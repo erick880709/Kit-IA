@@ -1,0 +1,30 @@
+# Dependencias
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Graphify (cache local)
+graphify-out/cost.json
+
+# Obsidian (config local)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+
+# Archivos de sesión (se regeneran)
+resources/session/estado.json
+
+# Binarios y paquetes
+*.skill
+*.zip
