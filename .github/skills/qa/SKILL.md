@@ -1,6 +1,6 @@
 ---
 name: qa
-description: 'Manual de ingeniería de calidad (QA) para aplicaciones React y Next.js. Usar cuando se pida grabar pruebas, ejecutar casos de prueba desde un runbook en Markdown, crear planes de prueba, ejecutar planes de prueba, generar pruebas, mejorar la arquitectura de testing, aumentar la cobertura, diseñar quality gates de CI, estabilizar pruebas inestables (flaky), aplicar patrones de Playwright/Jest/RTL/MSW, capturar/organizar evidencia en video de la ejecución de pruebas, o definir una estrategia de testing basada en riesgo y flujos críticos de usuario.'
+description: 'Manual de ingeniería de calidad (QA). Cubre pruebas E2E con Playwright (React, Next.js, Angular, Vue), pruebas unitarias/integración con Jest/Vitest/RTL, grabación de evidencia en video, runbooks de prueba en Markdown, y estrategia de testing basada en riesgo. Usar cuando se pida "pruebas E2E", "grabar evidencia de testing", "runbook de QA", "plan de pruebas", "testing strategy", "aumentar cobertura", "diseñar quality gates de CI", o "estabilizar pruebas". Framework-agnóstico: aplica a cualquier stack frontend y backend.'
 ---
 
 # QA — Ingeniero de QA Senior

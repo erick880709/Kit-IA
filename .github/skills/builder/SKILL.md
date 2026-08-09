@@ -1,14 +1,15 @@
 ---
 name: builder
 description: >
-  Genera el scaffold completo de un nuevo módulo de dominio (CRUD tradicional
-  o pipeline de Machine Learning/IA) para cualquier proyecto, en cualquier
-  lenguaje y stack, con patrones de nivel senior. Cubre backend (Java/Spring Boot,
-  C#/.NET, Python/FastAPI/Django, Node.js/Express/NestJS) y frontend (Angular 18+,
-  React/Next.js, Vue). Recibe como entrada un ID de historia de usuario o tarea
-  técnica de Jira, un ID de Épica de Jira (en cuyo caso resuelve y recorre
-  todas sus historias hijas), o la ruta a un archivo Markdown en
-  resources/functional/hu/. Detecta automáticamente el lenguaje, framework,
+  Genera el scaffold completo de un nuevo módulo de dominio (CRUD tradicional,
+  pipeline de Machine Learning/IA, CLI tool, o app mobile) para cualquier proyecto,
+  en cualquier lenguaje y stack, con patrones de nivel senior. Cubre backend
+  (Java/Spring Boot, C#/.NET, Python/FastAPI/Django, Node.js/Express/NestJS),
+  frontend (Angular 18+, React/Next.js, Vue), CLI tools (Python/Typer, Go/Cobra,
+  Node.js/Commander), y mobile (React Native, Flutter). Recibe como entrada un ID
+  de historia de usuario o tarea técnica de Jira, un ID de Épica de Jira
+  (en cuyo caso resuelve y recorre todas sus historias hijas), o la ruta a un
+  archivo Markdown en resources/functional/hu/. Detecta automáticamente el lenguaje, framework,
   ORM y patrón arquitectónico del proyecto — o, si el recurso es de tipo
   Machine Learning/IA, el stack de ciencia de datos (pandas, scikit-learn,
   XGBoost, TensorFlow/PyTorch, notebooks). Si no existe línea base de
@@ -52,6 +53,7 @@ ideal, testing, Dockerfile y stack recomendado.
 | **Python + FastAPI/Django/Flask** | `references/guia-backend-python.md` |
 | **Node.js + Express/Fastify/NestJS** | `references/guia-backend-nodejs.md` |
 | **Angular 17+ (frontend)** | `references/guia-frontend-angular.md` |
+| **CLI Tools** | `references/guia-cli-tools.md` |
 | **Machine Learning / IA** | `references/guia-notebooks-python.md` (local) + `archi/references/guia-ml-arquitectura.md` |
 
 Para frontend React/Next.js, el skill `qa` tiene patrones de testing E2E
