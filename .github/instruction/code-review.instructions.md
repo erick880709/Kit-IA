@@ -71,7 +71,7 @@ Impacto real si no se corrige.
 Este archivo es agnóstico de lenguaje a propósito, porque `builder` opera en
 cualquier stack. Cuando el proyecto tiene reglas propias más específicas
 (p. ej. `architecture.instructions.md` o `backend.instructions.md` para
-proyectos Java/Kotlin sobre Clean Architecture Bancolombia, o
+proyectos Java/Kotlin con Clean Architecture, o
 `security-and-owasp.instructions.md` para el detalle OWASP completo), esas
 reglas se suman a estas — nunca las reemplazan. Ante conflicto de detalle
 técnico específico de stack, gana la instrucción más específica del proyecto;
