@@ -1,5 +1,13 @@
 ﻿# 🧠 Kit IA — Pipeline de Desarrollo Spec-Driven con Agentes de IA
 
+<p align="center">
+  <a href="https://github.com/erick880709/Kit-IA/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="https://github.com/erick880709/Kit-IA"><img src="https://img.shields.io/badge/version-1.0.0-green.svg" alt="Version 1.0.0"></a>
+  <a href="https://github.com/erick880709/Kit-IA/stargazers"><img src="https://img.shields.io/github/stars/erick880709/Kit-IA?style=flat" alt="Stars"></a>
+  <a href="https://github.com/erick880709/Kit-IA/blob/main/CONTRIBUTING.md"><img src="https://img.shields.io/badge/contribuciones-bienvenidas-brightgreen.svg" alt="Contribuciones bienvenidas"></a>
+  <a href="https://github.com/erick880709/Kit-IA/blob/main/SECURITY.md"><img src="https://img.shields.io/badge/security-policy-blue.svg" alt="Security Policy"></a>
+</p>
+
 > **De RFP a producción, sin perder contexto entre sesiones.**
 > 22 skills de IA orquestados que cubren el ciclo completo de desarrollo de software:
 > desde la extracción de requerimientos hasta el despliegue continuo, pasando por
