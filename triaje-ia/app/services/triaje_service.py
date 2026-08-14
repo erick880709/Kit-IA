@@ -116,6 +116,16 @@ def transicionar_estado(
 
 # ---------- Signos vitales (HU-E2-04) ----------
 
+def normalizar_talla_m(valor: float) -> tuple[float, bool]:
+    """Talla en metros. Si llega en centímetros (> 3 m), convierte e informa.
+
+    Evita el error clásico de IMC ≈ 0 cuando se digita 170 en vez de 1.70.
+    """
+    if valor > 3.0:
+        return valor / 100.0, True
+    return valor, False
+
+
 def _validar_signos(datos: dict, *, permitir_fuera_rango: bool = False) -> dict:
     for campo in (
         "temperatura", "frecuencia_cardiaca", "frecuencia_respiratoria",
@@ -129,6 +139,8 @@ def _validar_signos(datos: dict, *, permitir_fuera_rango: bool = False) -> dict:
             num = float(valor)
         except ValueError:
             raise ValidationError("Valor numérico inválido", detalle=campo) from None
+        if campo == "talla":
+            num, _ = normalizar_talla_m(num)
         if not permitir_fuera_rango and not (minimo <= num <= maximo):
             raise ValidationError(
                 f"{campo} fuera de rango fisiológico ({minimo}-{maximo} {unidad})",

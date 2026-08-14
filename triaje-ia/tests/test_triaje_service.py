@@ -184,6 +184,21 @@ def test_signos_imc_calculado_y_fuera_de_rango_rechazado(session: Session) -> No
         )
 
 
+def test_talla_en_centimetros_se_convierte_para_imc(session: Session) -> None:
+    """Regresión: talla digitada en cm (170) → 1.70 m para que el IMC no dé ≈ 0."""
+    assert triaje_service.normalizar_talla_m(170.0) == (1.70, True)
+    assert triaje_service.normalizar_talla_m(1.70) == (1.70, False)
+
+    evento = triaje_service.crear_evento(
+        session, paciente_id=_paciente_id(session), usuario_id=USUARIO
+    )
+    signos = triaje_service.registrar_signos(
+        session, evento_id=evento.id, usuario_id=USUARIO, datos=_signos(talla=170)
+    )
+    assert signos.talla == 1.70
+    assert signos.imc == round(64.0 / (1.70**2), 1)
+
+
 # ---------- HU-E2-05: evaluación ----------
 
 def test_evaluacion_texto_libre_vacio_no_bloquea(session: Session) -> None:

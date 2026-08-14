@@ -13,6 +13,7 @@ from app.domain.catalogos import RANGOS_SIGNOS
 from app.domain.exceptions import ValidationError
 from app.infra.db import SessionLocal
 from app.services import triaje_service
+from app.services.triaje_service import normalizar_talla_m
 
 
 def render() -> None:
@@ -31,9 +32,14 @@ def render() -> None:
         # Límites amplios (no los fisiológicos): así un valor fuera de rango
         # puede capturarse y dispara el flujo de confirmación de CA2.
         if campo in _FLOAT_CAMPOS:
+            ayuda = (
+                "En metros — ej. 1.70 (si digita 170 se convierte a cm automáticamente)"
+                if campo == "talla" else None
+            )
             return col.number_input(
                 label, min_value=0.0, max_value=1000.0,
-                step=0.1, key=f"sv2_{campo}",
+                step=0.01 if campo == "talla" else 0.1,
+                key=f"sv2_{campo}", help=ayuda,
             )
         return col.number_input(
             label, min_value=0, max_value=500,
@@ -53,8 +59,17 @@ def render() -> None:
     }
 
     if datos["talla"] > 0:
-        imc = round(datos["peso"] / (datos["talla"] ** 2), 1)
+        talla_m, convertida = normalizar_talla_m(datos["talla"])
+        imc = round(datos["peso"] / (talla_m ** 2), 1)
         st.metric("IMC (calculado automáticamente)", f"{imc} kg/m²")
+        st.caption(
+            f"Fórmula: {datos['peso']} kg ÷ ({talla_m:.2f} m)² = {imc} kg/m²"
+        )
+        if convertida:
+            st.info(
+                f"Talla digitada en centímetros ({datos['talla']:.0f} cm) — "
+                f"convertida a {talla_m:.2f} m automáticamente."
+            )
 
     fuera = [
         campo for campo, valor in datos.items()
