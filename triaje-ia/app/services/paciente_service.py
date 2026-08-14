@@ -41,8 +41,6 @@ def _validar_campos(datos: dict) -> None:
         "fecha_nacimiento",
         "sexo",
         "via_llegada",
-        "contacto_emergencia",
-        "numero_contacto_emergencia",
         "departamento",
         "ciudad",
     ]
@@ -56,9 +54,11 @@ def _validar_campos(datos: dict) -> None:
         raise ValidationError("Sexo inválido", detalle=str(datos["sexo"]))
     if datos.get("telefono"):
         datos["telefono"] = _normalizar_telefono(datos["telefono"])
-    datos["numero_contacto_emergencia"] = _normalizar_telefono(
-        datos["numero_contacto_emergencia"]
-    )
+    # Contacto de emergencia OPCIONAL: si trae teléfono, debe ser válido.
+    if (datos.get("numero_contacto_emergencia") or "").strip():
+        datos["numero_contacto_emergencia"] = _normalizar_telefono(
+            datos["numero_contacto_emergencia"]
+        )
     if datos.get("correo"):
         if not _EMAIL_RE.match(datos["correo"].strip()):
             raise ValidationError("Correo inválido", detalle=str(datos["correo"]))
@@ -135,12 +135,15 @@ def registrar_paciente(
         episodios_previos_urgencias=episodios,
         telefono=datos.get("telefono"),
         correo=(datos.get("correo") or "").strip() or None,
-        contacto_emergencia=datos["contacto_emergencia"].strip(),
-        numero_contacto_emergencia=datos["numero_contacto_emergencia"],
+        contacto_emergencia=(datos.get("contacto_emergencia") or "").strip() or "",
+        numero_contacto_emergencia=(
+            (datos.get("numero_contacto_emergencia") or "").strip() or ""
+        ),
         departamento=datos["departamento"],
         ciudad=datos["ciudad"],
         direccion_residencia=(datos.get("direccion_residencia") or "").strip() or None,
         regimen=datos.get("regimen"),
+        eps=(datos.get("eps") or "").strip() or None,
         tipo_sangre=datos.get("tipo_sangre"),
         alergias=(datos.get("alergias") or "").strip() or None,
     )
@@ -177,7 +180,7 @@ def actualizar_paciente(
     }, **datos})
 
     for campo in ("telefono", "correo", "contacto_emergencia", "numero_contacto_emergencia",
-                  "direccion_residencia", "regimen", "tipo_sangre", "alergias"):
+                  "direccion_residencia", "regimen", "eps", "tipo_sangre", "alergias"):
         if campo in datos and datos[campo] is not None:
             setattr(paciente, campo, (str(datos[campo]).strip() or None))
     paciente.actualizado_en = datetime.now(UTC)

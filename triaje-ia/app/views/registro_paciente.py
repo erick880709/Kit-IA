@@ -9,11 +9,14 @@ auditoría (CA4).
 
 from __future__ import annotations
 
+from datetime import date
+
 import streamlit as st
 
 from app.domain.catalogos import (
     CIUDADES_POR_DEPARTAMENTO,
     DEPARTAMENTOS_COLOMBIA,
+    EPS_COLOMBIA,
     GRUPOS_SANGUINEOS,
     SEXO,
     VIA_LLEGADA,
@@ -52,7 +55,10 @@ def _datos_desde_form() -> dict | None:
     datos["apellidos"] = c2.text_input("Apellidos", value=p.get("apellidos", ""))
     c1, c2 = st.columns(2)
     datos["fecha_nacimiento"] = c1.date_input(
-        "Fecha de nacimiento", value=p.get("fecha_nacimiento")
+        "Fecha de nacimiento",
+        value=p.get("fecha_nacimiento") or date(1990, 1, 1),
+        min_value=date(1900, 1, 1),
+        max_value=date.today(),
     )
     datos["via_llegada"] = c2.selectbox("Vía de llegada", VIA_LLEGADA)
     datos["episodios_previos_urgencias"] = st.number_input(
@@ -71,10 +77,10 @@ def _datos_desde_form() -> dict | None:
         "Correo (opcional)", value=p.get("correo", "")
     )
 
-    st.subheader("3 · Contacto de emergencia")
+    st.subheader("3 · Contacto de emergencia (opcional)")
     c1, c2 = st.columns(2)
     datos["contacto_emergencia"] = c1.text_input(
-        "Nombre del contacto", value=p.get("contacto_emergencia", "")
+        "Nombre del contacto (opcional)", value=p.get("contacto_emergencia", "")
     )
     datos["numero_contacto_emergencia"] = c2.text_input(
         "Teléfono del contacto",
@@ -118,6 +124,17 @@ def _datos_desde_form() -> dict | None:
     datos["alergias"] = c3.text_input(
         "Alergias conocidas", value=p.get("alergias", "")
     )
+    # EPS/IPS: aplica solo a regímenes contributivo y subsidiado.
+    if datos["regimen"] in ("Contributivo", "Subsidiado"):
+        eps_opciones = [""] + EPS_COLOMBIA
+        eps_valor = p.get("eps") if p.get("eps") in EPS_COLOMBIA else ""
+        datos["eps"] = st.selectbox(
+            "EPS / IPS a la que pertenece",
+            eps_opciones,
+            index=eps_opciones.index(eps_valor),
+        ) or None
+    else:
+        datos["eps"] = None
     return datos
 
 
@@ -171,6 +188,7 @@ def render() -> None:
                         "ciudad": existente.ciudad,
                         "direccion_residencia": existente.direccion_residencia or "",
                         "regimen": existente.regimen or "",
+                        "eps": existente.eps or "",
                         "tipo_sangre": existente.tipo_sangre or "",
                         "alergias": existente.alergias or "",
                     }

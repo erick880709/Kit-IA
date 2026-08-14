@@ -1,5 +1,19 @@
 # Bitácora de Sesiones — Kit IA
 
+## Sesión 25 — 2026-08-14
+
+**Objetivo:** Ajustes al registro de paciente reportados en prueba funcional.
+
+**Correcciones:**
+- **Fecha de nacimiento:** `st.date_input` con `min_value=1900-01-01` y `max_value=today` (el default de Streamlit limita a ±10 años — por eso no dejaba antes de 2016).
+- **Ciudades:** catálogo `CIUDADES_POR_DEPARTAMENTO` reemplazado por TODOS los municipios oficiales (DANE) de los 32 departamentos (Quindío con sus 12).
+- **EPS/IPS:** nueva columna `eps` en Paciente (entidad + migración ligera `_COLUMNAS_NUEVAS`), catálogo `EPS_COLOMBIA` (32 EPS) y selector en el formulario visible para regímenes Contributivo/Subsidiado.
+- **Contacto de emergencia opcional:** sale de obligatorios; el teléfono solo se normaliza/valida si se digitó; se guarda `""` si está vacío.
+
+**Verificaciones:** pytest **108/108** (3 tests nuevos: contacto opcional, EPS subsidiado, Quindío completo) · ruff 0 · servidor relanzado en :8599 (healthcheck 200).
+
+---
+
 ## Sesión 24 — 2026-08-14
 
 **Objetivo:** Corregir AttributeError en Gestión de modelos al activar un modelo.

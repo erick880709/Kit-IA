@@ -29,6 +29,9 @@ _COLUMNAS_NUEVAS: dict[str, list[tuple[str, str]]] = {
     "auditoria": [
         ("evento_id", "VARCHAR(36)"),
     ],
+    "pacientes": [
+        ("eps", "VARCHAR(80)"),
+    ],
 }
 
 

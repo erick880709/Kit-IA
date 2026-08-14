@@ -114,6 +114,7 @@ class Paciente(Base):
     ciudad: Mapped[str] = mapped_column(String(80), nullable=False)
     direccion_residencia: Mapped[str | None] = mapped_column(String(160), nullable=True)
     regimen: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    eps: Mapped[str | None] = mapped_column(String(80), nullable=True)
     tipo_sangre: Mapped[str | None] = mapped_column(String(5), nullable=True)
     alergias: Mapped[str | None] = mapped_column(String(200), nullable=True)
     creado_en: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, nullable=False)

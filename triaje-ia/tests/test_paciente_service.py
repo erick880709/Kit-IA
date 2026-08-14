@@ -59,10 +59,42 @@ def test_ca1_registro_completo_con_via_y_episodios(session: Session) -> None:
 
 
 def test_ca3_obligatorios_no_vacios(session: Session) -> None:
-    for campo in ("nombres", "numero_documento", "contacto_emergencia"):
+    for campo in ("nombres", "numero_documento", "departamento", "ciudad"):
         with pytest.raises(ValidationError) as exc:
             registrar_paciente(session, usuario_id=None, datos=_datos(**{campo: ""}))
         assert exc.value.detalle == campo
+
+
+def test_contacto_emergencia_es_opcional(session: Session) -> None:
+    """Regla de negocio: no todos los pacientes tienen contacto de emergencia."""
+    p = registrar_paciente(
+        session,
+        usuario_id=None,
+        datos=_datos(contacto_emergencia="", numero_contacto_emergencia=""),
+    )
+    assert p.contacto_emergencia == ""
+    assert p.numero_contacto_emergencia == ""
+
+
+def test_eps_se_guarda_para_regimen_subsidiado(session: Session) -> None:
+    p = registrar_paciente(
+        session,
+        usuario_id=None,
+        datos=_datos(regimen="Subsidiado", eps="Nueva EPS"),
+    )
+    assert p.eps == "Nueva EPS"
+
+
+def test_catalogo_quindio_completo() -> None:
+    from app.domain.catalogos import CIUDADES_POR_DEPARTAMENTO
+
+    quindio = CIUDADES_POR_DEPARTAMENTO["Quindío"]
+    assert set(quindio) == {
+        "Armenia", "Buenavista", "Calarcá", "Circasia", "Córdoba", "Filandia",
+        "Génova", "La Tebaida", "Montenegro", "Pijao", "Quimbaya", "Salento",
+    }
+    # Todo departamento debe listar al menos sus municipios principales.
+    assert all(len(CIUDADES_POR_DEPARTAMENTO[d]) >= 1 for d in CIUDADES_POR_DEPARTAMENTO)
 
 
 def test_ca3_telefono_minimo_10_digitos_y_acepta_57(session: Session) -> None:
