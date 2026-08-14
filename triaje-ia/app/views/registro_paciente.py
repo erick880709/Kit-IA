@@ -20,7 +20,7 @@ from app.domain.catalogos import (
 )
 from app.domain.exceptions import ValidationError
 from app.infra.db import SessionLocal
-from app.services import paciente_service
+from app.services import paciente_service, triaje_service
 
 
 def _precarga() -> dict:
@@ -197,7 +197,21 @@ def render() -> None:
                     f"Paciente registrado: {paciente.nombres} {paciente.apellidos} "
                     f"({paciente.tipo_documento} {paciente.numero_documento})"
                 )
-                if st.button("Volver al inicio"):
+                b1, b2 = st.columns(2)
+                if b1.button(
+                    "➕ Iniciar triaje (signos vitales)",
+                    type="primary", width="stretch",
+                ):
+                    with SessionLocal() as session:
+                        nuevo = triaje_service.crear_evento(
+                            session,
+                            paciente_id=paciente.id,
+                            usuario_id=usuario_id,
+                        )
+                    st.session_state["evento_id"] = nuevo.id
+                    st.session_state["pantalla"] = "signos_vitales"
+                    st.rerun()
+                if b2.button("Volver al inicio", width="stretch"):
                     st.session_state["pantalla"] = "inicio"
                     st.rerun()
 

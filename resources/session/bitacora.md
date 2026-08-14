@@ -1,5 +1,18 @@
 # Bitácora de Sesiones — Kit IA
 
+## Sesión 23 — 2026-08-14
+
+**Objetivo:** Corrección de prueba funcional: administrador con acceso total + flujo directo registro → signos vitales.
+
+**Correcciones:**
+- `authorization_service.py`: rol `Administrador` agregado a TODAS las pantallas clínicas (historial, signos vitales, evaluación, clasificación IA, SHAP, validación, cierre). Causa raíz del bug: el admin registraba al paciente pero el router lo bloqueaba antes de signos vitales (`ProhibidoError` → vuelta a inicio).
+- `registro_paciente.py`: tras el alta exitosa aparece el botón primario "➕ Iniciar triaje (signos vitales)" que crea el evento y navega directo a signos_vitales (sin pasar por inicio).
+- Test nuevo `test_administrador_tiene_acceso_total` (RBAC exhaustivo sobre PERMISOS_PANTALLA).
+
+**Verificaciones:** pytest **104/104** · ruff 0 · servidor relanzado en :8599 con healthcheck 200.
+
+---
+
 ## Sesión 22 — 2026-08-14
 
 **Objetivo:** Cerrar los 4 pendientes externos/del documento (organización grupal, comité de ética, trámites, maquetación Word).

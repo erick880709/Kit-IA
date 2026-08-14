@@ -69,6 +69,22 @@ def test_ca3_admin_roles_solo_administrador() -> None:
     assert puede_acceder("Medico", "admin_roles") is False
 
 
+def test_administrador_tiene_acceso_total() -> None:
+    """Requerimiento funcional: el administrador puede operar TODO el flujo
+    clínico, no solo las pantallas administrativas."""
+    from app.services.authorization_service import PERMISOS_PANTALLA
+
+    for pantalla, roles in PERMISOS_PANTALLA.items():
+        assert "Administrador" in roles, f"Administrador sin permiso en {pantalla}"
+    for pantalla in (
+        "signos_vitales", "evaluacion_clinica", "clasificacion_ia",
+        "explicacion_shap", "validacion_triaje", "cierre_evento",
+        "historial_paciente",
+    ):
+        assert puede_acceder("Administrador", pantalla) is True
+    verificar_acceso("Administrador", "signos_vitales")  # no lanza
+
+
 def test_ca4_cambio_rol_queda_auditado(session: Session) -> None:
     session.add(Rol(nombre="Investigador"))
     session.commit()
