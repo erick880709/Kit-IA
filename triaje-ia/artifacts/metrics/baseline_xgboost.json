@@ -1,0 +1,52 @@
+{
+  "modelo": "baseline_xgboost",
+  "metricas": {
+    "macro_cv": {
+      "precision": 0.5698490277351144,
+      "recall": 0.5183929934859303,
+      "f1": 0.540817810429071
+    },
+    "k_folds": 3,
+    "mejor_fold": {
+      "macro": {
+        "precision": 0.583144385026738,
+        "recall": 0.5232323232323232,
+        "f1": 0.5497595893435998
+      },
+      "por_clase": {
+        "I": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 0.0
+        },
+        "II": {
+          "precision": 1.0,
+          "recall": 0.8888888888888888,
+          "f1-score": 0.9411764705882353,
+          "support": 9.0
+        },
+        "III": {
+          "precision": 0.9745454545454545,
+          "recall": 1.0,
+          "f1-score": 0.9871086556169429,
+          "support": 268.0
+        },
+        "IV": {
+          "precision": 0.9411764705882353,
+          "recall": 0.7272727272727273,
+          "f1-score": 0.8205128205128205,
+          "support": 22.0
+        },
+        "V": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 1.0
+        }
+      },
+      "accuracy": 0.9733333333333334,
+      "auc_roc_ovr": NaN
+    }
+  }
+}

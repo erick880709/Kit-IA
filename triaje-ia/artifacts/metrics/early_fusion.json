@@ -1,0 +1,11 @@
+{
+  "modelo": "early_fusion",
+  "metricas": {
+    "macro_cv": {
+      "precision": 0.5680097689880022,
+      "recall": 0.5120437871367239,
+      "f1": 0.5358678375919196
+    },
+    "k_folds": 3
+  }
+}

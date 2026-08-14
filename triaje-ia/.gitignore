@@ -1,0 +1,25 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Secretos y configuración local
+.env
+
+# Base de datos local (demo)
+*.db
+*.sqlite3
+
+# Artefactos pesados / datos (los reales NUNCA se versionan — RNF-006)
+artifacts/models/*
+!artifacts/models/.gitkeep
+mlruns/*
+!mlruns/.gitkeep
+ml/data/raw/*
+!ml/data/raw/.gitkeep
+datasets/
+
+# Streamlit
+.streamlit/secrets.toml

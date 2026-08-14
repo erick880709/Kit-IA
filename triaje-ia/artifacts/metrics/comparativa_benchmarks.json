@@ -1,0 +1,41 @@
+[
+  {
+    "referencia": "CTAS (Canadá)",
+    "auc": 0.882,
+    "f1": null,
+    "nota": "Triage and Acuity Scale",
+    "modelo": "CTAS (Canadá)",
+    "es_benchmark": true
+  },
+  {
+    "referencia": "Hong et al. 2021",
+    "auc": 0.93,
+    "f1": null,
+    "nota": "ML en triaje ED",
+    "modelo": "Hong et al. 2021",
+    "es_benchmark": true
+  },
+  {
+    "referencia": "Ueareekul et al.",
+    "auc": 0.917,
+    "f1": null,
+    "nota": "XGBoost triaje",
+    "modelo": "Ueareekul et al.",
+    "es_benchmark": true
+  },
+  {
+    "referencia": "Levin et al.",
+    "auc": null,
+    "f1": 0.81,
+    "nota": "Benchmark F1",
+    "modelo": "Levin et al.",
+    "es_benchmark": true
+  },
+  {
+    "referencia": "TriajeIA (este proyecto)",
+    "auc": 0.9681556293661597,
+    "f1": 0.5506986209829293,
+    "nota": "Fusión tardía — dataset sintético demo",
+    "es_benchmark": false
+  }
+]

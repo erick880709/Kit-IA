@@ -1,0 +1,34 @@
+{
+  "top": [
+    {
+      "feature": "num__frecuencia_respiratoria",
+      "clinico": "num__frecuencia_respiratoria",
+      "impacto_medio": 1.0568920373916626,
+      "peso_absoluto": 1.0594744682312012
+    },
+    {
+      "feature": "num__saturacion_o2",
+      "clinico": "num__saturacion_o2",
+      "impacto_medio": 1.0432566404342651,
+      "peso_absoluto": 1.0477244853973389
+    },
+    {
+      "feature": "num__presion_sistolica",
+      "clinico": "num__presion_sistolica",
+      "impacto_medio": 0.46388542652130127,
+      "peso_absoluto": 0.5292685031890869
+    },
+    {
+      "feature": "num__frecuencia_cardiaca",
+      "clinico": "num__frecuencia_cardiaca",
+      "impacto_medio": 0.4653012454509735,
+      "peso_absoluto": 0.49118494987487793
+    },
+    {
+      "feature": "num__temperatura",
+      "clinico": "num__temperatura",
+      "impacto_medio": 0.3309195041656494,
+      "peso_absoluto": 0.3635871410369873
+    }
+  ]
+}

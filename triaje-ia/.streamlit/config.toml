@@ -1,0 +1,10 @@
+[theme]
+# Design system TriajeIA — ver .github/resources/diseno/design-system.md
+primaryColor = "#0891B2"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#ECFEFF"
+textColor = "#164E63"
+font = "sans serif"
+
+[server]
+headless = true

@@ -1,0 +1,139 @@
+{
+  "datos": {
+    "n_demo": 4000,
+    "n_sjd": 43594,
+    "n_nacional": 89453,
+    "calibracion": {
+      "esperado_rnf004": {
+        "I": 0.002269,
+        "II": 0.030295,
+        "III": 0.885359,
+        "IV": 0.077516,
+        "V": 0.004561
+      },
+      "medido_nacional": {
+        "I": 0.002269,
+        "II": 0.030295,
+        "III": 0.885359,
+        "IV": 0.077516,
+        "V": 0.004561
+      },
+      "demo_sintetico": {
+        "I": 0.0025,
+        "II": 0.02675,
+        "III": 0.8835,
+        "IV": 0.08175,
+        "V": 0.0055
+      },
+      "desviacion_maxima_demo": 0.0042
+    }
+  },
+  "baselines": {
+    "regresion_logistica": {
+      "precision": 0.4778778747645739,
+      "recall": 0.6214305135495067,
+      "f1": 0.48961590822582945
+    },
+    "random_forest": {
+      "precision": 0.5287187717273162,
+      "recall": 0.5632047850446019,
+      "f1": 0.5444611982077299
+    },
+    "xgboost": {
+      "precision": 0.5587004190562875,
+      "recall": 0.5486359244620115,
+      "f1": 0.5530103349664165
+    }
+  },
+  "early_fusion": {
+    "precision": 0.5696488466354283,
+    "recall": 0.5875942028985508,
+    "f1": 0.5782817537939956
+  },
+  "late_fusion": {
+    "promedio_ponderado": {
+      "precision": 0.5615515616842502,
+      "recall": 0.5497672375933245,
+      "f1": 0.5548394705787348
+    },
+    "stacking": {
+      "precision": 0.5623801716707549,
+      "recall": 0.5586368028107158,
+      "f1": 0.5596371573953969
+    }
+  },
+  "ganador_macro": {
+    "precision": 0.5598154961872768,
+    "recall": 0.5420918367346939,
+    "f1": 0.5506986209829293
+  },
+  "auc_roc_ovr": 0.9681556293661597,
+  "metas_cumplidas": {
+    "f1": false,
+    "precision": false,
+    "recall": false,
+    "auc_roc": true
+  },
+  "umbrales": {
+    "I": 0.2785303381327592,
+    "II": 0.28070430749535624,
+    "III": 0.5,
+    "IV": 0.5,
+    "V": 0.5
+  },
+  "tuning_sub_a": {
+    "mejor_config": {
+      "max_depth": 5,
+      "learning_rate": 0.1
+    },
+    "macro_f1_val": 0.5588739902481624
+  },
+  "peso_estructurado": 0.5,
+  "texto_sjd_holdout": {
+    "precision": 0.19967566818178542,
+    "recall": 0.19219601739310863,
+    "f1": 0.08772033181857354
+  },
+  "ruta_modelo": "C:\\Users\\ELITEBOOK\\OneDrive\\Documentos\\Repositorio\\Trabajo\\kit-ia\\triaje-ia\\artifacts\\models\\modelo-latefusion-xgb-text-sjd-v20260814.joblib",
+  "comparativa_benchmarks": [
+    {
+      "referencia": "CTAS (Canadá)",
+      "auc": 0.882,
+      "f1": null,
+      "nota": "Triage and Acuity Scale",
+      "modelo": "CTAS (Canadá)",
+      "es_benchmark": true
+    },
+    {
+      "referencia": "Hong et al. 2021",
+      "auc": 0.93,
+      "f1": null,
+      "nota": "ML en triaje ED",
+      "modelo": "Hong et al. 2021",
+      "es_benchmark": true
+    },
+    {
+      "referencia": "Ueareekul et al.",
+      "auc": 0.917,
+      "f1": null,
+      "nota": "XGBoost triaje",
+      "modelo": "Ueareekul et al.",
+      "es_benchmark": true
+    },
+    {
+      "referencia": "Levin et al.",
+      "auc": null,
+      "f1": 0.81,
+      "nota": "Benchmark F1",
+      "modelo": "Levin et al.",
+      "es_benchmark": true
+    },
+    {
+      "referencia": "TriajeIA (este proyecto)",
+      "auc": 0.9681556293661597,
+      "f1": 0.5506986209829293,
+      "nota": "Fusión tardía — dataset sintético demo",
+      "es_benchmark": false
+    }
+  ]
+}

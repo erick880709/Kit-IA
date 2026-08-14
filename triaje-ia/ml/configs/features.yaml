@@ -1,0 +1,76 @@
+# Configuración versionable de features (TT-E3-02) — reproducibilidad.
+
+semilla_global: 42
+
+features_numericas:
+  - temperatura
+  - frecuencia_cardiaca
+  - frecuencia_respiratoria
+  - saturacion_o2
+  - presion_sistolica
+  - presion_diastolica
+  - peso
+  - talla
+  - imc
+  - edad
+  - episodios_previos_urgencias
+
+features_categoricas:
+  sexo:
+    imputacion: "moda"
+    codificacion: onehot
+  via_llegada:           # RNQ-004: catálogo controlado
+    imputacion: "moda"
+    codificacion: onehot
+    catalogo: [Ambulancia, Particular, Remisión]
+  regimen:
+    imputacion: "moda"
+    codificacion: onehot
+    # Normalización RT-006: typos documentados
+    normalizacion:
+      "contributivo": Contributivo
+      "subsidiado": Subsidiado
+      "especial": Especial
+      "no afiliado": NoAfiliado
+  departamento:
+    imputacion: "moda"
+    codificacion: onehot
+
+imputacion_numericas: mediana   # documentada por variable (TT-E3-02)
+
+texto:
+  columna: motivo_texto
+  vectorizador: tfidf          # fallback liviano; BETO clínico opcional (TT-E3-03)
+  max_features: 500
+  ngram: [1, 2]
+
+split:
+  test_size: 0.15
+  val_size: 0.15
+  estratificado_por: nivel_triaje
+
+modelos:
+  baselines: [regresion_logistica, random_forest, xgboost]
+  early_fusion:
+    clasificador: xgboost
+  late_fusion:
+    submodelo_estructurado: xgboost
+    submodelo_texto: regresion_logistica
+    combinador_default: promedio_ponderado   # RT-010: strategy pattern
+    combinadores_experimentales: [stacking, meta_clasificador]
+
+umbrales:
+  optimizar_recall_en: ["I", "II"]   # RT-009 / RNF-003
+  argmax_en: ["III", "IV", "V"]
+
+benchmarks_literatura:            # RT-008
+  CTAS: {auc: 0.882}
+  Hong_2021: {auc: 0.93}
+  Ueareekul: {auc: 0.917}
+  Levin: {f1: 0.81}
+
+metas:                            # RNF-001
+  f1: 0.82
+  precision: 0.85
+  recall: 0.80
+  auc_roc: 0.87

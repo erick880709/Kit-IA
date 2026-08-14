@@ -1,0 +1,14 @@
+streamlit>=1.57
+SQLAlchemy>=2.0
+python-dotenv>=1.0
+bcrypt>=4.0
+reportlab>=4.2
+# Épica E3/E4 — pipeline de entrenamiento e inferencia
+pandas>=2.2
+scikit-learn>=1.5
+xgboost>=2.1
+shap>=0.46
+pyyaml>=6.0
+joblib>=1.4
+# Épica E5 — exportación de auditoría
+openpyxl>=3.1

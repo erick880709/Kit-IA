@@ -1,0 +1,132 @@
+"""Pruebas del registro de pacientes (HU-E2-01)."""
+
+from __future__ import annotations
+
+from datetime import date
+
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from app.domain.base import Base
+from app.domain.entities import Auditoria
+from app.domain.exceptions import ValidationError
+from app.services.paciente_service import buscar_duplicados, registrar_paciente
+
+
+@pytest.fixture()
+def session() -> Session:
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    Base.metadata.create_all(engine)
+    factory = sessionmaker(bind=engine)
+    with factory() as s:
+        yield s
+
+
+def _datos(**overrides) -> dict:
+    datos = {
+        "tipo_documento": "CC",
+        "numero_documento": "52148903",
+        "nombres": "María",
+        "apellidos": "Gómez Ruiz",
+        "fecha_nacimiento": date(1986, 2, 12),
+        "sexo": "Femenino",
+        "via_llegada": "Ambulancia",
+        "episodios_previos_urgencias": 2,
+        "telefono": "+57 300 123 4567",
+        "correo": "m.gomez@correo.com",
+        "contacto_emergencia": "Carlos Gómez",
+        "numero_contacto_emergencia": "3107654321",
+        "departamento": "Cundinamarca",
+        "ciudad": "Bogotá D.C.",
+        "direccion_residencia": "Calle 10 # 5-20",
+        "regimen": "Contributivo",
+        "tipo_sangre": "O+",
+        "alergias": "Penicilina",
+    }
+    datos.update(overrides)
+    return datos
+
+
+def test_ca1_registro_completo_con_via_y_episodios(session: Session) -> None:
+    p = registrar_paciente(session, usuario_id=None, datos=_datos())
+    assert p.via_llegada == "Ambulancia"
+    assert p.episodios_previos_urgencias == 2
+    assert p.tipo_documento == "CC"
+
+
+def test_ca3_obligatorios_no_vacios(session: Session) -> None:
+    for campo in ("nombres", "numero_documento", "contacto_emergencia"):
+        with pytest.raises(ValidationError) as exc:
+            registrar_paciente(session, usuario_id=None, datos=_datos(**{campo: ""}))
+        assert exc.value.detalle == campo
+
+
+def test_ca3_telefono_minimo_10_digitos_y_acepta_57(session: Session) -> None:
+    p = registrar_paciente(session, usuario_id=None, datos=_datos(telefono="+57 300 123 4567"))
+    assert p.telefono == "3001234567"  # normalizado a 10 dígitos locales
+
+    with pytest.raises(ValidationError):
+        registrar_paciente(session, usuario_id=None, datos=_datos(telefono="300123"))
+    with pytest.raises(ValidationError):
+        registrar_paciente(
+            session, usuario_id=None, datos=_datos(numero_contacto_emergencia="123")
+        )
+
+
+def test_episodios_previos_no_numericos_rechazados(session: Session) -> None:
+    """Frontera externa: valor no numérico → ValidationError, nunca ValueError."""
+    with pytest.raises(ValidationError) as exc:
+        registrar_paciente(
+            session, usuario_id=None,
+            datos=_datos(episodios_previos_urgencias="muchos"),
+        )
+    assert exc.value.detalle == "episodios_previos_urgencias"
+
+
+def test_ca3_correo_invalido_rechaza_y_vacio_permitido(session: Session) -> None:
+    with pytest.raises(ValidationError):
+        registrar_paciente(session, usuario_id=None, datos=_datos(correo="no-es-correo"))
+    p = registrar_paciente(session, usuario_id=None, datos=_datos(correo=""))
+    assert p.correo is None
+
+
+def test_ca2_duplicado_por_documento(session: Session) -> None:
+    registrar_paciente(session, usuario_id=None, datos=_datos())
+    dup = buscar_duplicados(
+        session,
+        tipo_documento="CC",
+        numero_documento="52148903",
+        nombres="Otra",
+        apellidos="Persona",
+    )
+    assert len(dup) == 1
+
+
+def test_ca2_duplicado_por_nombre_apellidos(session: Session) -> None:
+    registrar_paciente(session, usuario_id=None, datos=_datos(numero_documento="999"))
+    dup = buscar_duplicados(
+        session,
+        tipo_documento="CC",
+        numero_documento="123456",
+        nombres="María",
+        apellidos="Gómez",
+    )
+    assert any(p.numero_documento == "999" for p in dup)
+
+
+def test_documento_duplicado_bloquea_alta(session: Session) -> None:
+    registrar_paciente(session, usuario_id=None, datos=_datos())
+    with pytest.raises(ValidationError):
+        registrar_paciente(
+            session, usuario_id=None, datos=_datos(numero_documento="52148903")
+        )
+
+
+def test_ca4_alta_queda_auditada(session: Session) -> None:
+    registrar_paciente(session, usuario_id="usr-1", datos=_datos())
+    registros = session.query(Auditoria).all()
+    assert any(r.accion == "CREAR_PACIENTE" and r.usuario_id == "usr-1" for r in registros)

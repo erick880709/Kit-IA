@@ -1,0 +1,28 @@
+{
+  "fecha_utc": "2026-08-14T14:37:06.647528+00:00",
+  "presupuestos": {
+    "inferencia_ms": 3000.0,
+    "consultas_ms": 1000.0
+  },
+  "inferencia": {
+    "estado": "ok",
+    "n_llamadas": 30,
+    "errores": 0,
+    "p50_ms": 24.11,
+    "p95_ms": 26.09,
+    "p99_ms": 26.87,
+    "min_ms": 22.1,
+    "max_ms": 27.13,
+    "presupuesto_ms": 3000.0,
+    "cumple_rnf007": true,
+    "version_modelo": "modelo-latefusion-xgb-text-sjd-v20260814",
+    "algoritmo": "latefusion-xgb-text-sjd"
+  },
+  "consultas": {
+    "dashboard_calcular_indicadores_ms": 24.02,
+    "auditoria_consultar_pagina50_ms": 6.93,
+    "presupuesto_ms": 1000.0,
+    "cumple_rnp003": true
+  },
+  "import_app_main_ms": 566.41
+}
