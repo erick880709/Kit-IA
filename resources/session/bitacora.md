@@ -1,5 +1,17 @@
 # Bitácora de Sesiones — Kit IA
 
+## Sesión 26 — 2026-08-14
+
+**Objetivo:** Validar el cálculo del IMC en signos vitales.
+
+**Diagnóstico:** la fórmula `peso / talla²` era correcta (test 64/1.62² = 24.4); el fallo reportado ocurría al digitar la talla en CENTÍMETROS (170 → IMC ≈ 0).
+
+**Corrección:** `normalizar_talla_m()` en `triaje_service` (talla > 3 m se interpreta como cm y se divide entre 100) aplicada en validación del servicio y en el preview de la vista; la pantalla muestra la fórmula completa (`70 kg ÷ (1.70 m)² = 24.2 kg/m²`) y un aviso cuando convierte cm→m; `help` del campo indica "En metros — ej. 1.70".
+
+**Verificaciones:** pytest **109/109** (test nuevo de conversión cm→m) · ruff 0 · servidor relanzado (healthcheck 200) · commit `fb2ba81`.
+
+---
+
 ## Sesión 25 — 2026-08-14
 
 **Objetivo:** Ajustes al registro de paciente reportados en prueba funcional.
