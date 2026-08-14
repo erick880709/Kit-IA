@@ -1,0 +1,197 @@
+Excelente. Todas las decisiones han quedado formalmente definidas. A continuación, presento la **versión actualizada y definitiva** del documento de contexto, con los acuerdos incorporados en las secciones correspondientes.
+
+---
+
+# Contexto de la Aplicación — Motor de Clasificación de Triaje con IA (Colombia)
+**Versión Definitiva v2.0** — Actualizada con decisiones de diseño y gobernanza (16 de julio de 2026)
+
+---
+
+## 0. Resumen ejecutivo de decisiones tomadas
+
+| Punto clave | Decisión adoptada |
+|---|---|
+| **Arquitectura de fusión** | Se implementarán **ambas** (early fusion y late fusion), se compararán y se seleccionará la de mejor rendimiento en la versión final. |
+| **Estrategia de umbral para niveles I-II** | Se prioriza **Recall sobre Precisión** para los niveles críticos (I y II), minimizando el costo clínico de un falso negativo. |
+| **Alcance del prototipo** | **Modelo entrenado y evaluado offline** + **interfaz/demo funcional** (dashboard interactivo). |
+| **Autorización ética (Hospital San Juan de Dios)** | **APROBADA** — el comité de ética ha dado el visto bueno; ya se puede proceder con la ingesta y tratamiento de datos locales. |
+
+---
+
+## 1. Objetivo funcional de la aplicación
+
+Dado un conjunto de datos de un paciente que llega a urgencias, el sistema debe predecir a cuál de los **5 niveles de triaje establecidos por la Resolución 5596 de 2015** del Ministerio de Salud y Protección Social de Colombia pertenece. La salida debe ser explicable, para apoyar (no reemplazar) al profesional que realiza el triaje.
+
+```
+Entrada (datos del paciente) → Modelo multimodal → Nivel I-V + explicación SHAP → Apoyo a decisión humana
+```
+
+
+## 2. Marco normativo: Resolución 5596 de 2015
+
+La Resolución 5596 del 24 de diciembre de 2015 define los criterios técnicos para el Sistema de Selección y Clasificación de pacientes en los servicios de urgencias (triaje) en Colombia. Establece **cinco (5) categorías** de triaje para determinar la prioridad en la atención:
+
+| Nivel | Denominación | Descripción clínica | Tiempo máximo de atención |
+|---|---|---|---|
+| **I** | Resucitación | Condición que coloca en peligro la vida del paciente; atención inmediata | Inmediata |
+| **II** | Emergencia | Paciente que puede evolucionar hacia deterioro rápido, pérdida de extremidad/órgano o muerte | ≤ 30 minutos |
+| **III** | Urgencia | Requiere medidas diagnósticas y terapéuticas en urgencias | 2 a 4 horas |
+| **IV** | Menor urgencia | No compromete el estado general ni representa riesgo evidente para la vida o pérdida de miembro/órgano | 4 a 12 horas |
+| **V** | No urgencia | Problemas agudos o crónicos sin evidencia de deterioro que comprometa el estado general | 12 a 24 horas |
+
+
+## 3. Definición operativa de "emergencia" (regla de negocio)
+
+El sistema no decide "es emergencia sí/no" de forma binaria — clasifica en 5 niveles ordinales, donde **I y II se consideran clínicamente críticos** (emergencia real) y **IV y V son claramente no urgentes**. El **nivel III es la zona gris** que más valor aporta clasificar bien.
+
+| Nivel | Umbral clínico de referencia | Acción del sistema |
+|---|---|---|
+| I — Resucitación | Riesgo vital inminente (paro, shock, vía aérea comprometida) | Alerta inmediata, prioridad máxima en cola |
+| II — Emergencia | Riesgo vital no inminente pero alto (ej. dolor torácico agudo, alteración de conciencia) | Alerta alta, atención ≤30 min |
+| III — Urgencia | Cuadro que requiere atención pero estable | Cola prioritaria, ≤2 h |
+| IV — Menor urgencia | Estable, sin riesgo | Cola estándar, ≤4 h |
+| V — No urgencia | Remitible a consulta externa | Redirección, ≤24 h |
+
+
+## 4. Variables de entrada (features)
+
+### 4.1 Datos estructurados
+
+| Categoría | Variables | Fuente típica |
+|---|---|---|
+| Signos vitales | Frecuencia respiratoria, saturación de O₂, presión arterial (sistólica/diastólica), frecuencia cardíaca, temperatura corporal | Toma directa en admisión |
+| Dolor | Escala de dolor (0-10) | Reporte del paciente |
+| Demográficas | Edad, sexo, régimen de afiliación (BDUA) | BDUA / admisión |
+| Antecedentes | Comorbilidades, episodios previos de urgencias, medicación crónica | Historia clínica |
+| Administrativas | Vía de llegada (ambulancia, particular, remisión), motivo de consulta estructurado (código) | Sistema de admisión |
+
+> **Variables con mayor peso predictivo** según el estado del arte: **saturación de O₂, frecuencia respiratoria, temperatura corporal, presión arterial sistólica, edad y vía de llegada.** Priorizar la calidad de captura de estas.
+
+### 4.2 Datos no estructurados
+
+- **Motivo de consulta en texto libre** (notas de enfermería en admisión).
+- **Historia clínica narrativa** (si disponible y autorizada).
+- Procesamiento: embeddings tipo BERT (clínico, idealmente afinado en español médico — evaluar BioBERT-es o similar).
+
+
+## 5. Arquitectura del modelo (DECISIÓN FINAL: AMBAS)
+
+Se implementarán, evaluarán y compararán **ambas estrategias de fusión** (early y late). El modelo ganador será el que mejores métricas globales y por clase (especialmente Recall en Niveles I-II) obtenga.
+
+### Opción A — Fusión temprana (early fusion)
+Concatenar el vector de features estructuradas + embedding del texto en un único vector de entrada antes del modelo de clasificación (XGBoost/RF sobre vector combinado, o red densa).
+
+### Opción B — Fusión tardía (late fusion)
+Dos submodelos independientes:
+- Submodelo A: estructurado → XGBoost/Random Forest.
+- Submodelo B: texto → BERT + clasificador.
+- Combinación de las salidas (promedio ponderado, stacking, o meta-clasificador).
+
+**Plan de acción:**
+1. Entrenar y optimizar ambos pipelines.
+2. Evaluar con 10-fold CV.
+3. Seleccionar el de mejor **Recall en Niveles I-II** (prioridad clínica), sin descuidar el F1 global.
+4. Documentar la comparativa en el Capítulo 5 del TFM.
+
+### Pipeline técnico
+
+```
+1. Ingesta (MIMIC-IV-ED + CSV colombianos + registro hospitalario autorizado)
+2. Limpieza: imputación de nulos, outliers
+3. Normalización de numéricas / one-hot de categóricas
+4. Embeddings de texto libre (notas clínicas)
+5. Split train/test + 10-fold cross-validation
+6. Entrenamiento modelos baseline (unimodal): Regresión Logística, RF, XGBoost
+7. Entrenamiento modelo multimodal (early fusion + late fusion en paralelo)
+8. Evaluación: matriz de confusión, precisión, recall, F1, AUC-ROC (macro y por nivel)
+9. Explicabilidad: SHAP sobre el modelo ganador
+10. Comparación contra benchmarks (CTAS, MTS, literatura)
+11. Despliegue de demo funcional (interfaz interactiva)
+```
+
+
+## 6. Métricas objetivo, criterios de éxito y estrategia de umbral (DECISIÓN FINAL: priorizar Recall)
+
+| Métrica | Meta |
+|---|---|
+| F1-score | ≥ 0,82 |
+| Precisión | ≥ 0,85 |
+| Recall | ≥ 0,80 |
+| AUC-ROC | ≥ 0,87 |
+
+**Estrategia de umbral para Niveles I y II (prioridad clínica):**
+- Se ajustará el umbral de decisión (probabilidad de corte) para **maximizar el Recall** en las clases críticas (I y II), aunque ello implique una ligera disminución de la Precisión.
+- Justificación: el **costo clínico de un falso negativo** en un nivel I o II (subclasificar a un paciente crítico como III o inferior) es inasumible (morbimortalidad evitable). Un falso positivo (sobre-clasificar) genera sobrecarga operativa pero no riesgo vital inmediato.
+- Se implementará **optimización de umbral por clase** (ej. usando `threshold tuning` en la curva ROC por nivel) y se documentará el punto de equilibrio elegido.
+
+**Consideraciones para el desbalance de clases** (los niveles IV-V suelen ser mayoritarios, I es raro pero crítico):
+- Evaluar métricas **por clase**, no solo macro-promedio.
+- Considerar AUPRC para las clases minoritarias.
+- Técnicas a evaluar: class weights, SMOTE, focal loss (si se usa red neuronal).
+
+
+## 7. Explicabilidad (XAI) — qué debe responder el sistema
+
+Para cada predicción, el sistema debe poder mostrar al clínico:
+1. **Nivel predicho + probabilidad/confianza.**
+2. **Top-5 variables que más influyeron** (valores SHAP), en lenguaje clínico comprensible (ej. "saturación de O₂ baja (88%) fue el factor de mayor peso").
+3. **Comparación implícita con el criterio MTS/Manchester** cuando coincida, para reforzar confianza clínica.
+
+
+## 8. Alcance del prototipo (DECISIÓN FINAL: offline + demo funcional)
+
+El alcance final del sistema comprende dos componentes:
+
+| Componente | Descripción |
+|---|---|
+| **Modelo offline** | Pipeline completo de entrenamiento, validación cruzada, evaluación y selección de modelo, ejecutado en entorno de desarrollo (Jupyter/VS Code). |
+| **Demo funcional (interfaz)** | Aplicación web interactiva (ej. construida con **Streamlit** o **Flask**) que permita al usuario: <br> - Ingresar datos de un paciente (signos vitales, texto libre, etc.). <br> - Recibir la predicción del nivel I-V. <br> - Visualizar la explicación SHAP asociada. <br> - Simular el flujo de triaje. |
+
+Esta demo servirá como prueba de concepto para la validación operativa y la transferencia tecnológica.
+
+
+## 9. Restricciones y consideraciones de gobernanza
+
+- **El sistema es de apoyo, no de decisión autónoma** — el criterio humano prevalece siempre.
+- **Autorización ética:** ✅ **APROBADA** por el Comité de Ética del Hospital San Juan de Dios. Ya se puede proceder con la ingesta, anonimización y uso de datos locales para fine-tuning y validación externa.
+- **Anonimización obligatoria** conforme a **Ley 1581 de 2012** (Protección de Datos Personales, Colombia) antes de cualquier procesamiento.
+- **Sesgo geográfico:** MIMIC-IV-ED es de EE.UU. — el modelo entrenado solo con esa base no es válido para el contexto colombiano. La fase de fine-tuning con datos del Hospital San Juan de Dios (ahora autorizada) es obligatoria para mitigar este sesgo; se documentará como limitación y estrategia de adaptación.
+- **Trazabilidad:** cada predicción debe quedar registrada (para auditoría clínica y detección de deriva del modelo en producción).
+
+
+## 10. Registro de información de triaje
+
+La normativa colombiana exige que se genere un registro de información de triaje que contenga mínimamente:
+- Nombre del paciente (anonimizado en el sistema)
+- Fecha y hora de ingreso
+- Nivel de triaje asignado (por el sistema y por el humano, para comparativa)
+- Signos vitales registrados
+- Motivo de consulta
+- Variables SHAP de mayor peso
+
+Este requisito se cumplirá en la demo funcional mediante la generación de un resumen descargable o visualizable en pantalla.
+
+
+## 11. Fuentes de datos
+
+| Fuente | Tipo | Rol | Estado |
+|---|---|---|---|
+| MIMIC-IV-ED v2.2 (PhysioNet) | Internacional, 422.500 admisiones | Entrenamiento base / preentrenamiento | ✅ Disponible |
+| Registro clínico Hospital San Juan de Dios | Local, datos sanitarios reales | Adaptación al contexto colombiano | ✅ **Autorizado por Comité de Ética** |
+| "Clasificación en Triaje Urgencias" (Min. Salud, datos.gov.co) | CSV público | Distribución real de niveles I-V en Colombia | ✅ Disponible |
+| BDUA (ADRES) | CSV público | Variables demográficas, régimen de afiliación | ✅ Disponible |
+| Datos abiertos Supersalud | CSV público | Desempeño operativo de EPS/IPS | ✅ Disponible |
+
+
+## 12. Estado de las decisiones (checklist final)
+
+| Pregunta clave | Decisión | Estado |
+|---|---|---|
+| ¿Early o Late fusion? | **Ambas** (comparativa y selección de la mejor) | ✅ Cerrado |
+| ¿Priorizar Recall o Precisión en Niveles I-II? | **Recall** (costo clínico del falso negativo) | ✅ Cerrado |
+| ¿Alcance: solo modelo offline o con interfaz? | **Modelo offline + demo funcional (Streamlit/Flask)** | ✅ Cerrado |
+| ¿Autorización ética Hospital San Juan de Dios? | **APROBADA** | ✅ Cerrado |
+
+---
+
+**Documento listo para ser utilizado como insumo directo del Capítulo 4 (Desarrollo de la contribución) del TFM.**

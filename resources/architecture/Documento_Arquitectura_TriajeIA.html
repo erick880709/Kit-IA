@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documento de Arquitectura de Software: TriajeIA — Sistema de Triaje Multimodal basado en IA</title>
+<style>
+:root{--primary:#0891B2;--accent:#059669;--bg:#FFFFFF;--fg:#164E63;--border:#A5F3FC;--code-bg:#ECFEFF;}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Fira Sans','Segoe UI',system-ui,sans-serif;background:#F0F9FA;color:var(--fg);line-height:1.65;}
+.wrap{max-width:960px;margin:0 auto;background:var(--bg);padding:48px 56px;box-shadow:0 0 24px rgba(8,145,178,.08);}
+h1,h2,h3,h4{color:var(--primary);font-weight:600;line-height:1.3;}
+h1{font-size:28px;border-bottom:3px solid var(--border);padding-bottom:12px;margin-bottom:8px;}
+h2{font-size:22px;border-bottom:2px solid var(--border);padding-bottom:6px;margin-top:36px;}
+h3{font-size:17px;margin-top:24px;}
+h4{font-size:15px;color:#0E7490;}
+p{margin:10px 0;}
+code{background:var(--code-bg);color:#0E7490;padding:2px 6px;border-radius:4px;font-family:'Fira Code',Consolas,monospace;font-size:13px;}
+pre{background:#164E63;color:#ECFEFF;padding:16px;border-radius:10px;overflow-x:auto;}
+pre code{background:transparent;color:inherit;padding:0;font-size:13px;}
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px;}
+th{background:var(--primary);color:#fff;text-align:left;padding:8px 10px;}
+td{border:1px solid var(--border);padding:8px 10px;vertical-align:top;}
+tr:nth-child(even) td{background:#F7FDFE;}
+blockquote{border-left:4px solid var(--primary);background:var(--code-bg);margin:12px 0;padding:8px 16px;color:#0E7490;font-size:14px;}
+figure.diagram{margin:16px 0;text-align:center;border:1px solid var(--border);border-radius:10px;padding:12px;background:#FFF;}
+figure.diagram svg{max-width:100%;height:auto;}
+a{color:var(--accent);}
+hr{border:none;border-top:2px solid var(--border);margin:28px 0;}
+ul,ol{padding-left:24px;}
+.footer{margin-top:40px;font-size:12px;color:#64748B;border-top:1px solid var(--border);padding-top:12px;}
+@media print{body{background:#fff}.wrap{box-shadow:none;padding:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1 id="documento-de-arquitectura-de-software-triajeia-sistema-de-triaje-multimodal-basado-en-ia">Documento de Arquitectura de Software: TriajeIA — Sistema de Triaje Multimodal basado en IA</h1>
+<p><strong>Versión:</strong> 1.0
+<strong>Fecha:</strong> 2026-08-13
+<strong>Tipo de documento:</strong> Arquitectura propuesta (Caso A — greenfield)
+<strong>Autor:</strong> Generado con asistencia de IA (skill <code>archi</code>, modo ML), revisado por el equipo del TFM
+<strong>Proyecto:</strong> TFM UNIR — "Desarrollo de un sistema de triaje multimodal basado en IA para la atención en urgencias médicas en Colombia" (Medina / Rivera / Soto, dir. Damaris Fuentes Lorenzo)</p>
+<hr />
+<h2 id="1-introduccion-y-objetivos">1. Introducción y Objetivos</h2>
+<h3 id="11-proposito-del-sistema">1.1 Propósito del sistema</h3>
+<p>TriajeIA es un sistema de <strong>apoyo a la decisión clínica</strong> (no autónomo — RNF-008) que asiste al profesional de urgencias en la clasificación de pacientes según los 5 niveles de triaje de la Resolución 5596/2015 de Colombia (I Resucitación, II Emergencia ≤30 min, III Urgencia 2–4 h, IV 4–12 h, V 12–24 h — RD-001). El sistema combina datos estructurados (signos vitales, demográficos) y texto clínico libre (motivo de consulta) mediante <strong>fusión temprana y tardía</strong> (RT-002), emite un nivel sugerido con probabilidades por clase y una explicación SHAP, y registra de forma dual la decisión de la IA y la del profesional (RD-003) para auditar concordancia.</p>
+<h3 id="12-requerimientos-funcionales-clave">1.2 Requerimientos funcionales clave</h3>
+<p>Priorizados desde <code>resources/functional/requests/</code> (16 RF):</p>
+<table>
+<thead>
+<tr>
+<th>Prioridad</th>
+<th>RF</th>
+<th>Función</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Alta</td>
+<td>RF-003/004/005</td>
+<td>Captura de signos vitales, evaluación clínica y motivo (estructurado + NLP)</td>
+</tr>
+<tr>
+<td>Alta</td>
+<td>RF-006/007</td>
+<td>Inferencia IA con nivel + probabilidades y umbral por clase</td>
+</tr>
+<tr>
+<td>Alta</td>
+<td>RF-009</td>
+<td>Explicación SHAP en lenguaje clínico</td>
+</tr>
+<tr>
+<td>Alta</td>
+<td>RF-008/010</td>
+<td>Gestión de modelos y concordancia dual IA vs. profesional</td>
+</tr>
+<tr>
+<td>Media</td>
+<td>RF-011/012</td>
+<td>Validación humana y auditoría (trazabilidad completa)</td>
+</tr>
+<tr>
+<td>Media</td>
+<td>RF-013</td>
+<td>Dashboard de KPIs operativos</td>
+</tr>
+<tr>
+<td>Media</td>
+<td>RF-014</td>
+<td>Roles y seguridad</td>
+</tr>
+<tr>
+<td>Baja</td>
+<td>RF-015/016</td>
+<td>Integraciones y pipeline de entrenamiento</td>
+</tr>
+</tbody>
+</table>
+<h3 id="13-atributos-de-calidad-requerimientos-no-funcionales">1.3 Atributos de calidad (requerimientos no funcionales)</h3>
+<table>
+<thead>
+<tr>
+<th>Atributo</th>
+<th>Prioridad</th>
+<th>Métrica / objetivo</th>
+<th>Fuente</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Calidad del modelo</td>
+<td>Alta</td>
+<td>F1 ≥ 0.82 · Precisión ≥ 0.85 · Recall ≥ 0.80 · AUC-ROC ≥ 0.87</td>
+<td>RNF-001</td>
+</tr>
+<tr>
+<td>Recall en clases críticas</td>
+<td>Muy alta</td>
+<td>Recall I + II priorizado (costo de subclasificar riesgo vital)</td>
+<td>RNF-003</td>
+</tr>
+<tr>
+<td>Latencia de inferencia</td>
+<td>Alta</td>
+<td>&lt; 3 s end-to-end en la demo</td>
+<td>RNF-002</td>
+</tr>
+<tr>
+<td>Disponibilidad</td>
+<td>Media</td>
+<td>Modo degradado: la app sigue usable sin IA (triaje manual)</td>
+<td>RNF-009</td>
+</tr>
+<tr>
+<td>Trazabilidad</td>
+<td>Alta</td>
+<td>Cada evento persiste input, versión de modelo, output y decisión humana</td>
+<td>RNF-007</td>
+</tr>
+<tr>
+<td>Privacidad</td>
+<td>Muy alta</td>
+<td>Anonimización obligatoria (Ley 1581/2012)</td>
+<td>RNF-006</td>
+</tr>
+</tbody>
+</table>
+<h3 id="14-interesados-stakeholders">1.4 Interesados (stakeholders)</h3>
+<ul>
+<li><strong>Profesionales de urgencias</strong> (usuarios finales de la demo).</li>
+<li><strong>Tribunal/directora del TFM</strong> (evalúa rigor científico y funcionalidad).</li>
+<li><strong>Autores del TFM</strong> (desarrollan, entrenan y documentan).</li>
+<li><strong>Comité de Ética / Hospital San Juan de Dios</strong> (autoriza y custodia los datos del cohorte).</li>
+</ul>
+<h2 id="2-restricciones">2. Restricciones</h2>
+<table>
+<thead>
+<tr>
+<th>Restricción</th>
+<th>Detalle</th>
+<th>Fuente</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Normativa</td>
+<td>Ley 1581/2012 (datos personales) + Resolución 5596/2015 (niveles y tiempos de triaje) + Art. 2.7 UNIR (autorización de Comité de Ética para datos clínicos)</td>
+<td>RNF-006, RD-001</td>
+</tr>
+<tr>
+<td>Stack decidido</td>
+<td>Python + Streamlit para la demo funcional (decisión cerrada por <code>refinador</code>, IA 14/100)</td>
+<td>RT-001, RT-007</td>
+</tr>
+<tr>
+<td>Alcance demo</td>
+<td>Datos sintéticos calibrados con distribuciones reales para la demo; datos reales solo en el pipeline offline de investigación</td>
+<td>Refinador 2026-08-13</td>
+</tr>
+<tr>
+<td>Fuentes de datos</td>
+<td>MIMIC-IV-ED (credencializada, pendiente CITI), cohorte Hospital San Juan de Dios (autorizado), datos.gov.co, Línea 123 Bogotá</td>
+<td>RT-006</td>
+</tr>
+<tr>
+<td>Presupuesto</td>
+<td>$0 en infraestructura (entorno académico, ejecución local)</td>
+<td>Contexto TFM</td>
+</tr>
+<tr>
+<td>Plazo</td>
+<td>Predepósito 14/07/2026 · depósito según calendario UNIR</td>
+<td>Contexto TFM</td>
+</tr>
+<tr>
+<td>Sin modo "a ciegas"</td>
+<td>Fuera de alcance en esta iteración (decisión refinador)</td>
+<td>RT-007</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3-alcance-y-contexto-del-sistema">3. Alcance y Contexto del Sistema</h2>
+<h3 id="31-contexto-de-negocio">3.1 Contexto de negocio</h3>
+<p>Actores externos: profesional de salud (valida y decide), paciente (fuente de datos, nunca usuario directo del sistema), administrador (gestiona modelos y usuarios). Sistemas externos: datasets de investigación (MIMIC, Socrata), futuro HIS hospitalario (integración RF-015 — solo definida, no implementada en la demo).</p>
+<h3 id="32-diagrama-de-contexto-c4-nivel-1">3.2 Diagrama de Contexto (C4 Nivel 1)</h3>
+<blockquote>
+<p><strong>Diagrama oficial:</strong> <code>Diagramas_TriajeIA.drawio</code> → pestaña <strong>1. C1 Contexto</strong>. El Mermaid es equivalente textual.</p>
+</blockquote>
+<figure class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120.0 790.0" width="1120.0" height="790.0" role="img" aria-label="1. C1 Contexto"><defs><marker id="arr-0" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0891B2"/></marker><marker id="arr-1" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker><marker id="arr-2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0891B2"/></marker><marker id="arr-3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748B"/></marker><marker id="arr-4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748B"/></marker><marker id="arr-5" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748B"/></marker><marker id="arr-6" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748B"/></marker></defs><path d="M130.0,295.0 L330.0,295.0 L330.0,360.0" fill="none" stroke="#0891B2" stroke-width="1.5"  marker-end="url(#arr-0)"/><path d="M330.0,360.0 L130.0,360.0 L130.0,295.0" fill="none" stroke="#059669" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arr-1)"/><path d="M130.0,485.0 L330.0,485.0 L330.0,360.0" fill="none" stroke="#0891B2" stroke-width="1.5"  marker-end="url(#arr-2)"/><path d="M130.0,675.0 L330.0,675.0 L330.0,360.0" fill="none" stroke="#64748B" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arr-3)"/><path d="M860.0,195.0 L690.0,195.0 L690.0,360.0" fill="none" stroke="#64748B" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arr-4)"/><path d="M860.0,355.0 L690.0,355.0 L690.0,360.0" fill="none" stroke="#64748B" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arr-5)"/><path d="M860.0,515.0 L690.0,515.0 L690.0,360.0" fill="none" stroke="#64748B" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arr-6)"/><circle cx="125.0" cy="289.8" r="6.3" fill="#ECFEFF" stroke="#0891B2"/><path d="M125.0,306.3 L125.0,342.6 M102.6,320.6 L147.4,320.6 M125.0,342.6 L104.0,371.2 M125.0,342.6 L146.0,371.2" fill="none" stroke="#0891B2" stroke-width="1.5" /><text x="125.0" y="398.0" text-anchor="middle" font-size="12" font-family="Fira Sans,sans-serif" fill="#164E63">Profesional de urgencias</text><circle cx="125.0" cy="479.8" r="6.3" fill="#ECFEFF" stroke="#0891B2"/><path d="M125.0,496.3 L125.0,532.6 M102.6,510.6 L147.4,510.6 M125.0,532.6 L104.0,561.2 M125.0,532.6 L146.0,561.2" fill="none" stroke="#0891B2" stroke-width="1.5" /><text x="125.0" y="588.0" text-anchor="middle" font-size="12" font-family="Fira Sans,sans-serif" fill="#164E63">Administrador</text><circle cx="125.0" cy="669.8" r="6.3" fill="#ECFEFF" stroke="#0891B2"/><path d="M125.0,686.3 L125.0,722.6 M102.6,700.6 L147.4,700.6 M125.0,722.6 L104.0,751.2 M125.0,722.6 L146.0,751.2" fill="none" stroke="#0891B2" stroke-width="1.5" /><text x="125.0" y="778.0" text-anchor="middle" font-size="12" font-family="Fira Sans,sans-serif" fill="#164E63">Paciente</text><rect x="360.0" y="290.0" width="360.0" height="200.0" rx="10" fill="#ECFEFF" stroke="#0891B2" /><text x="540.0" y="374.2" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="14" fill="#164E63">TriajeIA</text><text x="540.0" y="392.2" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="14" fill="#164E63">Sistema de apoyo al triaje (Res. 5596/2015)</text><text x="540.0" y="410.2" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="14" fill="#164E63">sugiere nivel I-V + SHAP · decide el profesional</text><path d="M890.0,194.0 L890.0,256.0 A14,14 0 0 0 1090.0,256.0 L1090.0,194.0 A14,14 0 0 0 890.0,194.0 Z" fill="#FFF3BF" stroke="#F59E0B" /><ellipse cx="990.0" cy="194.0" rx="100.0" ry="14" fill="#FFF3BF" stroke="#F59E0B" /><text x="990.0" y="211.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">MIMIC-IV-ED</text><text x="990.0" y="226.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">(preentrenamiento</text><text x="990.0" y="241.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">~425k visitas)</text><path d="M890.0,354.0 L890.0,416.0 A14,14 0 0 0 1090.0,416.0 L1090.0,354.0 A14,14 0 0 0 890.0,354.0 Z" fill="#FFF3BF" stroke="#F59E0B" /><ellipse cx="990.0" cy="354.0" rx="100.0" ry="14" fill="#FFF3BF" stroke="#F59E0B" /><text x="990.0" y="378.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">Cohorte Hospital SJdD</text><text x="990.0" y="393.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">(43.594 episodios)</text><path d="M890.0,514.0 L890.0,576.0 A14,14 0 0 0 1090.0,576.0 L1090.0,514.0 A14,14 0 0 0 890.0,514.0 Z" fill="#FFF3BF" stroke="#F59E0B" /><ellipse cx="990.0" cy="514.0" rx="100.0" ry="14" fill="#FFF3BF" stroke="#F59E0B" /><text x="990.0" y="538.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">datos.gov.co / Línea 123</text><text x="990.0" y="553.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">(89.453 triajes + BDUA)</text><rect x="310.0" y="650.0" width="460.0" height="40.0" rx="0" fill="#E8F1F6" stroke="none" /><text x="540.0" y="671.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63" font-style="italic">Límite: demo académica — sin HIS ni integración productiva (RF-015 solo definida)</text><g><rect x="226.0" y="316.5" width="188" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="230.0" y="327.5" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#0891B2">usa la app (registra / valida)</text></g><g><rect x="226.0" y="316.5" width="134" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="230.0" y="327.5" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#059669">nivel sugerido + SHAP</text></g><g><rect x="226.0" y="411.5" width="170" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="230.0" y="422.5" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#0891B2">gestiona modelos y usuarios</text></g><g><rect x="226.0" y="506.5" width="170" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="230.0" y="517.5" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#64748B">datos del paciente (fuente)</text></g><g><rect x="771.0" y="266.5" width="134" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="775.0" y="277.5" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#64748B">entrenamiento offline</text></g><g><rect x="771.0" y="346.5" width="104" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="775.0" y="357.5" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#64748B">validación local</text></g><g><rect x="771.0" y="426.5" width="146" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="775.0" y="437.5" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#64748B">calibración demográfica</text></g></svg></figure>
+<h2 id="4-estrategia-de-solucion">4. Estrategia de Solución</h2>
+<h3 id="41-por-que-ml-y-no-reglas-deterministas">4.1 Por qué ML y no reglas deterministas</h3>
+<p>Las escalas clínicas (MTS, ESI) son reglas expertas estáticas; el proyecto evalúa si un modelo multimodal supera o complementa esa cota (benchmark de literatura, RT-008). El ML se justifica por: (a) patrón de decisión de alta dimensión (signos + texto + demografía), (b) objetivo de investigación del TFM (comparar fusión temprana vs. tardía), (c) existencia de datasets reales etiquetados. La responsabilidad se divide: <strong>el modelo sugiere</strong> (nivel + probabilidades + explicación), <strong>las reglas clínicas y el profesional deciden</strong> — el sistema nunca autocompleta el nivel del profesional (RD-003).</p>
+<h3 id="42-arquitecturas-candidatas-evaluadas-paso-09-de-archi">4.2 Arquitecturas candidatas evaluadas (Paso 0.9 de <code>archi</code>)</h3>
+<p><strong>Drivers:</strong> 1º entrega de demo funcional en semanas, 2º reproducibilidad y trazabilidad científica, 3º costo $0, 4º experiencia de uso en demo, 5º extensibilidad futura.</p>
+<table>
+<thead>
+<tr>
+<th>Criterio (peso)</th>
+<th>A: Monolito Streamlit + SQLite + modelo empaquetado</th>
+<th>B: React + FastAPI + PostgreSQL + serving dedicado</th>
+<th>C: FastAPI + Streamlit (2 contenedores)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Entrega rápida (30%)</td>
+<td>5</td>
+<td>2</td>
+<td>3</td>
+</tr>
+<tr>
+<td>Reproducibilidad (25%)</td>
+<td>5</td>
+<td>4</td>
+<td>4</td>
+</tr>
+<tr>
+<td>Costo (20%)</td>
+<td>5</td>
+<td>3</td>
+<td>4</td>
+</tr>
+<tr>
+<td>UX demo (15%)</td>
+<td>4</td>
+<td>5</td>
+<td>4</td>
+</tr>
+<tr>
+<td>Extensibilidad (10%)</td>
+<td>3</td>
+<td>5</td>
+<td>4</td>
+</tr>
+<tr>
+<td><strong>Ponderado</strong></td>
+<td><strong>4.70</strong></td>
+<td>3.45</td>
+<td>3.70</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Decisión: Candidata A.</strong> La demo es mono-usuario, académica y de alcance acotado; un backend separado o un serving dedicado agregan complejidad sin beneficio medible para los drivers. La extensibilidad se preserva aislando la lógica de dominio y el motor de inferencia en módulos independientes (Sección 6), de modo que migrar a FastAPI/React sea evolutivo, no un rewrite.</p>
+<h3 id="43-estrategia-de-solucion">4.3 Estrategia de solución</h3>
+<p><strong>Monolito modular Streamlit</strong> (patrón Layered + Services): capas <code>views</code> (pantallas), <code>domain</code> (entidades y reglas), <code>services</code> (inferencia, NLP, validación), <code>infra</code> (BD, auth, configuración). El modelo se empaqueta como artefacto versionado (<code>joblib</code>/ONNX + registro MLflow) y se carga en memoria al iniciar la app (latencias &lt; 3 s, RNF-002).</p>
+<h2 id="5-vista-de-contenedores-c4-nivel-2">5. Vista de Contenedores (C4 Nivel 2)</h2>
+<blockquote>
+<p><strong>Diagrama oficial:</strong> <code>Diagramas_TriajeIA.drawio</code> → pestaña <strong>2. C2 Contenedores</strong>.</p>
+</blockquote>
+<figure class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100.0 720.0" width="1100.0" height="720.0" role="img" aria-label="2. C2 Contenedores"><defs><marker id="arr-0" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0891B2"/></marker><marker id="arr-1" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#F59E0B"/></marker><marker id="arr-2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker><marker id="arr-3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7C3AED"/></marker><marker id="arr-4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748B"/></marker></defs><path d="M880.0,605.0 L720.0,605.0 L720.0,275.0" fill="none" stroke="#0891B2" stroke-width="1.5"  marker-end="url(#arr-0)"/><path d="M570.0,330.0 L570.0,460.0 L420.0,460.0" fill="none" stroke="#F59E0B" stroke-width="1.5"  marker-end="url(#arr-1)"/><path d="M570.0,330.0 L570.0,460.0 L730.0,460.0" fill="none" stroke="#059669" stroke-width="1.5"  marker-end="url(#arr-2)"/><path d="M250.0,285.0 L640.0,285.0 L640.0,505.0" fill="none" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arr-3)"/><path d="M145.0,460.0 L145.0,350.0 L155.0,350.0" fill="none" stroke="#64748B" stroke-width="1.5"  marker-end="url(#arr-4)"/><rect x="310.0" y="170.0" width="760.0" height="520.0" rx="10" fill="none" stroke="#0891B2" stroke-dasharray="6 4"/><text x="690.0" y="431.9" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="13" fill="#164E63" font-weight="700">TriajeIA — demo local</text><circle cx="940.0" cy="606.2" r="5.3999999999999995" fill="#ECFEFF" stroke="#0891B2"/><path d="M940.0,619.7 L940.0,649.4 M920.8,631.4 L959.2,631.4 M940.0,649.4 L922.0,672.8 M940.0,649.4 L958.0,672.8" fill="none" stroke="#0891B2" stroke-width="1.5" /><text x="940.0" y="698.0" text-anchor="middle" font-size="12" font-family="Fira Sans,sans-serif" fill="#164E63">Profesional (navegador)</text><rect x="450.0" y="250.0" width="300.0" height="110.0" rx="10" fill="#A5D8FF" stroke="#0891B2" /><text x="600.0" y="290.6" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="12" fill="#164E63">app-streamlit</text><text x="600.0" y="306.6" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="12" fill="#164E63">Python 3.12 + Streamlit</text><text x="600.0" y="322.6" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="12" fill="#164E63">UI + orquestación + inferencia en proceso</text><path d="M360.0,504.0 L360.0,566.0 A14,14 0 0 0 540.0,566.0 L540.0,504.0 A14,14 0 0 0 360.0,504.0 Z" fill="#FFF3BF" stroke="#F59E0B" /><ellipse cx="450.0" cy="504.0" rx="90.0" ry="14" fill="#FFF3BF" stroke="#F59E0B" /><text x="450.0" y="521.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">triaje-db</text><text x="450.0" y="536.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">SQLite (SQLAlchemy ORM)</text><text x="450.0" y="551.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">eventos · auditoría · usuarios</text><path d="M670.0,502.0 L670.0,580.0 L850.0,580.0 L850.0,502.0 L769.0,502.0 L751.0,490.0 L682.0,490.0 Z" fill="#B2F2BB" stroke="#059669" /><text x="760.0" y="521.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">Model Registry</text><text x="760.0" y="536.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">artifacts/models + MLflow</text><text x="760.0" y="551.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">modelos versionados vX</text><rect x="90.0" y="250.0" width="190.0" height="130.0" rx="10" fill="#D0BFFF" stroke="#7C3AED" /><text x="185.0" y="293.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">training-pipeline (offline)</text><text x="185.0" y="308.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">notebooks + scripts</text><text x="185.0" y="323.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">pandas · sklearn · XGBoost</text><text x="185.0" y="338.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">transformers · SHAP · Optuna</text><path d="M90.0,504.0 L90.0,556.0 A14,14 0 0 0 260.0,556.0 L260.0,504.0 A14,14 0 0 0 90.0,504.0 Z" fill="#E8F1F6" stroke="#64748B" /><ellipse cx="175.0" cy="504.0" rx="85.0" ry="14" fill="#E8F1F6" stroke="#64748B" /><text x="175.0" y="523.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">datasets/ crudos</text><text x="175.0" y="538.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">MIMIC · SJdD · Socrata</text><g><rect x="796.0" y="429.0" width="62" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="800.0" y="440.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#0891B2">navegador</text></g><g><rect x="491.0" y="384.0" width="68" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="495.0" y="395.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#F59E0B">SQLAlchemy</text></g><g><rect x="646.0" y="384.0" width="110" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="650.0" y="395.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#059669">carga al arranque</text></g><g><rect x="441.0" y="384.0" width="164" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="445.0" y="395.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#7C3AED">registra modelo versionado</text></g><g><rect x="146.0" y="394.0" width="74" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="150.0" y="405.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#64748B">ingesta CSV</text></g></svg></figure>
+<table>
+<thead>
+<tr>
+<th>Contenedor</th>
+<th>Tecnología</th>
+<th>Responsabilidad</th>
+<th>Por qué</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>app-streamlit</code></td>
+<td>Python 3.12 + Streamlit</td>
+<td>UI + orquestación del flujo de triaje + inferencia en proceso</td>
+<td>Único framework decidido (RT-007); entrega rápida; &lt;3 s sin salto de red</td>
+</tr>
+<tr>
+<td><code>triaje-db</code></td>
+<td>SQLite (SQLAlchemy ORM)</td>
+<td>Persistencia local de eventos, auditoría y usuarios</td>
+<td>Cero configuración, mono-usuario, datos demo sintéticos; migrable a PostgreSQL (ADR-002)</td>
+</tr>
+<tr>
+<td><code>model-registry</code></td>
+<td>Directorio <code>artifacts/models/</code> + MLflow (local)</td>
+<td>Modelos versionados + metadatos de corrida</td>
+<td>Reproducibilidad científica (RT-005)</td>
+</tr>
+<tr>
+<td><code>training-pipeline</code></td>
+<td>Python (pandas, scikit-learn, XGBoost, transformers)</td>
+<td>Entrenamiento/evaluación offline</td>
+<td>No forma parte del runtime de la demo (Sección 5.2)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="51-arquitectura-de-datos">5.1 Arquitectura de Datos</h3>
+<blockquote>
+<p><strong>Diagrama oficial:</strong> <code>Diagramas_TriajeIA.drawio</code> → pestaña <strong>6. ML C2 Pipeline</strong> (pipeline de datos completo).</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Fuente</th>
+<th>Tipo</th>
+<th>Volumen</th>
+<th>Rol</th>
+<th>Sensibilidad</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MIMIC-IV-ED</td>
+<td>Tabular + texto libre</td>
+<td>~425k visitas (ED), estático</td>
+<td>Preentrenamiento / baseline</td>
+<td>Credencial PhysioNet + CITI</td>
+</tr>
+<tr>
+<td>Cohorte Hospital San Juan de Dios</td>
+<td>Tabular (morbilidad + etiqueta triaje)</td>
+<td>43.594 episodios</td>
+<td>Validación contexto local</td>
+<td>Datos de salud — anonimizados, autorización vigente</td>
+</tr>
+<tr>
+<td>datos.gov.co — triaje nacional</td>
+<td>Tabular</td>
+<td>89.453 eventos</td>
+<td>Calibración de distribución I–V</td>
+<td>Pública</td>
+</tr>
+<tr>
+<td>BDUA (contributivo/subsidiado)</td>
+<td>Tabular</td>
+<td>~11 M registros</td>
+<td>Perfil demográfico</td>
+<td>Pública</td>
+</tr>
+<tr>
+<td>Línea 123 Bogotá</td>
+<td>Texto (llamadas)</td>
+<td>~100 meses</td>
+<td>NLP motivo de consulta</td>
+<td>Pública</td>
+</tr>
+<tr>
+<td>Datos sintéticos demo</td>
+<td>Tabular + texto</td>
+<td>Generados</td>
+<td>Demo funcional</td>
+<td>Sintéticos, calibrados con distribuciones reales</td>
+</tr>
+</tbody>
+</table>
+<p>Pipeline (13 pasos, RD-006): ingesta CSV → limpieza/validación → anonimización (Ley 1581) → feature engineering (normalización, one-hot, embeddings de texto) → split <strong>estratificado por nivel</strong> 70/15/15 con <strong>semilla fija</strong> (evita leakage: split previo a cualquier fit; el texto se vectoriza con un modelo preentrenado, sin reentrenar con el test).</p>
+<figure class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180.0 700.0" width="1180.0" height="700.0" role="img" aria-label="6. ML C2 Pipeline"><defs><marker id="arr-0" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748B"/></marker><marker id="arr-1" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748B"/></marker><marker id="arr-2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748B"/></marker><marker id="arr-3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748B"/></marker><marker id="arr-4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7C3AED"/></marker><marker id="arr-5" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker><marker id="arr-6" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker><marker id="arr-7" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0891B2"/></marker></defs><path d="M160.0,235.0 L200.0,235.0 L200.0,235.0" fill="none" stroke="#64748B" stroke-width="1.5"  marker-end="url(#arr-0)"/><path d="M330.0,235.0 L370.0,235.0 L370.0,235.0" fill="none" stroke="#64748B" stroke-width="1.5"  marker-end="url(#arr-1)"/><path d="M500.0,235.0 L540.0,235.0 L540.0,235.0" fill="none" stroke="#64748B" stroke-width="1.5"  marker-end="url(#arr-2)"/><path d="M680.0,235.0 L720.0,235.0 L720.0,235.0" fill="none" stroke="#64748B" stroke-width="1.5"  marker-end="url(#arr-3)"/><path d="M860.0,235.0 L900.0,235.0 L900.0,250.0" fill="none" stroke="#7C3AED" stroke-width="1.5"  marker-end="url(#arr-4)"/><path d="M900.0,250.0 L240.0,250.0 L240.0,450.0" fill="none" stroke="#059669" stroke-width="1.5"  marker-end="url(#arr-5)"/><path d="M240.0,450.0 L300.0,450.0 L300.0,450.0" fill="none" stroke="#059669" stroke-width="1.5"  marker-end="url(#arr-6)"/><path d="M500.0,450.0 L560.0,450.0 L560.0,450.0" fill="none" stroke="#0891B2" stroke-width="1.5"  marker-end="url(#arr-7)"/><rect x="70.0" y="230.0" width="120.0" height="70.0" rx="10" fill="#E8F1F6" stroke="#64748B" /><text x="130.0" y="258.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">1. Ingesta</text><text x="130.0" y="273.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">CSV (batch)</text><rect x="230.0" y="230.0" width="130.0" height="70.0" rx="10" fill="#E8F1F6" stroke="#64748B" /><text x="295.0" y="258.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">2. Limpieza y validación</text><text x="295.0" y="273.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">nulos · outliers · dedup</text><rect x="400.0" y="230.0" width="130.0" height="70.0" rx="10" fill="#FFC9C9" stroke="#DC2626" /><text x="465.0" y="258.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">3. Anonimización</text><text x="465.0" y="273.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">Ley 1581/2012</text><rect x="570.0" y="230.0" width="140.0" height="70.0" rx="10" fill="#E8F1F6" stroke="#64748B" /><text x="640.0" y="251.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">4. Feature engineering</text><text x="640.0" y="266.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">normalización · one-hot</text><text x="640.0" y="281.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">embeddings de texto</text><rect x="750.0" y="230.0" width="140.0" height="70.0" rx="10" fill="#FFF3BF" stroke="#F59E0B" /><text x="820.0" y="251.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">5. Split estratificado</text><text x="820.0" y="266.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">70 / 15 / 15 · semilla fija</text><text x="820.0" y="281.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">(sin leakage)</text><rect x="930.0" y="220.0" width="220.0" height="120.0" rx="10" fill="#D0BFFF" stroke="#7C3AED" /><text x="1040.0" y="251.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">6. Entrenamiento</text><text x="1040.0" y="266.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">Baselines: LR · RF · XGBoost</text><text x="1040.0" y="281.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">Texto: BERT clínico español</text><text x="1040.0" y="296.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">Fusión temprana + tardía</text><text x="1040.0" y="311.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">Optuna (hiperparámetros)</text><rect x="70.0" y="430.0" width="200.0" height="100.0" rx="10" fill="#B2F2BB" stroke="#059669" /><text x="170.0" y="458.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">7. Evaluación</text><text x="170.0" y="473.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">F1 · P · R · AUC por clase</text><text x="170.0" y="488.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">matriz 5×5 · McNemar</text><text x="170.0" y="503.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">recall I-II prioritario</text><rect x="330.0" y="430.0" width="200.0" height="100.0" rx="10" fill="#B2F2BB" stroke="#059669" /><text x="430.0" y="458.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">8. Registro y versionado</text><text x="430.0" y="473.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">MLflow (mlruns/)</text><text x="430.0" y="488.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">artifacts/models/vX</text><text x="430.0" y="503.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">convención data-v&lt;fecha&gt;</text><rect x="590.0" y="430.0" width="200.0" height="100.0" rx="10" fill="#A5D8FF" stroke="#0891B2" /><text x="690.0" y="466.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">9. Inferencia demo</text><text x="690.0" y="481.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">(en proceso, &lt; 3 s)</text><text x="690.0" y="496.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">umbrales por clase</text><rect x="280.0" y="630.0" width="700.0" height="40.0" rx="0" fill="#E8F1F6" stroke="none" /><text x="630.0" y="651.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63" font-style="italic">Tracking transversal: MLflow registra parámetros · métricas · semillas · artefactos de cada corrida (reproducibilidad RT-005)</text><g><rect x="566.0" y="339.0" width="104" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="570.0" y="350.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#059669">modelo candidato</text></g><g><rect x="266.0" y="439.0" width="128" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="270.0" y="450.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#059669">artefacto + métricas</text></g><g><rect x="526.0" y="439.0" width="110" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="530.0" y="450.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#0891B2">carga al arranque</text></g></svg></figure>
+<h3 id="52-arquitectura-de-entrenamiento">5.2 Arquitectura de Entrenamiento</h3>
+<blockquote>
+<p><strong>Diagramas oficiales:</strong> <code>Diagramas_TriajeIA.drawio</code> → pestañas <strong>5. ML C1 Contexto</strong>, <strong>6. ML C2 Pipeline</strong> y <strong>7. Arquitectura del Modelo</strong>.</p>
+</blockquote>
+<ol>
+<li><strong>Baselines (obligatorios, RT-004):</strong> Regresión Logística y Random Forest solo con datos estructurados; XGBoost como baseline fuerte. Ningún modelo complejo se acepta sin superar esta cota con significancia estadística.</li>
+<li><strong>Submodelo de texto:</strong> BERT clínico en español (BETO / biomédico), embeddings del motivo de consulta (RT-003).</li>
+<li><strong>Fusión:</strong> temprana (concatenación de features + clasificador único) y tardía (probabilidades por submodelo combinadas con meta-modelo de Regresión Logística — RT-010). Ambas se entrenan y comparan (requisito del TFM).</li>
+<li><strong>Hiperparámetros:</strong> Optuna (búsqueda bayesiana), métrica objetivo F1-macro con recall ponderado en clases I–II.</li>
+<li><strong>Tracking:</strong> MLflow local (<code>mlruns/</code>) registra parámetros, métricas, artefactos y semillas; <strong>DVC</strong> o convención de nombres versiona los datasets (<code>data-v&lt;fecha&gt;-&lt;hash&gt;</code>).</li>
+<li><strong>Cómputo:</strong> CPU local del equipo (los modelos y el volumen lo permiten); sin GPU requerida.</li>
+<li><strong>Umbrales por clase:</strong> ajuste de thresholds por nivel optimizando recall I–II (RT-009, RNF-003), no solo argmax.</li>
+</ol>
+<h3 id="53-evaluacion-y-metricas">5.3 Evaluación y Métricas</h3>
+<table>
+<thead>
+<tr>
+<th>Métrica</th>
+<th>Meta (RNF-001)</th>
+<th>Global</th>
+<th>Por clase I–V (obligatorio)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F1-score</td>
+<td>≥ 0.82</td>
+<td>reportar</td>
+<td>reportar todas</td>
+</tr>
+<tr>
+<td>Precisión</td>
+<td>≥ 0.85</td>
+<td>reportar</td>
+<td>reportar</td>
+</tr>
+<tr>
+<td>Recall</td>
+<td>≥ 0.80</td>
+<td>reportar</td>
+<td><strong>prioridad en I y II</strong></td>
+</tr>
+<tr>
+<td>AUC-ROC</td>
+<td>≥ 0.87</td>
+<td>one-vs-rest</td>
+<td>curva por nivel</td>
+</tr>
+</tbody>
+</table>
+<p>Además: matriz de confusión 5×5 del modelo ganador, comparación contra baselines con test estadístico (McNemar entre pares), comparación contra benchmark de literatura MTS/ESI (RT-008) y contra la distribución real nacional (RNF-004). <strong>Desbalance</strong> (real: III 88.5%, IV 7.8%, II 3.0%, V 0.5%, I 0.2% — RNF-004): class weights + threshold tuning; SMOTE se evalúa pero no es default (ADR-003).</p>
+<h3 id="54-explicabilidad-xai">5.4 Explicabilidad (XAI)</h3>
+<ul>
+<li><strong>Técnica:</strong> SHAP — TreeExplainer para XGBoost, KernelExplainer para el meta-modelo de fusión tardía, SHAP de transformers para el submodelo de texto (HU-E4-02).</li>
+<li><strong>Contrato con el usuario:</strong> top-N variables traducidas a lenguaje clínico ("La saturación de O₂ baja (88 %) fue el factor de mayor peso") + comparación implícita con criterios MTS; impactos +/− diferenciados (mockups <code>s-shap</code>).</li>
+<li><strong>Alcance:</strong> local (explicación por evento) + global (importancia agregada en Dashboard/Gestión de modelos, fase 2).</li>
+</ul>
+<h2 id="6-vista-de-componentes-c4-nivel-3-contenedor-app-streamlit">6. Vista de Componentes (C4 Nivel 3 — contenedor <code>app-streamlit</code>)</h2>
+<blockquote>
+<p><strong>Diagrama oficial:</strong> <code>Diagramas_TriajeIA.drawio</code> → pestaña <strong>3. C3 Componentes</strong>.</p>
+</blockquote>
+<figure class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1190.0 830.0" width="1190.0" height="830.0" role="img" aria-label="3. C3 Componentes"><defs><marker id="arr-0" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7C3AED"/></marker><marker id="arr-1" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7C3AED"/></marker><marker id="arr-2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7C3AED"/></marker><marker id="arr-3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker><marker id="arr-4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker><marker id="arr-5" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748B"/></marker><marker id="arr-6" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748B"/></marker><marker id="arr-7" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748B"/></marker><marker id="arr-8" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker></defs><path d="M620.0,145.0 L450.0,145.0 L450.0,320.0" fill="none" stroke="#7C3AED" stroke-width="1.5"  marker-end="url(#arr-0)"/><path d="M537.5,170.0 L537.5,280.0 L575.0,280.0" fill="none" stroke="#7C3AED" stroke-width="1.5"  marker-end="url(#arr-1)"/><path d="M817.5,170.0 L817.5,280.0 L785.0,280.0" fill="none" stroke="#7C3AED" stroke-width="1.5"  marker-end="url(#arr-2)"/><path d="M355.0,360.0 L355.0,430.0 L405.0,430.0" fill="none" stroke="#059669" stroke-width="1.5"  marker-end="url(#arr-3)"/><path d="M900.0,145.0 L510.0,145.0 L510.0,465.0" fill="none" stroke="#059669" stroke-width="1.5"  marker-end="url(#arr-4)"/><path d="M405.0,500.0 L405.0,580.0 L325.0,580.0" fill="none" stroke="#64748B" stroke-width="1.5"  marker-end="url(#arr-5)"/><path d="M117.5,170.0 L117.5,580.0 L485.0,580.0" fill="none" stroke="#64748B" stroke-width="1.5"  marker-end="url(#arr-6)"/><path d="M450.0,320.0 L580.0,320.0 L580.0,605.0" fill="none" stroke="#64748B" stroke-width="1.5"  marker-end="url(#arr-7)"/><path d="M510.0,465.0 L560.0,465.0 L560.0,465.0" fill="none" stroke="#059669" stroke-width="1.5"  marker-end="url(#arr-8)"/><rect x="70.0" y="90.0" width="1090.0" height="710.0" rx="10" fill="none" stroke="#0891B2" stroke-dasharray="6 4"/><text x="615.0" y="446.9" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="13" fill="#164E63" font-weight="700">app-streamlit (C4 N3)</text><rect x="90.0" y="150.0" width="115.0" height="50.0" rx="10" fill="#ECFEFF" stroke="#0891B2" /><text x="147.5" y="176.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">views.login</text><rect x="230.0" y="150.0" width="115.0" height="50.0" rx="10" fill="#ECFEFF" stroke="#0891B2" /><text x="287.5" y="176.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">views.registro</text><rect x="370.0" y="150.0" width="115.0" height="50.0" rx="10" fill="#ECFEFF" stroke="#0891B2" /><text x="427.5" y="176.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">views.signos</text><rect x="510.0" y="150.0" width="115.0" height="50.0" rx="10" fill="#ECFEFF" stroke="#0891B2" /><text x="567.5" y="176.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">views.evaluacion</text><rect x="650.0" y="150.0" width="115.0" height="50.0" rx="10" fill="#ECFEFF" stroke="#0891B2" /><text x="707.5" y="176.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">views.clasificacion</text><rect x="790.0" y="150.0" width="115.0" height="50.0" rx="10" fill="#ECFEFF" stroke="#0891B2" /><text x="847.5" y="176.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">views.shap</text><rect x="930.0" y="150.0" width="115.0" height="50.0" rx="10" fill="#ECFEFF" stroke="#0891B2" /><text x="987.5" y="176.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">views.validacion</text><rect x="1070.0" y="150.0" width="80.0" height="50.0" rx="10" fill="#ECFEFF" stroke="#0891B2" /><text x="1110.0" y="176.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">views.cierre</text><rect x="290.0" y="310.0" width="190.0" height="80.0" rx="10" fill="#D0BFFF" stroke="#7C3AED" /><text x="385.0" y="336.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">services.inference</text><text x="385.0" y="351.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">carga modelo + predict</text><text x="385.0" y="366.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">+ umbrales por clase</text><rect x="530.0" y="310.0" width="150.0" height="80.0" rx="10" fill="#D0BFFF" stroke="#7C3AED" /><text x="605.0" y="343.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">services.nlp</text><text x="605.0" y="358.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">vectorización texto</text><rect x="730.0" y="310.0" width="170.0" height="80.0" rx="10" fill="#D0BFFF" stroke="#7C3AED" /><text x="815.0" y="351.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">services.shap_explainer</text><rect x="330.0" y="460.0" width="210.0" height="70.0" rx="10" fill="#B2F2BB" stroke="#059669" /><text x="435.0" y="488.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">domain.entities</text><text x="435.0" y="503.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">EventoTriaje dual (RD-003)</text><rect x="590.0" y="460.0" width="210.0" height="70.0" rx="10" fill="#B2F2BB" stroke="#059669" /><text x="695.0" y="488.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">domain.reglas</text><text x="695.0" y="503.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">rangos clínicos · concordancia</text><rect x="290.0" y="610.0" width="130.0" height="50.0" rx="10" fill="#E8F1F6" stroke="#64748B" /><text x="355.0" y="636.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">infra.db</text><rect x="450.0" y="610.0" width="130.0" height="50.0" rx="10" fill="#E8F1F6" stroke="#64748B" /><text x="515.0" y="636.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">infra.auth</text><rect x="610.0" y="610.0" width="130.0" height="50.0" rx="10" fill="#E8F1F6" stroke="#64748B" /><text x="675.0" y="636.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">infra.config</text><rect x="770.0" y="610.0" width="130.0" height="50.0" rx="10" fill="#E8F1F6" stroke="#64748B" /><text x="835.0" y="636.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">infra.logging</text><g><rect x="531.0" y="221.5" width="50" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="535.0" y="232.5" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#7C3AED">predict</text></g><g><rect x="552.25" y="214.0" width="62" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="556.25" y="225.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#7C3AED">embedding</text></g><g><rect x="797.25" y="214.0" width="56" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="801.25" y="225.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#7C3AED">explicar</text></g><g><rect x="376.0" y="384.0" width="92" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="380.0" y="395.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#059669">persistir dual</text></g><g><rect x="701.0" y="294.0" width="86" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="705.0" y="305.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#059669">validar nivel</text></g><g><rect x="361.0" y="529.0" width="26" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="365.0" y="540.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#64748B">ORM</text></g><g><rect x="297.25" y="364.0" width="44" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="301.25" y="375.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#64748B">bcrypt</text></g><g><rect x="511.0" y="451.5" width="56" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="515.0" y="462.5" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#64748B">settings</text></g><g><rect x="531.0" y="454.0" width="80" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="535.0" y="465.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#059669">concordancia</text></g></svg></figure>
+<p>Los componentes de dominio (<code>domain/</code>) no dependen de Streamlit — esa frontera es la que permitirá evolucionar a FastAPI+React sin reescribir lógica (Candidata B).</p>
+<h2 id="7-opcional-vista-de-codigo">7. [Opcional] Vista de Código</h2>
+<blockquote>
+<p><strong>Diagrama oficial:</strong> <code>Diagramas_TriajeIA.drawio</code> → pestaña <strong>4. C4 Código (clases clave)</strong> — clases del dominio e inferencia. Los diagramas de secuencia equivalentes están en las pestañas 9 y 10 del mismo archivo.</p>
+</blockquote>
+<h2 id="8-vistas-de-ejecucion-diagramas-de-secuencia">8. Vistas de Ejecución: Diagramas de Secuencia</h2>
+<h3 id="81-flujo-critico-1-inferencia-end-to-end-hu-e4-01-rnf-002-3-s">8.1 Flujo crítico 1 — Inferencia end-to-end (HU-E4-01, RNF-002 &lt; 3 s)</h3>
+<blockquote>
+<p><strong>Diagrama oficial:</strong> <code>Diagramas_TriajeIA.drawio</code> → pestaña <strong>9. Secuencia Inferencia</strong>.</p>
+</blockquote>
+<figure class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180.0 720.0" width="1180.0" height="720.0" role="img" aria-label="9. Secuencia Inferencia"><defs><marker id="arr-0" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0891B2"/></marker><marker id="arr-1" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7C3AED"/></marker><marker id="arr-2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker><marker id="arr-3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker><marker id="arr-4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7C3AED"/></marker><marker id="arr-5" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0891B2"/></marker><marker id="arr-6" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#F59E0B"/></marker><marker id="arr-7" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#F59E0B"/></marker></defs><path d="M175.0,190.0 L405.0,190.0" fill="none" stroke="#0891B2" stroke-width="1.5"  marker-end="url(#arr-0)"/><path d="M405.0,250.0 L645.0,250.0" fill="none" stroke="#7C3AED" stroke-width="1.5"  marker-end="url(#arr-1)"/><path d="M645.0,310.0 L875.0,310.0" fill="none" stroke="#059669" stroke-width="1.5"  marker-end="url(#arr-2)"/><path d="M875.0,370.0 L645.0,370.0" fill="none" stroke="#059669" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arr-3)"/><path d="M645.0,430.0 L405.0,430.0" fill="none" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arr-4)"/><path d="M175.0,490.0 L405.0,490.0" fill="none" stroke="#0891B2" stroke-width="1.5"  marker-end="url(#arr-5)"/><path d="M405.0,570.0 L1090.0,570.0" fill="none" stroke="#F59E0B" stroke-width="1.5"  marker-end="url(#arr-6)"/><path d="M1090.0,650.0 L405.0,650.0" fill="none" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arr-7)"/><rect x="110.0" y="90.0" width="130.0" height="40.0" rx="10" fill="#ECFEFF" stroke="#0891B2" /><text x="175.0" y="111.6" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="12" fill="#164E63">Profesional</text><rect x="330.0" y="90.0" width="150.0" height="40.0" rx="10" fill="#ECFEFF" stroke="#0891B2" /><text x="405.0" y="111.6" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="12" fill="#164E63">views.clasificacion</text><rect x="570.0" y="90.0" width="150.0" height="40.0" rx="10" fill="#D0BFFF" stroke="#7C3AED" /><text x="645.0" y="111.6" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="12" fill="#164E63">services.inference</text><rect x="810.0" y="90.0" width="130.0" height="40.0" rx="10" fill="#B2F2BB" stroke="#059669" /><text x="875.0" y="111.6" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="12" fill="#164E63">Modelo vX</text><path d="M1030.0,100.0 L1030.0,130.0 A10.0,10.0 0 0 0 1150.0,130.0 L1150.0,100.0 A10.0,10.0 0 0 0 1030.0,100.0 Z" fill="#FFF3BF" stroke="#F59E0B" /><ellipse cx="1090.0" cy="100.0" rx="60.0" ry="10.0" fill="#FFF3BF" stroke="#F59E0B" /><text x="1090.0" y="116.6" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="12" fill="#164E63">SQLite</text><line x1="175.0" y1="130.0" x2="175.0" y2="690.0" stroke="#64748B" stroke-dasharray="6 4"/><line x1="405.0" y1="130.0" x2="405.0" y2="690.0" stroke="#64748B" stroke-dasharray="6 4"/><line x1="645.0" y1="130.0" x2="645.0" y2="690.0" stroke="#64748B" stroke-dasharray="6 4"/><line x1="875.0" y1="130.0" x2="875.0" y2="690.0" stroke="#64748B" stroke-dasharray="6 4"/><line x1="1090.0" y1="130.0" x2="1090.0" y2="690.0" stroke="#64748B" stroke-dasharray="6 4"/><g><rect x="286.0" y="179.0" width="158" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="290.0" y="190.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#0891B2">1. Ejecutar clasificación</text></g><g><rect x="521.0" y="239.0" width="128" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="525.0" y="250.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#7C3AED">2. predict(features)</text></g><g><rect x="756.0" y="299.0" width="104" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="760.0" y="310.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#059669">3. predict_proba</text></g><g><rect x="756.0" y="359.0" width="128" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="760.0" y="370.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#059669">4. probs I-V (1.8 s)</text></g><g><rect x="521.0" y="419.0" width="152" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="525.0" y="430.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#7C3AED">5. nivel sugerido + SHAP</text></g><g><rect x="286.0" y="479.0" width="158" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="290.0" y="490.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#0891B2">6. registrar nivel propio</text></g><g><rect x="743.5" y="559.0" width="188" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="747.5" y="570.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#F59E0B">7. persistir EventoTriaje dual</text></g><g><rect x="743.5" y="639.0" width="98" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="747.5" y="650.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#F59E0B">8. confirmación</text></g></svg></figure>
+<h3 id="82-flujo-critico-2-discrepancia-con-motivo-obligatorio-hu-e4-03-rd-003">8.2 Flujo crítico 2 — Discrepancia con motivo obligatorio (HU-E4-03, RD-003)</h3>
+<blockquote>
+<p><strong>Diagrama oficial:</strong> <code>Diagramas_TriajeIA.drawio</code> → pestaña <strong>10. Secuencia Validación (discrepancia)</strong>.</p>
+</blockquote>
+<figure class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060.0 760.0" width="1060.0" height="760.0" role="img" aria-label="10. Secuencia Validación (discrepancia)"><defs><marker id="arr-0" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0891B2"/></marker><marker id="arr-1" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker><marker id="arr-2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker><marker id="arr-3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#DC2626"/></marker><marker id="arr-4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0891B2"/></marker><marker id="arr-5" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#F59E0B"/></marker><marker id="arr-6" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#F59E0B"/></marker></defs><path d="M175.0,180.0 L445.0,180.0" fill="none" stroke="#0891B2" stroke-width="1.5"  marker-end="url(#arr-0)"/><path d="M445.0,250.0 L720.0,250.0" fill="none" stroke="#059669" stroke-width="1.5"  marker-end="url(#arr-1)"/><path d="M720.0,320.0 L445.0,320.0" fill="none" stroke="#059669" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arr-2)"/><path d="M445.0,390.0 L175.0,390.0" fill="none" stroke="#DC2626" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arr-3)"/><path d="M175.0,460.0 L445.0,460.0" fill="none" stroke="#0891B2" stroke-width="1.5"  marker-end="url(#arr-4)"/><path d="M445.0,550.0 L970.0,550.0" fill="none" stroke="#F59E0B" stroke-width="1.5"  marker-end="url(#arr-5)"/><path d="M970.0,620.0 L175.0,620.0" fill="none" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arr-6)"/><rect x="110.0" y="90.0" width="130.0" height="40.0" rx="10" fill="#ECFEFF" stroke="#0891B2" /><text x="175.0" y="111.6" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="12" fill="#164E63">Profesional</text><rect x="370.0" y="90.0" width="150.0" height="40.0" rx="10" fill="#ECFEFF" stroke="#0891B2" /><text x="445.0" y="111.6" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="12" fill="#164E63">views.validacion</text><rect x="650.0" y="90.0" width="140.0" height="40.0" rx="10" fill="#B2F2BB" stroke="#059669" /><text x="720.0" y="111.6" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="12" fill="#164E63">domain.reglas</text><path d="M910.0,100.0 L910.0,130.0 A10.0,10.0 0 0 0 1030.0,130.0 L1030.0,100.0 A10.0,10.0 0 0 0 910.0,100.0 Z" fill="#FFF3BF" stroke="#F59E0B" /><ellipse cx="970.0" cy="100.0" rx="60.0" ry="10.0" fill="#FFF3BF" stroke="#F59E0B" /><text x="970.0" y="116.6" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="12" fill="#164E63">SQLite</text><line x1="175.0" y1="130.0" x2="175.0" y2="650.0" stroke="#64748B" stroke-dasharray="6 4"/><line x1="445.0" y1="130.0" x2="445.0" y2="650.0" stroke="#64748B" stroke-dasharray="6 4"/><line x1="720.0" y1="130.0" x2="720.0" y2="650.0" stroke="#64748B" stroke-dasharray="6 4"/><line x1="970.0" y1="130.0" x2="970.0" y2="650.0" stroke="#64748B" stroke-dasharray="6 4"/><rect x="270.0" y="690.0" width="600.0" height="40.0" rx="0" fill="#E8F1F6" stroke="none" /><text x="570.0" y="711.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63" font-style="italic">La decisión del profesional prevalece; la IA nunca se sobrescribe (RD-003, RNF-008)</text><g><rect x="306.0" y="169.0" width="218" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="310.0" y="180.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#0891B2">1. asigna nivel II (IA sugirió III)</text></g><g><rect x="578.5" y="239.0" width="152" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="582.5" y="250.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#059669">2. calcular concordancia</text></g><g><rect x="578.5" y="309.0" width="128" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="582.5" y="320.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#059669">3. Concordancia = No</text></g><g><rect x="306.0" y="379.0" width="170" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="310.0" y="390.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#DC2626">4. exige MotivoDiscrepancia</text></g><g><rect x="306.0" y="449.0" width="146" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="310.0" y="460.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#0891B2">5. motivo: riesgo vital</text></g><g><rect x="703.5" y="539.0" width="278" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="707.5" y="550.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#F59E0B">6. persistir ambos niveles + motivo + versión</text></g><g><rect x="568.5" y="609.0" width="128" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="572.5" y="620.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#F59E0B">7. cierre del evento</text></g></svg></figure>
+<h2 id="9-modelo-de-datos">9. Modelo de Datos</h2>
+<p>Estrategia de persistencia (Paso 0.8 de <code>archi</code>): datos <strong>transaccionales</strong> de bajo volumen, mono-usuario, demo local → <strong>SQLite</strong> con ORM SQLAlchemy (patrón de acceso: escrituras puntuales + lecturas de auditoría; sin concurrencia real). PostgreSQL queda documentado como evolución natural si la demo escala a multi-usuario o despliegue hospitalario (ADR-002).</p>
+<figure class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100.0 840.0" width="1100.0" height="840.0" role="img" aria-label="11. Modelo de Datos (ER)"><defs><marker id="arr-0" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0891B2"/></marker><marker id="arr-1" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0891B2"/></marker><marker id="arr-2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0891B2"/></marker><marker id="arr-3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0891B2"/></marker><marker id="arr-4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748B"/></marker><marker id="arr-5" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7C3AED"/></marker><marker id="arr-6" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748B"/></marker><marker id="arr-7" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748B"/></marker></defs><path d="M310.0,175.0 L430.0,175.0 L430.0,165.0" fill="none" stroke="#0891B2" stroke-width="1.5"  marker-end="url(#arr-0)"/><path d="M430.0,165.0 L310.0,165.0 L310.0,405.0" fill="none" stroke="#0891B2" stroke-width="1.5"  marker-end="url(#arr-1)"/><path d="M565.0,250.0 L565.0,530.0 L185.0,530.0" fill="none" stroke="#0891B2" stroke-width="1.5"  marker-end="url(#arr-2)"/><path d="M185.0,270.0 L185.0,680.0 L185.0,680.0" fill="none" stroke="#0891B2" stroke-width="1.5"  marker-end="url(#arr-3)"/><path d="M810.0,145.0 L700.0,145.0 L700.0,165.0" fill="none" stroke="#64748B" stroke-width="1.5"  marker-end="url(#arr-4)"/><path d="M810.0,355.0 L700.0,355.0 L700.0,165.0" fill="none" stroke="#7C3AED" stroke-width="1.5"  marker-end="url(#arr-5)"/><path d="M565.0,250.0 L565.0,500.0 L925.0,500.0" fill="none" stroke="#64748B" stroke-width="1.5"  marker-end="url(#arr-6)"/><path d="M925.0,680.0 L925.0,210.0 L925.0,210.0" fill="none" stroke="#64748B" stroke-width="1.5"  marker-end="url(#arr-7)"/><rect x="90.0" y="110.0" width="250.0" height="190.0" rx="0" fill="#ECFEFF" stroke="#0891B2" /><text x="98.0" y="150.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">PACIENTE</text><text x="98.0" y="164.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">────────────</text><text x="98.0" y="178.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">id PK (UUID)</text><text x="98.0" y="192.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">tipo_documento · numero_documento</text><text x="98.0" y="206.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">nombres · apellidos · fecha_nacimiento</text><text x="98.0" y="220.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">sexo · departamento · ciudad · direccion</text><text x="98.0" y="234.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">telefono · correo · contacto_emergencia</text><text x="98.0" y="248.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">regimen · tipo_sangre · alergias</text><text x="98.0" y="262.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">via_llegada · episodios_previos</text><rect x="460.0" y="110.0" width="270.0" height="170.0" rx="0" fill="#B2F2BB" stroke="#059669" /><text x="468.0" y="154.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">EVENTO_TRIaje</text><text x="468.0" y="168.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">────────────</text><text x="468.0" y="182.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">id PK · paciente_id FK</text><text x="468.0" y="196.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">nivel_sugerido_ia · probabilidades_ia</text><text x="468.0" y="210.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">nivel_asignado_profesional</text><text x="468.0" y="224.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">concordancia · motivo_discrepancia</text><text x="468.0" y="238.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">version_modelo · inicio · cierre</text><rect x="90.0" y="370.0" width="250.0" height="130.0" rx="0" fill="#ECFEFF" stroke="#0891B2" /><text x="98.0" y="408.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">SIGNOS_VITALES</text><text x="98.0" y="422.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">────────────</text><text x="98.0" y="436.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">id PK · evento_id FK</text><text x="98.0" y="450.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">fr · spo2 · pa_sist · pa_diast</text><text x="98.0" y="464.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">fc · temperatura · peso · talla · imc</text><rect x="90.0" y="560.0" width="250.0" height="100.0" rx="0" fill="#ECFEFF" stroke="#0891B2" /><text x="98.0" y="583.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">MOTIVO_CONSULTA</text><text x="98.0" y="597.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">────────────</text><text x="98.0" y="611.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">id PK · evento_id FK</text><text x="98.0" y="625.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">codigo_cie10 · descripcion</text><text x="98.0" y="639.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">texto_libre</text><rect x="90.0" y="710.0" width="250.0" height="100.0" rx="0" fill="#ECFEFF" stroke="#0891B2" /><text x="98.0" y="726.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">ANTECEDENTES</text><text x="98.0" y="740.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">────────────</text><text x="98.0" y="754.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">id PK · paciente_id FK</text><text x="98.0" y="768.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">diabetes · hta · erc · embarazo</text><text x="98.0" y="782.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">cancer · cardiopatias · epoc</text><text x="98.0" y="796.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">cirugias · medicacion</text><rect x="840.0" y="110.0" width="230.0" height="130.0" rx="0" fill="#E8F1F6" stroke="#64748B" /><text x="848.0" y="141.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">USUARIO</text><text x="848.0" y="155.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">────────────</text><text x="848.0" y="169.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">id PK · rol_id FK</text><text x="848.0" y="183.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">correo (único) · password_hash</text><text x="848.0" y="197.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">activo · intentos_fallidos</text><text x="848.0" y="211.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">bloqueado_hasta</text><rect x="840.0" y="330.0" width="230.0" height="110.0" rx="0" fill="#D0BFFF" stroke="#7C3AED" /><text x="848.0" y="358.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">MODELO</text><text x="848.0" y="372.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">────────────</text><text x="848.0" y="386.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">version PK</text><text x="848.0" y="400.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">algoritmo · fecha_entrenamiento</text><text x="848.0" y="414.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">metricas (JSON) · ruta_artefacto</text><rect x="840.0" y="530.0" width="230.0" height="110.0" rx="0" fill="#E8F1F6" stroke="#64748B" /><text x="848.0" y="565.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">AUDITORIA</text><text x="848.0" y="579.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">────────────</text><text x="848.0" y="593.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">id PK · evento_id FK · usuario_id FK</text><text x="848.0" y="607.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">accion · entidad · antes · despues</text><rect x="840.0" y="710.0" width="230.0" height="70.0" rx="0" fill="#E8F1F6" stroke="#64748B" /><text x="848.0" y="732.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">ROL</text><text x="848.0" y="746.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">────────────</text><text x="848.0" y="760.0" font-family="Fira Code,Consolas,monospace" font-size="10" fill="#164E63">id PK · nombre</text><g><rect x="366.0" y="159.0" width="38" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="370.0" y="170.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#0891B2">1 — N</text></g><g><rect x="366.0" y="274.0" width="38" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="370.0" y="285.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#0891B2">1 — 1</text></g><g><rect x="371.0" y="379.0" width="38" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="375.0" y="390.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#0891B2">1 — 1</text></g><g><rect x="181.0" y="464.0" width="38" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="185.0" y="475.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#0891B2">1 — N</text></g><g><rect x="751.0" y="144.0" width="104" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="755.0" y="155.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#64748B">1 — N (registra)</text></g><g><rect x="751.0" y="249.0" width="104" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="755.0" y="260.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#7C3AED">1 — N (versiona)</text></g><g><rect x="741.0" y="364.0" width="38" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="745.0" y="375.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#64748B">1 — N</text></g><g><rect x="921.0" y="434.0" width="38" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="925.0" y="445.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#64748B">1 — N</text></g></svg></figure>
+<p>Campos del paciente: 11 decididos por <code>refinador</code> (9 demográficos + TipoSangre + Alergias, RD-002). Esquema dual de <code>EventoTriaje</code> según RD-003. Entidades restantes del catálogo (ENT-006, ENT-007, ENT-010 a ENT-012) se mapean a <code>EvaluacionClinica</code>, <code>Concordancia</code> (embebida en el evento), <code>ConfiguracionUmbrales</code>, <code>RegistroTriaje</code> (vista de export PDF) — ver Supuestos.</p>
+<h3 id="91-arquitectura-de-inferencia-servicio-del-modelo">9.1 Arquitectura de Inferencia / Servicio del Modelo</h3>
+<table>
+<thead>
+<tr>
+<th>Decisión</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Modo</td>
+<td>Tiempo real, síncrono, <strong>en proceso</strong> dentro de Streamlit</td>
+</tr>
+<tr>
+<td>Ubicación del modelo</td>
+<td><code>artifacts/models/&lt;algo&gt;_v&lt;fecha&gt;.joblib</code> (+ metadatos MLflow), cargado al arranque</td>
+</tr>
+<tr>
+<td>Latencia objetivo</td>
+<td>&lt; 3 s (RNF-002); medido en demo: 1.8 s</td>
+</tr>
+<tr>
+<td>Reentrenamiento</td>
+<td>Manual bajo demanda (investigación) — no hay deriva automática en alcance demo</td>
+</tr>
+</tbody>
+</table>
+<h2 id="10-conceptos-transversales">10. Conceptos Transversales</h2>
+<table>
+<thead>
+<tr>
+<th>Concepto</th>
+<th>Resolución</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Autenticación</td>
+<td>Login local por correo + contraseña con hash (bcrypt); token simulado por email para recuperación (demo, refinador). Bloqueo 3 intentos/15 min (HU-E1-04).</td>
+</tr>
+<tr>
+<td>Autorización</td>
+<td>Roles <code>Profesional</code> y <code>Administrador</code> (RF-014); demo mono-rol en la práctica</td>
+</tr>
+<tr>
+<td>Manejo de errores</td>
+<td>Formato único <code>{error: {codigo, mensaje, detalle}}</code>; modo degradado sin IA (RNF-009)</td>
+</tr>
+<tr>
+<td>Logging</td>
+<td><code>logging</code> estándar + formato estructurado (JSON), niveles DEBUG/INFO/WARNING</td>
+</tr>
+<tr>
+<td>Configuración/secrets</td>
+<td><code>.env</code> + <code>python-dotenv</code>; nunca secretos en código (RT-005)</td>
+</tr>
+<tr>
+<td>Validación</td>
+<td>En el límite de entrada (formularios de Streamlit) + rangos clínicos por edad (RD-002)</td>
+</tr>
+<tr>
+<td>Anonimización</td>
+<td>Los datos de la demo son sintéticos; en el pipeline offline, anonimización previa a todo procesamiento (RNF-006)</td>
+</tr>
+<tr>
+<td>Reproducibilidad</td>
+<td>Semillas fijas, MLflow, convención de versionado de datos <code>data-v&lt;fecha&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="11-decisiones-arquitectonicas-adrs">11. Decisiones Arquitectónicas (ADRs)</h2>
+<h3 id="adr-001-monolito-streamlit-sobre-frontendbackend-separados">ADR-001: Monolito Streamlit sobre frontend/backend separados</h3>
+<ul>
+<li><strong>Contexto:</strong> demo académica mono-usuario, plazo acotado, decisión de stack ya tomada en refinador (RT-007).</li>
+<li><strong>Decisión:</strong> monolito modular Streamlit con capas aisladas (Sección 6).</li>
+<li><strong>Alternativas:</strong> React+FastAPI (desechada por costo de entrega), FastAPI+Streamlit (desechada por complejidad sin beneficio).</li>
+<li><strong>Consecuencias:</strong> +velocidad de entrega, +simplicidad; −acoplamiento UI/lógica a mediano plazo (mitigado con frontera <code>domain/</code> pura).</li>
+</ul>
+<h3 id="adr-002-sqlite-para-la-demo-postgresql-como-evolucion">ADR-002: SQLite para la demo, PostgreSQL como evolución</h3>
+<ul>
+<li><strong>Contexto:</strong> persistencia transaccional de eventos con cero infraestructura.</li>
+<li><strong>Decisión:</strong> SQLite vía SQLAlchemy ORM; el ORM abstrae el motor.</li>
+<li><strong>Consecuencias:</strong> +arranque instantáneo, +costo $0; −sin concurrencia multi-usuario real (trigger de reevaluación: despliegue hospitalario).</li>
+</ul>
+<h3 id="adr-003-manejo-de-desbalance-con-class-weights-umbrales-no-smote-por-defecto">ADR-003: Manejo de desbalance con class weights + umbrales (no SMOTE por defecto)</h3>
+<ul>
+<li><strong>Contexto:</strong> distribución real extrema (III 88.5% vs. I 0.2%, RNF-004) y recall prioritario en I–II.</li>
+<li><strong>Decisión:</strong> class weights en entrenamiento + ajuste de umbrales por clase; SMOTE como experimento controlado.</li>
+<li><strong>Consecuencias:</strong> +control fino del recall crítico; −riesgo de sobreajuste con SMOTE evitado.</li>
+</ul>
+<h3 id="adr-004-fusion-tardia-como-candidata-principal-comparada-con-temprana">ADR-004: Fusión tardía como candidata principal (comparada con temprana)</h3>
+<ul>
+<li><strong>Contexto:</strong> RT-002 exige comparar ambas fusiones.</li>
+<li><strong>Decisión:</strong> entrenar ambas; la tardía (meta-modelo LR) es la candidata principal por modularidad y explicabilidad.</li>
+<li><strong>Consecuencias:</strong> +interpretabilidad por submodelo; −dos pipelines a mantener (costo asumido: es el objeto de estudio del TFM).</li>
+</ul>
+<h2 id="12-vista-de-despliegue">12. Vista de Despliegue</h2>
+<blockquote>
+<p><strong>Diagrama oficial:</strong> <code>Diagramas_TriajeIA.drawio</code> → pestaña <strong>8. Despliegue</strong>.</p>
+</blockquote>
+<p>Sin proveedor cloud definido en las especificaciones y con alcance académico: el despliegue es <strong>local</strong> (no aplica comparativo multi-nube productivo — ver Supuestos).</p>
+<figure class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160.0 800.0" width="1160.0" height="800.0" role="img" aria-label="8. Despliegue"><defs><marker id="arr-0" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748B"/></marker><marker id="arr-1" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#F59E0B"/></marker><marker id="arr-2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker><marker id="arr-3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7C3AED"/></marker><marker id="arr-4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker></defs><path d="M300.0,230.0 L380.0,230.0 L380.0,230.0" fill="none" stroke="#64748B" stroke-width="1.5"  marker-end="url(#arr-0)"/><path d="M380.0,230.0 L300.0,230.0 L300.0,440.0" fill="none" stroke="#F59E0B" stroke-width="1.5"  marker-end="url(#arr-1)"/><path d="M505.0,270.0 L505.0,400.0 L505.0,400.0" fill="none" stroke="#059669" stroke-width="1.5"  marker-end="url(#arr-2)"/><path d="M515.0,540.0 L515.0,480.0 L505.0,480.0" fill="none" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arr-3)"/><path d="M630.0,230.0 L820.0,230.0 L820.0,300.0" fill="none" stroke="#059669" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arr-4)"/><rect x="110.0" y="150.0" width="640.0" height="560.0" rx="10" fill="none" stroke="#0891B2" stroke-dasharray="6 4"/><text x="430.0" y="431.9" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="13" fill="#164E63" font-weight="700">Máquina local (Windows / macOS / Linux)</text><rect x="170.0" y="230.0" width="160.0" height="60.0" rx="10" fill="#E8F1F6" stroke="#64748B" /><text x="250.0" y="261.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">venv Python 3.12</text><rect x="410.0" y="220.0" width="250.0" height="80.0" rx="10" fill="#A5D8FF" stroke="#0891B2" /><text x="535.0" y="253.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">streamlit run app/main.py</text><text x="535.0" y="268.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">(UI + inferencia en proceso)</text><path d="M170.0,444.0 L170.0,496.0 A14,14 0 0 0 330.0,496.0 L330.0,444.0 A14,14 0 0 0 170.0,444.0 Z" fill="#FFF3BF" stroke="#F59E0B" /><ellipse cx="250.0" cy="444.0" rx="80.0" ry="14" fill="#FFF3BF" stroke="#F59E0B" /><text x="250.0" y="463.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">triaje.db</text><text x="250.0" y="478.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">SQLite</text><path d="M430.0,442.0 L430.0,510.0 L640.0,510.0 L640.0,442.0 L545.5,442.0 L524.5,430.0 L442.0,430.0 Z" fill="#B2F2BB" stroke="#059669" /><text x="535.0" y="463.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">artifacts/models + mlruns</text><text x="535.0" y="478.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">(modelos vX + tracking)</text><rect x="430.0" y="570.0" width="230.0" height="80.0" rx="10" fill="#D0BFFF" stroke="#7C3AED" /><text x="545.0" y="603.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">Entrenamiento offline</text><text x="545.0" y="618.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">notebooks + scripts (CPU local)</text><rect x="850.0" y="270.0" width="280.0" height="120.0" rx="10" fill="#B2F2BB" stroke="#059669" stroke-dasharray="6 4"/><text x="990.0" y="323.6" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="12" fill="#164E63">Streamlit Community Cloud (opcional, $0)</text><text x="990.0" y="339.6" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="12" fill="#164E63">solo demo con datos sintéticos — nunca datos reales</text><rect x="270.0" y="730.0" width="700.0" height="40.0" rx="0" fill="#E8F1F6" stroke="none" /><text x="620.0" y="751.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63" font-style="italic">Sin proveedor cloud productivo en alcance académico — no aplica comparativo multi-nube ni Pricing (Supuesto #4 del documento)</text><g><rect x="336.0" y="324.0" width="68" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="340.0" y="335.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#F59E0B">SQLAlchemy</text></g><g><rect x="501.0" y="324.0" width="38" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="505.0" y="335.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#059669">carga</text></g><g><rect x="506.0" y="499.0" width="56" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="510.0" y="510.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#7C3AED">registra</text></g><g><rect x="721.0" y="254.0" width="170" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="725.0" y="265.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#059669">publicación para la defensa</text></g></svg></figure>
+<ul>
+<li><strong>Ambiente:</strong> un solo entorno local; <code>pip install -r requirements.txt</code>.</li>
+<li><strong>Cómputo de entrenamiento:</strong> misma máquina local (CPU), separado del runtime.</li>
+<li><strong>Comunidad Cloud:</strong> opción de publicación $0 para la defensa; nunca con datos reales (RNF-006).</li>
+</ul>
+<h2 id="13-riesgos-y-deuda-tecnica">13. Riesgos y Deuda Técnica</h2>
+<table>
+<thead>
+<tr>
+<th>Riesgo</th>
+<th>Impacto</th>
+<th>Mitigación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Desbalance extremo I/II</td>
+<td>Modelo que "acierta" prediciendo III</td>
+<td>Métricas por clase + umbrales + recall I–II (ADR-003)</td>
+</tr>
+<tr>
+<td>Training-serving skew</td>
+<td>Métricas infladas offline</td>
+<td>Feature engineering versionado como función compartida, no ad hoc</td>
+</tr>
+<tr>
+<td>Dataset internacional vs. contexto colombiano</td>
+<td>Sesgo de población</td>
+<td>Validación con cohorte local (43.594) + calibración nacional (RNF-004)</td>
+</tr>
+<tr>
+<td>Acceso a MIMIC pendiente (CITI)</td>
+<td>Retraso de preentrenamiento</td>
+<td>Baselines con datos locales ya disponibles; MIMIC como mejora</td>
+</tr>
+<tr>
+<td>Deriva no monitoreada</td>
+<td>Degradación silenciosa</td>
+<td>Estrategia prevista: monitor de distribución de features (fase 2)</td>
+</tr>
+<tr>
+<td>Deuda: 4 pantallas de soporte diferidas</td>
+<td>Demo incompleta en admin</td>
+<td>Fase 2 explícita en el plan</td>
+</tr>
+</tbody>
+</table>
+<h3 id="131-gobernanza-etica-y-cumplimiento">13.1 Gobernanza, Ética y Cumplimiento</h3>
+<ul>
+<li><strong>Rol del sistema:</strong> apoyo a la decisión humana — el nivel del profesional es obligatorio y prevalece; la IA nunca lo autocompleta (RNF-008, RD-003).</li>
+<li><strong>Marco normativo:</strong> Ley 1581/2012 (protección de datos personales) + Resolución 5596/2015; datos clínicos solo con autorización del Comité de Ética (Art. 2.7 UNIR). La demo usa exclusivamente datos sintéticos.</li>
+<li><strong>Sesgo/representatividad:</strong> documentado como limitación explícita si el entrenamiento se basa en MIMIC (EE. UU.) sin adaptación local.</li>
+<li><strong>Trazabilidad:</strong> cada predicción persiste input relevante, versión de modelo, output y decisión humana (RD-003, RF-013) — habilita auditoría y análisis de discrepancias.</li>
+<li><strong>Deriva:</strong> estrategia documentada (Sección 13), implementación en fase 2.</li>
+</ul>
+<h2 id="14-caso-c-gap-analysis-no-aplica-caso-a">14. [Caso C] Gap Analysis — No aplica (Caso A).</h2>
+<h2 id="15-caso-c-roadmap-no-aplica-roadmap-natural-del-proyecto-genesis-builder-hu-en-orden-del-flujo-clinico-validacion-cientifica-ml-tfm-redactor">15. [Caso C] Roadmap — No aplica. Roadmap natural del proyecto: <code>genesis</code> → <code>builder</code> (HU en orden del flujo clínico) → <code>validacion-cientifica-ml</code> → <code>tfm-redactor</code>.</h2>
+<h2 id="16-supuestos">16. Supuestos</h2>
+<ol>
+<li><strong>Entidades ENT-006, ENT-007, ENT-010–ENT-012:</strong> nombres y campos inferidos desde los RF/RD disponibles (el catálogo original remite a <code>CONTEXT TRIA.txt</code>); validar con negocio antes del primer <code>builder</code> de esos recursos.</li>
+<li><strong>SQLite</strong> elegido para la demo; PostgreSQL si el sistema deja de ser demo.</li>
+<li><strong>Autenticación local</strong> (bcrypt + token simulado) — no hay proveedor de identidad externo en alcance.</li>
+<li><strong>No hay despliegue productivo:</strong> el alcance del TFM es la demo funcional + modelo evaluado offline; por eso la Sección 12 no desarrolla comparativo multi-nube ni Pricing (lo exige <code>archi</code> solo para despliegue productivo).</li>
+<li><strong>Datos sintéticos</strong> de la demo calibrados con las distribuciones reales validadas (RNF-004).</li>
+<li><strong>Monorepo:</strong> el código de la aplicación se inicializará en la carpeta <code>triaje-ia/</code> del repositorio Kit-IA (el kit aloja múltiples proyectos y no debe mezclarse con el código de la app).</li>
+</ol>
+<h2 id="17-glosario">17. Glosario</h2>
+<table>
+<thead>
+<tr>
+<th>Término</th>
+<th>Definición</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Triaje</td>
+<td>Clasificación de pacientes por prioridad clínica (Res. 5596/2015)</td>
+</tr>
+<tr>
+<td>MTS / ESI</td>
+<td>Escalas de triaje Manchester / Emergency Severity Index (benchmarks)</td>
+</tr>
+<tr>
+<td>Fusión temprana / tardía</td>
+<td>Combinar modalidades a nivel de features vs. a nivel de decisiones</td>
+</tr>
+<tr>
+<td>SHAP</td>
+<td>SHapley Additive exPlanations — explicabilidad de predicciones</td>
+</tr>
+<tr>
+<td>RIPS / BDUA</td>
+<td>Registros de prestación de servicios / Base de datos de afiliados (Colombia)</td>
+</tr>
+<tr>
+<td>Training-serving skew</td>
+<td>Divergencia entre features de entrenamiento y producción</td>
+</tr>
+</tbody>
+</table>
+<div class="footer">Generado con asistencia de IA · Kit-IA (skill archi) · 2026-08-13 · Los diagramas están embebidos como imágenes SVG exportadas de
+<code>Diagramas_TriajeIA.drawio</code> (11 pestañas).</div>
+</div>
+</body>
+</html>

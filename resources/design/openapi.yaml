@@ -1,0 +1,83 @@
+openapi: 3.1.0
+info:
+  title: TriajeIA API
+  version: 0.1.0
+  description: >
+    Contrato vivo del sistema TriajeIA. Generado por `genesis` con el envoltorio base;
+    `builder` agrega un path por recurso en cada corrida (no regenerar desde cero).
+    La demo actual es Streamlit sin API REST pública — este contrato rige la evolución
+    a FastAPI (ADR-001).
+servers:
+  - url: /api/v1
+    description: Prefijo de rutas convenido (genesis, FASE 2)
+paths: {}
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Autenticación prevista para la evolución FastAPI (la demo usa login local Streamlit).
+  schemas:
+    Error:
+      type: object
+      required: [codigo, mensaje]
+      properties:
+        codigo:
+          type: string
+          enum: [VALIDACION, NO_AUTORIZADO, PROHIBIDO, NO_ENCONTRADO, CONFLICTO, INFERENCIA, ERROR_INTERNO]
+        mensaje:
+          type: string
+        detalle:
+          type: string
+    PaginationMeta:
+      type: object
+      required: [page, page_size, total]
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        page_size:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+  responses:
+    BadRequest:
+      description: Entrada inválida
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: No autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Sin permisos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Recurso inexistente
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Conflicto de estado (p. ej. recurso duplicado)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalError:
+      description: Error interno
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

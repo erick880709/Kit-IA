@@ -1,0 +1,3558 @@
+# ENTREGA 1
+
+# Documento Maestro de Contexto Funcional
+
+## Sistema Inteligente de Clasificación de Triaje Multimodal Basado en Inteligencia Artificial para Servicios de Urgencias en Colombia
+
+**Versión:** 1.0
+
+**Estado:** Baseline Funcional
+
+**Fecha:** Julio 2026
+
+**Proyecto**
+
+Desarrollo de un Sistema Inteligente de Triaje Multimodal basado en Inteligencia Artificial para la Atención en Urgencias Médicas en Colombia.
+
+---
+
+# Control de versiones
+
+| Versión | Fecha      | Autor      | Descripción               |
+| ------- | ---------- | ---------- | ------------------------- |
+| 1.0     | Julio 2026 | Equipo TFM | Documento maestro inicial |
+
+---
+
+# Índice
+
+1. Introducción
+
+2. Propósito del Documento
+
+3. Alcance
+
+4. Objetivos
+
+5. Contexto del Negocio
+
+6. Problema Actual
+
+7. Oportunidad
+
+8. Visión del Producto
+
+9. Definición del Producto
+
+10. Stakeholders
+
+11. Actores
+
+12. Procesos del Negocio
+
+13. Modelo AS-IS
+
+14. Modelo TO-BE
+
+15. Arquitectura Funcional
+
+16. Procesos BPM
+
+17. Casos de Uso
+
+18. Historias de Usuario
+
+19. Requerimientos Funcionales
+
+20. Requerimientos No Funcionales
+
+21. Reglas de Negocio
+
+22. Catálogo de Datos
+
+23. Diccionario de Datos
+
+24. Modelo de Dominio
+
+25. Arquitectura IA
+
+26. Arquitectura Multimodal
+
+27. Pipeline de Datos
+
+28. Explicabilidad
+
+29. Auditoría
+
+30. Seguridad
+
+31. Gobierno del Dato
+
+32. MLOps
+
+33. Riesgos
+
+34. Restricciones
+
+35. Supuestos
+
+36. Exclusiones
+
+37. KPIs
+
+38. Roadmap
+
+39. Glosario
+
+40. Referencias
+
+---
+
+# 1. Introducción
+
+## 1.1 Antecedentes
+
+Los servicios de urgencias representan uno de los componentes más críticos del sistema de salud colombiano. La demanda creciente de pacientes, sumada a la limitada capacidad instalada de las Instituciones Prestadoras de Servicios de Salud (IPS), genera tiempos de espera elevados, congestión operativa y un aumento del riesgo clínico asociado a retrasos en la atención.
+
+El proceso de clasificación inicial de pacientes, conocido como triaje, constituye el mecanismo mediante el cual se determina la prioridad de atención de acuerdo con la gravedad clínica del paciente. En Colombia este proceso se encuentra reglamentado por la Resolución 5596 de 2015 del Ministerio de Salud y Protección Social, la cual define cinco niveles de prioridad clínica.
+
+A pesar de existir una regulación nacional, diversos estudios muestran que una gran proporción de hospitales implementan procedimientos propios o adaptaciones de la resolución, lo que produce variabilidad en la clasificación, diferencias entre profesionales y riesgo de subclasificación o sobreclasificación de pacientes.
+
+Paralelamente, durante la última década la Inteligencia Artificial ha demostrado resultados prometedores para asistir procesos de toma de decisiones clínicas, especialmente mediante algoritmos de Machine Learning capaces de aprender patrones complejos presentes en grandes volúmenes de información clínica.
+
+Sin embargo, la mayoría de soluciones publicadas presentan al menos una de las siguientes limitaciones:
+
+* utilizan únicamente datos estructurados;
+
+* no consideran texto libre proveniente de la historia clínica;
+
+* funcionan como cajas negras;
+
+* no incorporan mecanismos de explicabilidad;
+
+* no han sido adaptadas al marco regulatorio colombiano;
+
+* no consideran estrategias de gobierno del dato;
+
+* carecen de trazabilidad clínica.
+
+El presente proyecto surge para cerrar estas brechas mediante el diseño de un sistema inteligente multimodal capaz de integrar múltiples fuentes de información clínica, generar predicciones explicables y apoyar al personal sanitario en la clasificación inicial de pacientes que ingresan al servicio de urgencias.
+
+---
+
+# 1.2 Propósito
+
+Este documento constituye la especificación funcional completa del proyecto.
+
+Su finalidad es consolidar en un único documento toda la información funcional, operativa, clínica, tecnológica y de negocio necesaria para desarrollar, evolucionar y mantener el sistema de clasificación inteligente de triaje.
+
+Este documento se convierte en la fuente oficial de verdad del proyecto y servirá como insumo para:
+
+* Desarrollo de software.
+* Arquitectura empresarial.
+* Arquitectura cloud.
+* Diseño de IA.
+* Diseño UX.
+* Entrenamiento de modelos.
+* Elaboración del Trabajo Fin de Máster.
+* Generación automática de código mediante IA.
+* Elaboración de historias de usuario.
+* Diseño de APIs.
+* Definición del modelo de datos.
+* Construcción del backlog del producto.
+* Auditorías técnicas y clínicas.
+* Transferencia tecnológica.
+
+---
+
+# 1.3 Objetivos del Documento
+
+Los objetivos específicos del presente Documento Maestro son:
+
+* eliminar ambigüedades funcionales;
+
+* consolidar todos los requerimientos del proyecto;
+
+* definir claramente el alcance;
+
+* documentar las reglas de negocio;
+
+* establecer responsabilidades;
+
+* definir las entradas y salidas del sistema;
+
+* documentar el flujo operativo completo;
+
+* establecer criterios de aceptación;
+
+* documentar restricciones regulatorias;
+
+* servir como contrato funcional entre usuarios, investigadores y desarrolladores.
+
+---
+
+# 2. Propósito del Proyecto
+
+## Objetivo General
+
+Diseñar, implementar y validar un sistema inteligente multimodal basado en Inteligencia Artificial que permita asistir el proceso de clasificación de pacientes en servicios de urgencias colombianos, integrando información clínica estructurada y no estructurada para predecir los cinco niveles de triaje definidos por la Resolución 5596 de 2015, proporcionando además mecanismos de explicabilidad y trazabilidad que incrementen la confianza del personal sanitario.
+
+## Objetivos Específicos
+
+El proyecto busca:
+
+* Reducir la subjetividad del proceso de triaje.
+* Disminuir la variabilidad entre clasificadores.
+* Incrementar la consistencia clínica.
+* Priorizar correctamente pacientes críticos.
+* Minimizar falsos negativos en niveles I y II.
+* Incorporar IA Explicable (XAI).
+* Facilitar la adaptación al contexto colombiano.
+* Construir una arquitectura multimodal reutilizable.
+* Validar diferentes estrategias de fusión de datos.
+* Generar una prueba de concepto funcional.
+
+---
+
+# 3. Alcance del Proyecto
+
+El proyecto comprende el diseño, implementación y validación de un prototipo funcional de apoyo a la decisión clínica para el proceso de triaje hospitalario.
+
+El sistema permitirá:
+
+* Capturar información clínica inicial.
+* Integrar variables estructuradas.
+* Procesar texto libre.
+* Ejecutar modelos predictivos.
+* Comparar arquitecturas multimodales.
+* Mostrar probabilidades por nivel.
+* Generar explicaciones SHAP.
+* Registrar auditoría.
+* Exportar resultados.
+* Permitir validación por profesionales de salud.
+
+El alcance contempla un entorno de demostración funcional (por ejemplo, Streamlit o Flask), orientado a validar la viabilidad técnica y clínica de la solución, sin sustituir los sistemas institucionales de historia clínica electrónica.
+
+---
+
+# Documento Maestro de Contexto Funcional
+
+## Sistema Inteligente de Clasificación de Triaje Multimodal Basado en Inteligencia Artificial para Servicios de Urgencias en Colombia
+
+# ENTREGA 2
+
+---
+
+# 4. Contexto del Negocio
+
+## 4.1 Contexto General
+
+El sistema de salud colombiano enfrenta uno de sus mayores retos operativos en los servicios de urgencias. El incremento sostenido en la demanda de atención, el envejecimiento poblacional, la prevalencia creciente de enfermedades crónicas, la limitada disponibilidad de recursos hospitalarios y la congestión estructural de los servicios generan una presión constante sobre el proceso de clasificación inicial de pacientes.
+
+El triaje constituye el primer proceso asistencial dentro del flujo de urgencias. Su propósito consiste en asignar una prioridad clínica que determine el orden y el tiempo máximo en el cual un paciente debe ser atendido.
+
+Una clasificación incorrecta puede ocasionar consecuencias críticas:
+
+* retraso en la atención de pacientes con riesgo vital;
+* utilización ineficiente de recursos médicos;
+* incremento en la mortalidad evitable;
+* aumento en eventos adversos;
+* mayor tiempo de permanencia hospitalaria;
+* incremento de costos asistenciales;
+* congestión del servicio.
+
+En Colombia, la Resolución 5596 de 2015 establece un modelo obligatorio de cinco niveles de clasificación; sin embargo, la implementación práctica presenta diferencias importantes entre instituciones, generando variabilidad en la toma de decisiones.
+
+---
+
+# 4.2 Necesidad del Negocio
+
+La necesidad principal consiste en disponer de una herramienta tecnológica que apoye la toma de decisiones clínicas durante el proceso de triaje, incrementando la precisión y reduciendo la subjetividad inherente al juicio humano.
+
+El sistema no busca reemplazar al profesional de salud, sino proporcionar un mecanismo de soporte basado en evidencia, datos históricos y modelos de inteligencia artificial explicables.
+
+Desde la perspectiva institucional, la solución debe contribuir a:
+
+* mejorar la oportunidad en la atención;
+* optimizar la utilización de recursos hospitalarios;
+* reducir tiempos de espera;
+* disminuir la variabilidad entre clasificadores;
+* mejorar la trazabilidad de las decisiones;
+* facilitar auditorías clínicas;
+* apoyar procesos de mejora continua.
+
+---
+
+# 4.3 Problema de Negocio
+
+Actualmente, el proceso de triaje depende principalmente de la experiencia del profesional que realiza la valoración inicial.
+
+Aunque existen protocolos institucionales, la interpretación clínica puede variar significativamente debido a factores como:
+
+* experiencia profesional;
+* carga laboral;
+* fatiga;
+* presión asistencial;
+* disponibilidad parcial de información;
+* diferencias en capacitación;
+* interpretación subjetiva de síntomas.
+
+Como consecuencia, pacientes con características clínicas similares pueden recibir clasificaciones diferentes dependiendo del evaluador.
+
+Esta variabilidad afecta la equidad y consistencia del sistema.
+
+---
+
+# 4.4 Oportunidad
+
+La disponibilidad de grandes volúmenes de información clínica, sumada al avance reciente en técnicas de Machine Learning, Deep Learning y Procesamiento de Lenguaje Natural (NLP), permite construir sistemas inteligentes capaces de identificar patrones que no resultan evidentes para un observador humano.
+
+Un sistema multimodal puede integrar simultáneamente:
+
+* signos vitales;
+* antecedentes;
+* variables demográficas;
+* síntomas;
+* motivo de consulta;
+* texto libre de enfermería;
+* información histórica.
+
+La combinación de estas fuentes incrementa la capacidad predictiva respecto a modelos tradicionales basados únicamente en datos estructurados.
+
+---
+
+# 4.5 Justificación del Proyecto
+
+La implementación de un sistema inteligente de apoyo al triaje se justifica por las siguientes razones:
+
+## Justificación Clínica
+
+* Incrementar la seguridad del paciente.
+* Reducir errores de clasificación.
+* Priorizar correctamente pacientes críticos.
+* Mejorar la consistencia clínica.
+
+---
+
+## Justificación Operativa
+
+* Disminuir tiempos de espera.
+* Optimizar utilización de recursos.
+* Reducir congestión.
+* Facilitar redistribución de carga asistencial.
+
+---
+
+## Justificación Tecnológica
+
+* Incorporar Inteligencia Artificial.
+* Aprovechar información multimodal.
+* Implementar modelos explicables.
+* Facilitar integración futura con Historia Clínica Electrónica.
+
+---
+
+## Justificación Científica
+
+El proyecto busca cubrir vacíos identificados en el estado del arte:
+
+* escasez de modelos adaptados al contexto colombiano;
+* ausencia de integración normativa;
+* limitada incorporación de explicabilidad;
+* poca evidencia sobre modelos multimodales para triaje latinoamericano.
+
+---
+
+# 5. Definición del Producto
+
+## 5.1 Descripción
+
+El producto corresponde a un Sistema Inteligente de Soporte a la Decisión Clínica para el proceso de clasificación de pacientes en servicios de urgencias.
+
+El sistema recibirá información clínica del paciente y generará una recomendación del nivel de triaje, acompañada de indicadores de confianza y explicaciones sobre los factores que influyeron en la decisión.
+
+La clasificación sugerida deberá ser validada por el profesional de salud antes de ser aceptada.
+
+---
+
+## 5.2 Tipo de Producto
+
+El sistema se clasifica como:
+
+* Clinical Decision Support System (CDSS)
+* Sistema Inteligente basado en IA
+* Sistema Predictivo
+* Sistema Multimodal
+* Sistema Explicable (XAI)
+* Herramienta de apoyo clínico
+
+---
+
+## 5.3 Valor Agregado
+
+El valor diferencial respecto a soluciones existentes radica en:
+
+* integración de múltiples fuentes de datos;
+* alineación con normativa colombiana;
+* explicabilidad mediante SHAP;
+* trazabilidad completa;
+* arquitectura reutilizable;
+* posibilidad de entrenamiento continuo.
+
+---
+
+# 6. Objetivos Estratégicos del Negocio
+
+El proyecto busca contribuir a los siguientes objetivos organizacionales:
+
+| Código | Objetivo                                                                  |
+| ------ | ------------------------------------------------------------------------- |
+| OE-001 | Reducir errores de clasificación.                                         |
+| OE-002 | Incrementar la consistencia clínica.                                      |
+| OE-003 | Mejorar la oportunidad de atención.                                       |
+| OE-004 | Optimizar utilización de recursos hospitalarios.                          |
+| OE-005 | Facilitar auditoría clínica.                                              |
+| OE-006 | Incrementar confianza en IA médica.                                       |
+| OE-007 | Construir una plataforma reutilizable para futuras aplicaciones clínicas. |
+
+---
+
+# 7. Stakeholders
+
+## 7.1 Identificación
+
+| Stakeholder                        | Interés  | Influencia |
+| ---------------------------------- | -------- | ---------- |
+| Pacientes                          | Muy Alto | Medio      |
+| Enfermería de Triaje               | Muy Alto | Muy Alto   |
+| Médicos de Urgencias               | Muy Alto | Muy Alto   |
+| Coordinador de Urgencias           | Alto     | Alto       |
+| Dirección Médica                   | Alto     | Muy Alto   |
+| Comité de Calidad                  | Alto     | Alto       |
+| Comité de Ética                    | Alto     | Muy Alto   |
+| Equipo IA                          | Muy Alto | Alto       |
+| Científicos de Datos               | Muy Alto | Alto       |
+| Arquitectos de Software            | Muy Alto | Alto       |
+| DevOps                             | Medio    | Medio      |
+| Ministerio de Salud                | Muy Alto | Muy Alto   |
+| Superintendencia Nacional de Salud | Alto     | Muy Alto   |
+| Investigadores UNIR                | Alto     | Medio      |
+
+---
+
+# 7.2 Matriz Poder - Interés
+
+## Gestionar Muy de Cerca
+
+* Dirección Médica
+* Enfermería
+* Médicos
+* Ministerio
+* Comité Ético
+
+---
+
+## Mantener Satisfechos
+
+* Gerencia Hospitalaria
+* Coordinador de Urgencias
+
+---
+
+## Mantener Informados
+
+* Investigadores
+* Equipo IA
+* Arquitectos
+* DevOps
+
+---
+
+## Monitorear
+
+* Pacientes
+* Comunidad Académica
+
+---
+
+# 8. Personas
+
+## Persona 1
+
+### Enfermera de Triaje
+
+**Objetivo**
+
+Clasificar correctamente al paciente en el menor tiempo posible.
+
+**Responsabilidades**
+
+* Recibir paciente.
+* Registrar signos vitales.
+* Evaluar motivo de consulta.
+* Registrar escala de dolor.
+* Determinar prioridad inicial.
+
+**Dolores**
+
+* Alto volumen de pacientes.
+* Fatiga.
+* Presión asistencial.
+* Información incompleta.
+* Riesgo de errores.
+
+**Necesidades**
+
+* Interfaz rápida.
+* Recomendación automática.
+* Explicaciones claras.
+* Alta disponibilidad.
+
+---
+
+## Persona 2
+
+### Médico de Urgencias
+
+**Objetivo**
+
+Atender oportunamente pacientes según prioridad clínica.
+
+**Necesidades**
+
+* Confiar en la clasificación.
+* Conocer razones de la recomendación.
+* Revisar probabilidades.
+* Consultar historial.
+
+---
+
+## Persona 3
+
+### Coordinador del Servicio
+
+Responsable de:
+
+* indicadores;
+* tiempos de espera;
+* distribución de recursos;
+* auditoría del proceso;
+* mejora continua.
+
+Necesita paneles de control y métricas operativas.
+
+---
+
+## Persona 4
+
+### Científico de Datos
+
+Responsabilidades:
+
+* entrenamiento;
+* validación;
+* monitoreo;
+* recalibración;
+* detección de drift;
+* evaluación continua.
+
+---
+
+## Persona 5
+
+### Arquitecto de Software
+
+Responsable de:
+
+* arquitectura;
+* integración;
+* APIs;
+* escalabilidad;
+* seguridad;
+* disponibilidad;
+* observabilidad.
+
+---
+
+# 9. Mapa General de Procesos
+
+El sistema participa dentro del macroproceso de atención hospitalaria.
+
+```
+Ingreso del paciente
+        │
+        ▼
+Registro Administrativo
+        │
+        ▼
+Captura de Signos Vitales
+        │
+        ▼
+Registro Motivo Consulta
+        │
+        ▼
+Ejecución IA
+        │
+        ▼
+Clasificación sugerida
+        │
+        ▼
+Validación Enfermería
+        │
+        ▼
+Asignación Nivel Triaje
+        │
+        ▼
+Sala de Espera
+        │
+        ▼
+Consulta Médica
+```
+
+---
+
+# 10. Macroprocesos del Sistema
+
+El sistema soporta seis macroprocesos principales:
+
+**MP-01:** Captura de Información Clínica Inicial.
+
+**MP-02:** Procesamiento Inteligente de Información.
+
+**MP-03:** Generación de Clasificación de Triaje.
+
+**MP-04:** Explicabilidad y Soporte a la Decisión.
+
+**MP-05:** Auditoría Clínica.
+
+**MP-06:** Aprendizaje y Mejora Continua del Modelo.
+
+---
+
+# Documento Maestro de Contexto Funcional
+
+## Sistema Inteligente de Clasificación de Triaje Multimodal Basado en Inteligencia Artificial para Servicios de Urgencias en Colombia
+
+# ENTREGA 3
+
+---
+
+# 11. Modelo Operacional Actual (AS-IS)
+
+## 11.1 Objetivo
+
+Documentar el funcionamiento actual del proceso de clasificación de pacientes en los servicios de urgencias colombianos, identificando los puntos de dolor, cuellos de botella, riesgos operacionales y oportunidades de mejora que justifican la implementación del sistema inteligente.
+
+El modelo AS-IS representa el estado actual del proceso sin intervención de Inteligencia Artificial.
+
+---
+
+# 11.2 Descripción General del Proceso Actual
+
+Actualmente, el proceso de triaje inicia cuando el paciente ingresa al servicio de urgencias y finaliza cuando se asigna un nivel de prioridad clínica conforme a la Resolución 5596 de 2015.
+
+La clasificación depende casi exclusivamente del criterio clínico del profesional de enfermería encargado del triaje.
+
+Aunque existen protocolos institucionales, la interpretación de síntomas y signos puede variar entre profesionales debido a la experiencia, carga asistencial, disponibilidad de información y presión operativa.
+
+---
+
+# 11.3 Flujo Operativo Actual
+
+```text
+Paciente llega a urgencias
+        │
+        ▼
+Registro Administrativo
+        │
+        ▼
+Espera para Triaje
+        │
+        ▼
+Enfermera recibe paciente
+        │
+        ▼
+Entrevista clínica
+        │
+        ▼
+Captura manual de signos vitales
+        │
+        ▼
+Evaluación clínica
+        │
+        ▼
+Consulta protocolo institucional
+        │
+        ▼
+Clasificación manual
+        │
+        ▼
+Registro Historia Clínica
+        │
+        ▼
+Paciente espera atención
+```
+
+---
+
+# 11.4 Problemas Detectados
+
+## PD-001 Variabilidad Clínica
+
+Dos profesionales pueden asignar diferentes niveles de triaje al mismo paciente.
+
+### Impacto
+
+* Inconsistencia.
+* Riesgo asistencial.
+* Dificultad para auditoría.
+
+---
+
+## PD-002 Saturación Operativa
+
+Durante horas pico el volumen de pacientes supera la capacidad del personal.
+
+### Consecuencias
+
+* Clasificaciones aceleradas.
+* Omisión de información.
+* Fatiga.
+
+---
+
+## PD-003 Información Incompleta
+
+En muchas ocasiones la valoración inicial dispone únicamente de:
+
+* motivo de consulta;
+* algunos signos vitales;
+* percepción subjetiva del dolor.
+
+No existe suficiente información clínica.
+
+---
+
+## PD-004 Subclasificación
+
+Un paciente crítico puede clasificarse como menos urgente.
+
+Este constituye el riesgo clínico más importante del proceso.
+
+---
+
+## PD-005 Sobreclasificación
+
+Pacientes con patologías leves pueden clasificarse con mayor prioridad.
+
+Esto genera:
+
+* congestión;
+* utilización ineficiente de recursos;
+* incremento en tiempos de espera.
+
+---
+
+## PD-006 Falta de Explicabilidad
+
+Actualmente no existe una justificación estructurada de por qué se asignó determinado nivel de triaje.
+
+La auditoría depende únicamente del registro clínico.
+
+---
+
+## PD-007 Ausencia de Aprendizaje
+
+Cada clasificación es independiente.
+
+El sistema hospitalario no aprende automáticamente de los casos anteriores.
+
+---
+
+# 11.5 Riesgos Operacionales
+
+| Código  | Riesgo                   | Impacto  |
+| ------- | ------------------------ | -------- |
+| ROP-001 | Clasificación incorrecta | Muy Alto |
+| ROP-002 | Demora en atención       | Muy Alto |
+| ROP-003 | Saturación del servicio  | Alto     |
+| ROP-004 | Falta de camas           | Alto     |
+| ROP-005 | Sobrecarga del personal  | Muy Alto |
+| ROP-006 | Errores humanos          | Muy Alto |
+| ROP-007 | Información incompleta   | Alto     |
+| ROP-008 | Variabilidad clínica     | Muy Alto |
+
+---
+
+# 12. Modelo Objetivo (TO-BE)
+
+## 12.1 Visión
+
+El proceso futuro incorpora un sistema inteligente que asiste al profesional de salud durante la clasificación inicial.
+
+La decisión clínica continúa siendo responsabilidad del profesional sanitario.
+
+La IA actúa como mecanismo de apoyo.
+
+---
+
+# 12.2 Principios del Modelo TO-BE
+
+## Principio 1
+
+La IA nunca reemplaza al profesional.
+
+---
+
+## Principio 2
+
+Toda recomendación debe ser explicable.
+
+---
+
+## Principio 3
+
+Toda inferencia debe quedar registrada.
+
+---
+
+## Principio 4
+
+Toda decisión puede ser auditada.
+
+---
+
+## Principio 5
+
+La clasificación definitiva siempre será validada por personal sanitario.
+
+---
+
+# 12.3 Flujo Objetivo
+
+```text
+Paciente ingresa
+        │
+        ▼
+Registro administrativo
+        │
+        ▼
+Captura signos vitales
+        │
+        ▼
+Registro síntomas
+        │
+        ▼
+Registro texto libre
+        │
+        ▼
+Preprocesamiento IA
+        │
+        ▼
+Modelo Multimodal
+        │
+        ▼
+Predicción Nivel I-V
+        │
+        ▼
+Explicación SHAP
+        │
+        ▼
+Validación Enfermería
+        │
+        ▼
+Confirmación clasificación
+        │
+        ▼
+Registro Historia Clínica
+        │
+        ▼
+Auditoría
+```
+
+---
+
+# 12.4 Beneficios Esperados
+
+## Clínicos
+
+* Mayor precisión.
+* Menor variabilidad.
+* Mejor priorización.
+* Disminución de falsos negativos.
+
+---
+
+## Operativos
+
+* Menor tiempo de clasificación.
+* Menor congestión.
+* Mejor utilización de recursos.
+
+---
+
+## Tecnológicos
+
+* Plataforma escalable.
+* Arquitectura reutilizable.
+* Integración futura con HCE.
+* Base para nuevos modelos predictivos.
+
+---
+
+# 13. Análisis GAP
+
+| Aspecto       | AS-IS     | TO-BE           |
+| ------------- | --------- | --------------- |
+| Clasificación | Manual    | Asistida por IA |
+| Explicación   | No        | Sí              |
+| Auditoría     | Limitada  | Completa        |
+| Variabilidad  | Alta      | Baja            |
+| Aprendizaje   | No existe | Continuo        |
+| Predicción    | Humana    | Multimodal      |
+| Evidencia     | Parcial   | Basada en datos |
+
+---
+
+# 14. Arquitectura Funcional del Negocio
+
+El sistema se organiza en siete capacidades funcionales.
+
+```text
+                Gestión Pacientes
+                       │
+        ┌──────────────┼──────────────┐
+        ▼              ▼              ▼
+ Captura Datos   Motor IA      Auditoría
+        │              │              │
+        ▼              ▼              ▼
+Validación      Explicabilidad   Reportes
+        │
+        ▼
+Historia Clínica
+```
+
+---
+
+# 15. Capacidades del Negocio
+
+## CF-01 Gestión del Paciente
+
+Responsable de administrar la información inicial del paciente.
+
+Funciones:
+
+* identificación;
+* admisión;
+* consulta inicial.
+
+---
+
+## CF-02 Captura Clínica
+
+Permite registrar:
+
+* signos vitales;
+* antecedentes;
+* escala de dolor;
+* motivo de consulta;
+* texto libre.
+
+---
+
+## CF-03 Inteligencia Artificial
+
+Responsable de:
+
+* procesamiento;
+* inferencia;
+* clasificación;
+* cálculo probabilístico.
+
+---
+
+## CF-04 Explicabilidad
+
+Genera:
+
+* variables más importantes;
+* peso de cada variable;
+* explicación SHAP;
+* confianza del modelo.
+
+---
+
+## CF-05 Validación Clínica
+
+Permite que el profesional:
+
+* acepte;
+* modifique;
+* rechace
+
+la clasificación sugerida.
+
+---
+
+## CF-06 Auditoría
+
+Registra:
+
+* usuario;
+* fecha;
+* hora;
+* modelo;
+* versión;
+* predicción;
+* clasificación final.
+
+---
+
+## CF-07 Analítica
+
+Produce indicadores para:
+
+* dirección médica;
+* comité de calidad;
+* investigadores;
+* entrenamiento futuro.
+
+---
+
+# 16. Cadena de Valor del Sistema
+
+```text
+Ingreso Paciente
+        │
+        ▼
+Captura Información
+        │
+        ▼
+Normalización
+        │
+        ▼
+Inferencia IA
+        │
+        ▼
+Explicación
+        │
+        ▼
+Validación
+        │
+        ▼
+Registro
+        │
+        ▼
+Auditoría
+        │
+        ▼
+Mejora Continua
+```
+
+---
+
+# 17. Objetivos Funcionales
+
+| Código | Objetivo                              |
+| ------ | ------------------------------------- |
+| OF-001 | Capturar información clínica inicial. |
+| OF-002 | Procesar datos estructurados.         |
+| OF-003 | Procesar texto libre.                 |
+| OF-004 | Clasificar pacientes.                 |
+| OF-005 | Mostrar probabilidad por nivel.       |
+| OF-006 | Explicar la decisión.                 |
+| OF-007 | Permitir validación humana.           |
+| OF-008 | Registrar auditoría.                  |
+| OF-009 | Generar indicadores.                  |
+| OF-010 | Facilitar reentrenamiento del modelo. |
+
+---
+
+# 18. Objetivos de Calidad
+
+El sistema deberá cumplir con los siguientes atributos de calidad (alineados con ISO/IEC 25010):
+
+| Código | Objetivo                                                |
+| ------ | ------------------------------------------------------- |
+| OC-001 | Alta disponibilidad.                                    |
+| OC-002 | Tiempo de respuesta menor a 3 segundos para inferencia. |
+| OC-003 | Escalabilidad horizontal.                               |
+| OC-004 | Trazabilidad completa.                                  |
+| OC-005 | Seguridad de la información.                            |
+| OC-006 | Explicabilidad de todas las predicciones.               |
+| OC-007 | Facilidad de uso para personal clínico.                 |
+| OC-008 | Mantenibilidad y extensibilidad del sistema.            |
+
+---
+
+## Fin de la Entrega 3
+
+# Documento Maestro de Contexto Funcional
+
+## Sistema Inteligente de Clasificación de Triaje Multimodal Basado en Inteligencia Artificial para Servicios de Urgencias en Colombia
+
+# ENTREGA 4
+
+---
+
+# 19. Modelo de Dominio del Negocio
+
+## 19.1 Objetivo
+
+El Modelo de Dominio identifica las entidades fundamentales del negocio, sus atributos, relaciones y responsabilidades. Este modelo representa el lenguaje común entre médicos, investigadores, analistas funcionales, científicos de datos y desarrolladores.
+
+El propósito es garantizar que todos los actores del proyecto compartan una comprensión uniforme del dominio clínico antes de iniciar el diseño técnico.
+
+---
+
+# 19.2 Principios del Modelo de Dominio
+
+El modelo se basa en los siguientes principios:
+
+* Independencia de la tecnología.
+* Representación fiel del proceso clínico.
+* Trazabilidad entre entidades.
+* Separación entre datos clínicos y resultados de IA.
+* Soporte para auditoría.
+* Evolución futura del sistema.
+* Compatibilidad con estándares de interoperabilidad (FHIR/HL7 como referencia futura).
+
+---
+
+# 19.3 Diagrama Conceptual del Dominio
+
+```text
+                                    Hospital
+                                       │
+                        ┌──────────────┴──────────────┐
+                        ▼                             ▼
+                  Servicio Urgencias             Profesional Salud
+                        │                             │
+                        ▼                             ▼
+                     Paciente ───────────────► Triaje
+                        │                          │
+                        │                          │
+                        ▼                          ▼
+                Signos Vitales              Evaluación Clínica
+                        │                          │
+                        └──────────────┬───────────┘
+                                       ▼
+                                 Motor IA
+                                       │
+                      ┌────────────────┼────────────────┐
+                      ▼                ▼                ▼
+               Predicción       Explicación SHAP   Nivel Triaje
+                      │
+                      ▼
+                  Auditoría
+```
+
+---
+
+# 20. Catálogo de Entidades
+
+## ENT-001 Paciente
+
+### Descripción
+
+Representa la persona que solicita atención médica en el servicio de urgencias.
+
+Es la entidad principal del dominio.
+
+### Responsabilidades
+
+* Ser sujeto de evaluación.
+* Asociarse a uno o varios eventos de triaje.
+* Mantener trazabilidad clínica.
+
+### Atributos
+
+| Atributo        | Tipo     | Obligatorio |
+| --------------- | -------- | ----------- |
+| IdPaciente      | UUID     | Sí          |
+| TipoDocumento   | Catálogo | Sí          |
+| NumeroDocumento | Texto    | Sí          |
+| FechaNacimiento | Fecha    | Sí          |
+| Edad            | Entero   | Sí          |
+| Sexo            | Catálogo | Sí          |
+| RégimenSalud    | Catálogo | No          |
+| EPS             | Texto    | No          |
+| Municipio       | Texto    | No          |
+
+---
+
+## ENT-002 Evento de Triaje
+
+### Descripción
+
+Representa una valoración inicial realizada sobre un paciente.
+
+Cada ingreso al servicio genera un nuevo evento de triaje.
+
+### Responsabilidades
+
+* Centralizar la información clínica inicial.
+* Asociarse a una predicción.
+* Registrar la decisión clínica final.
+
+### Atributos
+
+| Campo                  | Tipo     |
+| ---------------------- | -------- |
+| IdTriaje               | UUID     |
+| FechaHoraIngreso       | DateTime |
+| FechaHoraClasificación | DateTime |
+| Estado                 | Catálogo |
+| NivelAsignado          | Catálogo |
+| ProfesionalResponsable | UUID     |
+
+---
+
+## Estados posibles
+
+* Registrado
+* En evaluación
+* Clasificado
+* Validado
+* Cerrado
+
+---
+
+## ENT-003 Signos Vitales
+
+### Descripción
+
+Agrupa las variables fisiológicas registradas durante el proceso de triaje.
+
+### Atributos
+
+| Variable                | Unidad    |
+| ----------------------- | --------- |
+| Temperatura             | °C        |
+| Frecuencia cardíaca     | lpm       |
+| Frecuencia respiratoria | rpm       |
+| Saturación O₂           | %         |
+| Presión Sistólica       | mmHg      |
+| Presión Diastólica      | mmHg      |
+| Peso                    | kg        |
+| Talla                   | cm        |
+| IMC                     | Calculado |
+
+---
+
+## Restricciones
+
+Cada registro pertenece a un único evento de triaje.
+
+---
+
+## ENT-004 Motivo de Consulta
+
+### Descripción
+
+Representa el motivo principal expresado por el paciente.
+
+Puede registrarse como:
+
+* texto libre;
+* categoría clínica;
+* código institucional.
+
+### Ejemplos
+
+* Dolor torácico.
+* Trauma.
+* Disnea.
+* Dolor abdominal.
+* Fiebre.
+
+---
+
+## ENT-005 Antecedentes Clínicos
+
+Representa antecedentes relevantes para el proceso de clasificación.
+
+### Atributos
+
+* Diabetes.
+* Hipertensión.
+* Enfermedad renal.
+* Embarazo.
+* Cáncer.
+* Cardiopatías.
+* Enfermedad pulmonar.
+* Cirugías recientes.
+* Medicación relevante.
+
+---
+
+## ENT-006 Escala del Dolor
+
+| Campo  | Tipo   |
+| ------ | ------ |
+| Valor  | Entero |
+| Escala | 0-10   |
+
+---
+
+## Reglas
+
+Valores permitidos:
+
+0–10.
+
+---
+
+## ENT-007 Evaluación Clínica
+
+Agrupa toda la información registrada por enfermería.
+
+Incluye:
+
+* observaciones;
+* inspección;
+* nivel de conciencia;
+* Glasgow;
+* apariencia general;
+* coloración;
+* movilidad.
+
+---
+
+## ENT-008 Texto Clínico
+
+### Descripción
+
+Información escrita libremente por el profesional.
+
+Ejemplo:
+
+```text
+Paciente masculino de 68 años.
+
+Refiere dolor torácico opresivo iniciado hace 20 minutos.
+
+Presenta diaforesis.
+
+Niega trauma.
+```
+
+Este texto será procesado mediante NLP.
+
+---
+
+## ENT-009 Predicción IA
+
+Representa el resultado generado por el modelo.
+
+### Atributos
+
+| Campo            | Tipo     |
+| ---------------- | -------- |
+| Modelo           | Texto    |
+| Versión          | Texto    |
+| Fecha            | DateTime |
+| NivelPredicho    | I-V      |
+| Confianza        | Decimal  |
+| TiempoInferencia | Decimal  |
+| EstadoModelo     | Activo   |
+
+---
+
+## ENT-010 Explicación SHAP
+
+Representa la explicación generada por el modelo.
+
+### Contiene
+
+* variables importantes;
+* peso individual;
+* impacto positivo;
+* impacto negativo;
+* ranking.
+
+---
+
+## ENT-011 Profesional de Salud
+
+Representa el usuario responsable de validar la clasificación.
+
+### Tipos
+
+* Enfermera.
+* Médico.
+* Coordinador.
+* Auditor.
+
+---
+
+## ENT-012 Auditoría
+
+Registra absolutamente todas las acciones realizadas.
+
+### Campos
+
+* Usuario.
+* Fecha.
+* Hora.
+* Acción.
+* Modelo.
+* Resultado.
+* IP.
+* Dispositivo.
+* Observaciones.
+
+---
+
+# 21. Relaciones del Dominio
+
+| Origen      | Relación | Destino            |
+| ----------- | -------- | ------------------ |
+| Paciente    | tiene    | Triaje             |
+| Triaje      | contiene | Signos Vitales     |
+| Triaje      | contiene | Evaluación Clínica |
+| Triaje      | contiene | Texto Clínico      |
+| Triaje      | genera   | Predicción         |
+| Predicción  | genera   | Explicación SHAP   |
+| Profesional | valida   | Triaje             |
+| Auditoría   | registra | Todos los eventos  |
+
+---
+
+# 22. Reglas de Cardinalidad
+
+| Relación                    | Cardinalidad |
+| --------------------------- | ------------ |
+| Paciente → Triaje           | 1:N          |
+| Triaje → Signos Vitales     | 1:1          |
+| Triaje → Evaluación Clínica | 1:1          |
+| Triaje → Texto Clínico      | 1:1          |
+| Triaje → Predicción         | 1:N          |
+| Predicción → SHAP           | 1:1          |
+| Profesional → Triaje        | 1:N          |
+
+---
+
+# 23. Catálogo de Objetos del Negocio
+
+| Código  | Objeto           |
+| ------- | ---------------- |
+| OBJ-001 | Paciente         |
+| OBJ-002 | Evento de Triaje |
+| OBJ-003 | Profesional      |
+| OBJ-004 | Motor IA         |
+| OBJ-005 | Predicción       |
+| OBJ-006 | Explicación      |
+| OBJ-007 | Auditoría        |
+| OBJ-008 | Reporte          |
+| OBJ-009 | Dashboard        |
+| OBJ-010 | Modelo ML        |
+
+---
+
+# 24. Diccionario Conceptual
+
+| Concepto   | Definición                                                                                               |
+| ---------- | -------------------------------------------------------------------------------------------------------- |
+| Triaje     | Proceso de clasificación inicial del paciente según gravedad clínica.                                    |
+| IA         | Sistema de apoyo basado en modelos predictivos entrenados con datos clínicos.                            |
+| Multimodal | Integración de datos estructurados y no estructurados en un mismo modelo.                                |
+| XAI        | Técnicas que permiten interpretar el comportamiento del modelo de IA.                                    |
+| SHAP       | Método de explicabilidad basado en valores de Shapley para cuantificar la contribución de cada variable. |
+| Inferencia | Proceso mediante el cual el modelo genera una predicción a partir de las variables de entrada.           |
+| Confianza  | Probabilidad asociada a la predicción emitida por el modelo.                                             |
+| Drift      | Cambio en la distribución de los datos que puede degradar el rendimiento del modelo con el tiempo.       |
+
+---
+
+# 25. Modelo Conceptual de Información
+
+```text
+Paciente
+   │
+   ▼
+Evento Triaje
+   │
+   ├──────────────┐
+   ▼              ▼
+Signos      Evaluación Clínica
+   │              │
+   └──────┬───────┘
+          ▼
+     Texto Clínico
+          │
+          ▼
+     Preprocesamiento
+          │
+          ▼
+      Modelo IA
+          │
+   ┌──────┴────────┐
+   ▼               ▼
+Predicción     SHAP
+   │
+   ▼
+Validación Humana
+   │
+   ▼
+Auditoría
+```
+
+---
+
+# 26. Principios de Integridad del Dominio
+
+Se establecen los siguientes principios obligatorios:
+
+* Todo paciente debe tener un identificador único.
+* Todo evento de triaje debe asociarse a un paciente.
+* Toda predicción debe asociarse a un evento de triaje.
+* Ninguna predicción puede existir sin una versión del modelo.
+* Toda clasificación validada debe conservar el historial de cambios.
+* Ningún dato clínico podrá modificarse sin generar un registro de auditoría.
+* La explicación SHAP debe generarse para cada inferencia aceptada.
+* Los datos utilizados para entrenamiento deberán estar anonimizados antes de su incorporación al pipeline de Machine Learning.
+
+---
+
+## Fin de la Entrega 4
+
+# Documento Maestro de Contexto Funcional
+
+## Sistema Inteligente de Clasificación de Triaje Multimodal Basado en Inteligencia Artificial para Servicios de Urgencias en Colombia
+
+# ENTREGA 5
+
+---
+
+# 27. Catálogo de Reglas de Negocio
+
+## 27.1 Objetivo
+
+Las reglas de negocio establecen las restricciones, políticas, validaciones y decisiones que gobiernan el comportamiento funcional del sistema.
+
+Estas reglas representan conocimiento del dominio clínico y operativo, independiente de la implementación tecnológica.
+
+Todas las funcionalidades, casos de uso y modelos de IA deberán cumplir estas reglas.
+
+---
+
+# 27.2 Clasificación de Reglas
+
+| Categoría               | Código |
+| ----------------------- | ------ |
+| Generales               | RNG    |
+| Clínicas                | RNC    |
+| Operativas              | RNO    |
+| Inteligencia Artificial | RNA    |
+| Seguridad               | RNS    |
+| Auditoría               | RNAU   |
+| Gobierno del Dato       | RNGD   |
+| Calidad del Dato        | RNQ    |
+| Explicabilidad          | RNX    |
+| Rendimiento             | RNP    |
+
+---
+
+# 28. Reglas Generales
+
+## RNG-001
+
+El sistema constituye un mecanismo de apoyo a la decisión clínica y no reemplaza el criterio profesional del personal sanitario.
+
+---
+
+## RNG-002
+
+La clasificación definitiva del paciente siempre deberá ser validada por un profesional autorizado.
+
+---
+
+## RNG-003
+
+Toda clasificación deberá quedar asociada al profesional responsable.
+
+---
+
+## RNG-004
+
+Cada ingreso del paciente genera un nuevo evento de triaje independiente.
+
+---
+
+## RNG-005
+
+Ningún evento de triaje podrá eliminarse físicamente.
+
+Solo podrá marcarse como:
+
+* Cancelado
+* Anulado
+* Reemplazado
+
+---
+
+## RNG-006
+
+Todas las fechas deberán almacenarse en formato UTC y presentarse según la zona horaria institucional.
+
+---
+
+## RNG-007
+
+El sistema deberá conservar el historial completo de modificaciones.
+
+---
+
+## RNG-008
+
+Ningún dato podrá sobrescribirse sin conservar su valor anterior.
+
+---
+
+## RNG-009
+
+Toda modificación deberá registrar:
+
+* Usuario.
+* Fecha.
+* Hora.
+* Motivo.
+* Valor anterior.
+* Valor nuevo.
+
+---
+
+## RNG-010
+
+Cada inferencia deberá poder reproducirse utilizando exactamente la misma versión del modelo.
+
+---
+
+# 29. Reglas Clínicas
+
+## RNC-001
+
+Todo paciente deberá clasificarse dentro de alguno de los cinco niveles definidos por la Resolución 5596 de 2015.
+
+---
+
+## RNC-002
+
+No se permitirán niveles intermedios.
+
+Valores válidos:
+
+* I
+* II
+* III
+* IV
+* V
+
+---
+
+## RNC-003
+
+Los signos vitales deberán registrarse antes de ejecutar la inferencia, salvo en situaciones de reanimación inmediata (Nivel I), donde el flujo clínico podrá priorizar la atención sobre el registro completo.
+
+---
+
+## RNC-004
+
+El sistema deberá alertar cuando existan signos vitales fuera de rangos fisiológicamente plausibles.
+
+Ejemplos:
+
+* Temperatura < 30 °C o > 45 °C.
+* Saturación > 100 %.
+* Frecuencia cardíaca negativa.
+* Presión arterial sistólica igual a 0 mmHg.
+
+---
+
+## RNC-005
+
+La escala del dolor deberá registrarse utilizando un valor entero entre 0 y 10.
+
+---
+
+## RNC-006
+
+El motivo principal de consulta deberá registrarse antes de finalizar el triaje.
+
+---
+
+## RNC-007
+
+Los antecedentes clínicos relevantes deberán registrarse cuando estén disponibles, sin impedir la continuidad del proceso si aún no se conocen.
+
+---
+
+## RNC-008
+
+Toda clasificación de Nivel I deberá generar una alerta visual y sonora para el personal asistencial.
+
+---
+
+## RNC-009
+
+Las clasificaciones Nivel I no podrán permanecer en estado "Pendiente de Validación".
+
+---
+
+## RNC-010
+
+El sistema deberá advertir cuando exista discordancia significativa entre los signos vitales y la clasificación propuesta.
+
+---
+
+# 30. Reglas Operativas
+
+## RNO-001
+
+El tiempo máximo esperado para completar el proceso de triaje será definido por cada institución y monitoreado mediante indicadores operativos.
+
+---
+
+## RNO-002
+
+El sistema permitirá guardar evaluaciones parciales cuando el proceso sea interrumpido.
+
+---
+
+## RNO-003
+
+El sistema deberá impedir la existencia de dos eventos de triaje activos para el mismo episodio de atención.
+
+---
+
+## RNO-004
+
+Cada profesional visualizará únicamente los pacientes asignados a su área de trabajo, salvo perfiles autorizados de coordinación o auditoría.
+
+---
+
+## RNO-005
+
+Toda clasificación validada deberá sincronizarse con la Historia Clínica Electrónica cuando exista integración.
+
+---
+
+## RNO-006
+
+El sistema deberá funcionar aun cuando temporalmente el modelo IA no esté disponible.
+
+En este caso continuará el proceso clínico tradicional.
+
+---
+
+## RNO-007
+
+Toda indisponibilidad del modelo deberá quedar registrada.
+
+---
+
+## RNO-008
+
+El sistema permitirá reclasificaciones justificadas.
+
+---
+
+## RNO-009
+
+Toda reclasificación requerirá motivo clínico.
+
+---
+
+## RNO-010
+
+Las reclasificaciones deberán conservar el historial completo.
+
+---
+
+# 31. Reglas de Inteligencia Artificial
+
+## RNA-001
+
+La IA únicamente emitirá recomendaciones.
+
+Nunca decisiones obligatorias.
+
+---
+
+## RNA-002
+
+Toda predicción deberá incluir:
+
+* nivel sugerido;
+* probabilidad;
+* confianza;
+* versión del modelo.
+
+---
+
+## RNA-003
+
+El modelo deberá registrar el tiempo de inferencia.
+
+---
+
+## RNA-004
+
+Toda inferencia deberá ser reproducible.
+
+---
+
+## RNA-005
+
+La versión del modelo deberá almacenarse junto con cada predicción.
+
+---
+
+## RNA-006
+
+El sistema permitirá coexistencia de múltiples versiones del modelo para comparación y validación.
+
+---
+
+## RNA-007
+
+No se utilizarán modelos no validados clínicamente en ambientes productivos.
+
+---
+
+## RNA-008
+
+El modelo deberá registrar métricas de desempeño antes de ser promovido a producción.
+
+---
+
+## RNA-009
+
+Los datos de entrenamiento deberán encontrarse anonimizados.
+
+---
+
+## RNA-010
+
+El sistema deberá monitorear deriva (Data Drift y Concept Drift) de manera periódica.
+
+---
+
+# 32. Reglas de Explicabilidad
+
+## RNX-001
+
+Toda inferencia deberá generar una explicación interpretable.
+
+---
+
+## RNX-002
+
+La explicación deberá identificar las variables con mayor influencia en la predicción.
+
+---
+
+## RNX-003
+
+El profesional podrá consultar el impacto de cada variable.
+
+---
+
+## RNX-004
+
+La explicación nunca modificará la predicción.
+
+---
+
+## RNX-005
+
+Las explicaciones deberán almacenarse para auditoría.
+
+---
+
+## RNX-006
+
+Las explicaciones deberán corresponder exactamente a la versión del modelo utilizada.
+
+---
+
+# 33. Reglas de Seguridad
+
+## RNS-001
+
+Todo acceso requerirá autenticación.
+
+---
+
+## RNS-002
+
+Toda comunicación deberá utilizar TLS.
+
+---
+
+## RNS-003
+
+Los datos sensibles deberán cifrarse en reposo.
+
+---
+
+## RNS-004
+
+Los usuarios accederán mediante roles.
+
+---
+
+## RNS-005
+
+Los permisos seguirán el principio de mínimo privilegio.
+
+---
+
+## RNS-006
+
+No podrán almacenarse contraseñas en texto plano.
+
+---
+
+## RNS-007
+
+Toda sesión inactiva expirará automáticamente.
+
+---
+
+## RNS-008
+
+Toda acción sensible quedará registrada.
+
+---
+
+## RNS-009
+
+El sistema deberá cumplir con la Ley 1581 de 2012 sobre protección de datos personales y las políticas institucionales de tratamiento de información.
+
+---
+
+## RNS-010
+
+Los conjuntos de datos destinados al entrenamiento deberán eliminar identificadores directos antes de su uso.
+
+---
+
+# 34. Reglas de Auditoría
+
+## RNAU-001
+
+Toda inferencia deberá generar un registro de auditoría.
+
+---
+
+## RNAU-002
+
+Toda modificación clínica quedará registrada.
+
+---
+
+## RNAU-003
+
+No se permitirá eliminar registros de auditoría.
+
+---
+
+## RNAU-004
+
+Toda auditoría incluirá:
+
+* usuario;
+* fecha;
+* hora;
+* dirección IP (si aplica);
+* dispositivo (si aplica);
+* acción realizada;
+* identificador del evento.
+
+---
+
+## RNAU-005
+
+Las auditorías deberán ser consultables mediante filtros.
+
+---
+
+## RNAU-006
+
+Las auditorías deberán conservarse conforme a la política institucional y la normativa vigente.
+
+---
+
+# 35. Reglas de Gobierno del Dato
+
+## RNGD-001
+
+Toda variable deberá tener propietario funcional.
+
+---
+
+## RNGD-002
+
+Cada atributo deberá poseer definición oficial.
+
+---
+
+## RNGD-003
+
+Todo dato deberá tener trazabilidad.
+
+---
+
+## RNGD-004
+
+No existirán atributos duplicados con diferente significado.
+
+---
+
+## RNGD-005
+
+Los catálogos deberán ser administrados centralmente.
+
+---
+
+## RNGD-006
+
+Toda modificación estructural del modelo de datos requerirá control de cambios.
+
+---
+
+# 36. Reglas de Calidad del Dato
+
+## RNQ-001
+
+Los campos obligatorios no podrán almacenarse vacíos.
+
+---
+
+## RNQ-002
+
+Los datos deberán validarse antes de ejecutar la inferencia.
+
+---
+
+## RNQ-003
+
+Los valores fuera de rango deberán generar alertas.
+
+---
+
+## RNQ-004
+
+Las variables categóricas utilizarán catálogos controlados.
+
+---
+
+## RNQ-005
+
+No se permitirán formatos ambiguos de fecha y hora.
+
+---
+
+## RNQ-006
+
+El sistema deberá identificar registros duplicados cuando sea posible.
+
+---
+
+# 37. Reglas de Rendimiento
+
+## RNP-001
+
+El tiempo objetivo de inferencia será menor a **3 segundos** en condiciones normales de operación.
+
+---
+
+## RNP-002
+
+El sistema deberá soportar múltiples inferencias concurrentes sin degradar significativamente el servicio.
+
+---
+
+## RNP-003
+
+Las consultas operativas deberán responder en tiempos adecuados para el entorno clínico.
+
+---
+
+## RNP-004
+
+La generación de explicaciones SHAP no deberá impedir la continuidad del proceso asistencial.
+
+---
+
+# 38. Catálogo de Decisiones Funcionales
+
+| Código | Decisión                                                                                                        |
+| ------ | --------------------------------------------------------------------------------------------------------------- |
+| DF-001 | La decisión clínica final corresponde al profesional sanitario.                                                 |
+| DF-002 | La IA actúa únicamente como apoyo.                                                                              |
+| DF-003 | Se utilizará un enfoque multimodal con datos estructurados y texto libre.                                       |
+| DF-004 | Todas las predicciones serán explicables mediante SHAP u otra técnica equivalente.                              |
+| DF-005 | El sistema mantendrá trazabilidad completa de cada inferencia.                                                  |
+| DF-006 | El entrenamiento del modelo utilizará datos anonimizados.                                                       |
+| DF-007 | Se permitirá la coexistencia de versiones del modelo durante procesos de validación.                            |
+| DF-008 | La integración con la Historia Clínica Electrónica será desacoplada mediante APIs cuando exista disponibilidad. |
+
+---
+
+## Fin de la Entrega 5
+
+# Documento Maestro de Contexto Funcional
+
+## Sistema Inteligente de Clasificación de Triaje Multimodal Basado en Inteligencia Artificial para Servicios de Urgencias en Colombia
+
+# ENTREGA 6
+
+---
+
+# 39. Catálogo de Requerimientos Funcionales
+
+## 39.1 Objetivo
+
+El presente capítulo define los requerimientos funcionales que deberá satisfacer el sistema. Los requerimientos se encuentran organizados por módulos funcionales y alineados con:
+
+* Objetivos del proyecto.
+* Reglas de negocio.
+* Restricciones regulatorias.
+* Arquitectura funcional.
+* Necesidades de los usuarios.
+
+Cada requerimiento posee:
+
+* Identificador único.
+* Descripción.
+* Prioridad.
+* Actor responsable.
+* Reglas de negocio asociadas.
+* Criterios de aceptación.
+
+---
+
+# 39.2 Clasificación
+
+| Prefijo | Módulo                  |
+| ------- | ----------------------- |
+| RF-ADM  | Administración          |
+| RF-PAC  | Gestión del Paciente    |
+| RF-TRI  | Triaje                  |
+| RF-VIT  | Signos Vitales          |
+| RF-EVA  | Evaluación Clínica      |
+| RF-NLP  | Procesamiento Texto     |
+| RF-IA   | Inteligencia Artificial |
+| RF-XAI  | Explicabilidad          |
+| RF-AUD  | Auditoría               |
+| RF-REP  | Reportes                |
+| RF-MOD  | Gestión de Modelos      |
+| RF-SEC  | Seguridad               |
+| RF-INT  | Integraciones           |
+
+---
+
+# 40. Módulo de Gestión del Paciente
+
+## RF-PAC-001 Registrar Paciente
+
+**Descripción**
+
+El sistema permitirá registrar la información básica del paciente para iniciar un episodio de atención.
+
+**Actor**
+
+Personal Administrativo.
+
+**Prioridad**
+
+Alta.
+
+**Reglas Asociadas**
+
+* RNG-004
+* RNS-009
+
+**Criterios de aceptación**
+
+* Se genera un identificador único del episodio.
+* Se valida la información obligatoria.
+* Se registra la fecha y hora de ingreso.
+
+---
+
+## RF-PAC-002 Buscar Paciente
+
+El sistema permitirá localizar pacientes mediante:
+
+* documento;
+* nombre;
+* número de historia clínica;
+* identificador interno.
+
+---
+
+## RF-PAC-003 Consultar Historial
+
+Permitirá visualizar eventos anteriores del paciente cuando la política institucional y la disponibilidad de la Historia Clínica Electrónica lo permitan.
+
+---
+
+## RF-PAC-004 Validación de Datos
+
+El sistema verificará:
+
+* duplicados;
+* formatos;
+* campos obligatorios.
+
+---
+
+# 41. Módulo de Triaje
+
+## RF-TRI-001 Crear Evento de Triaje
+
+Cada ingreso generará un nuevo evento de triaje.
+
+---
+
+## RF-TRI-002 Registrar Hora de Inicio
+
+El sistema registrará automáticamente la fecha y hora de inicio del proceso.
+
+---
+
+## RF-TRI-003 Estado del Triaje
+
+Estados permitidos:
+
+* Registrado.
+* En evaluación.
+* Pendiente IA.
+* Clasificado.
+* Validado.
+* Cerrado.
+* Cancelado.
+
+---
+
+## RF-TRI-004 Reclasificación
+
+Permitirá reclasificar un paciente cuando existan cambios clínicos.
+
+Será obligatorio registrar:
+
+* motivo;
+* profesional;
+* fecha;
+* observaciones.
+
+---
+
+## RF-TRI-005 Cierre del Evento
+
+El sistema permitirá cerrar el evento únicamente cuando exista:
+
+* clasificación;
+* validación;
+* auditoría mínima.
+
+---
+
+# 42. Módulo de Captura de Signos Vitales
+
+## RF-VIT-001 Registrar Temperatura
+
+Unidad:
+
+°C.
+
+---
+
+## RF-VIT-002 Registrar Frecuencia Cardíaca
+
+Unidad:
+
+Latidos por minuto.
+
+---
+
+## RF-VIT-003 Registrar Frecuencia Respiratoria
+
+Unidad:
+
+Respiraciones por minuto.
+
+---
+
+## RF-VIT-004 Registrar Saturación
+
+Unidad:
+
+Porcentaje.
+
+---
+
+## RF-VIT-005 Registrar Presión Arterial
+
+Registrar:
+
+* Sistólica.
+* Diastólica.
+
+---
+
+## RF-VIT-006 Registrar Peso
+
+Unidad:
+
+Kilogramos.
+
+---
+
+## RF-VIT-007 Registrar Talla
+
+Unidad:
+
+Centímetros.
+
+---
+
+## RF-VIT-008 Calcular IMC
+
+El sistema calculará automáticamente el índice de masa corporal cuando existan peso y talla.
+
+---
+
+## RF-VIT-009 Validar Rangos
+
+Todos los signos vitales serán validados antes del almacenamiento.
+
+---
+
+## RF-VIT-010 Alertar Valores Críticos
+
+Valores fuera de rangos fisiológicos generarán alertas visuales.
+
+---
+
+# 43. Módulo de Evaluación Clínica
+
+## RF-EVA-001 Registrar Motivo de Consulta
+
+Permitirá ingresar:
+
+* texto libre;
+* categorías.
+
+---
+
+## RF-EVA-002 Registrar Escala del Dolor
+
+Valores permitidos:
+
+0–10.
+
+---
+
+## RF-EVA-003 Registrar Glasgow
+
+Cuando aplique.
+
+---
+
+## RF-EVA-004 Registrar Nivel de Conciencia
+
+Catálogo:
+
+* Alerta.
+* Somnoliento.
+* Obnubilado.
+* Inconsciente.
+
+---
+
+## RF-EVA-005 Registrar Antecedentes
+
+Permitirá registrar antecedentes relevantes.
+
+---
+
+## RF-EVA-006 Registrar Alergias
+
+Campo opcional.
+
+---
+
+## RF-EVA-007 Registrar Observaciones
+
+Texto libre.
+
+---
+
+# 44. Módulo NLP
+
+## RF-NLP-001 Procesar Texto Libre
+
+El sistema procesará automáticamente las notas clínicas.
+
+---
+
+## RF-NLP-002 Generar Embeddings
+
+Transformará el texto clínico en representaciones numéricas utilizando el modelo NLP configurado.
+
+---
+
+## RF-NLP-003 Limpieza del Texto
+
+Realizará:
+
+* normalización;
+* eliminación de caracteres inválidos;
+* tokenización;
+* lematización cuando aplique.
+
+---
+
+## RF-NLP-004 Detección de Texto Vacío
+
+Cuando el texto esté vacío continuará el proceso utilizando únicamente variables estructuradas.
+
+---
+
+## RF-NLP-005 Idioma
+
+El sistema asumirá español como idioma principal.
+
+---
+
+# 45. Módulo Inteligencia Artificial
+
+## RF-IA-001 Ejecutar Inferencia
+
+Permitirá ejecutar el modelo predictivo.
+
+---
+
+## RF-IA-002 Generar Probabilidades
+
+Calculará la probabilidad para cada nivel.
+
+Ejemplo:
+
+Nivel I
+
+0.01
+
+Nivel II
+
+0.72
+
+Nivel III
+
+0.20
+
+Nivel IV
+
+0.06
+
+Nivel V
+
+0.01
+
+---
+
+## RF-IA-003 Seleccionar Predicción
+
+Seleccionará automáticamente la clase con mayor probabilidad, manteniendo visibles las probabilidades del resto de niveles.
+
+---
+
+## RF-IA-004 Registrar Modelo
+
+Toda inferencia almacenará:
+
+* versión;
+* algoritmo;
+* fecha;
+* identificador.
+
+---
+
+## RF-IA-005 Registrar Tiempo
+
+Tiempo empleado por la inferencia.
+
+---
+
+## RF-IA-006 Registrar Confianza
+
+Se almacenará el score de confianza.
+
+---
+
+## RF-IA-007 Comparación de Modelos
+
+Permitirá comparar múltiples modelos durante pruebas.
+
+---
+
+## RF-IA-008 Cambio de Modelo
+
+Solo usuarios autorizados podrán seleccionar modelos diferentes.
+
+---
+
+## RF-IA-009 Reprocesamiento
+
+Permitirá volver a ejecutar la inferencia cuando existan cambios en los datos clínicos.
+
+---
+
+## RF-IA-010 Inferencia Asíncrona
+
+El sistema podrá ejecutar inferencias sin bloquear la interfaz de usuario cuando el tiempo de procesamiento lo requiera.
+
+---
+
+# 46. Módulo Explicabilidad
+
+## RF-XAI-001 Generar SHAP
+
+Toda predicción deberá tener explicación.
+
+---
+
+## RF-XAI-002 Variables Más Importantes
+
+Mostrar Top 10 variables.
+
+---
+
+## RF-XAI-003 Impacto Positivo
+
+Mostrar variables que incrementan la probabilidad.
+
+---
+
+## RF-XAI-004 Impacto Negativo
+
+Mostrar variables que disminuyen la probabilidad.
+
+---
+
+## RF-XAI-005 Visualización
+
+Mostrar gráficos interpretables.
+
+---
+
+## RF-XAI-006 Exportar Explicación
+
+Permitirá exportar resultados.
+
+---
+
+# 47. Módulo Auditoría
+
+## RF-AUD-001 Registrar Acciones
+
+Toda acción quedará registrada.
+
+---
+
+## RF-AUD-002 Registrar Usuario
+
+Usuario responsable.
+
+---
+
+## RF-AUD-003 Registrar Fecha
+
+Fecha y hora.
+
+---
+
+## RF-AUD-004 Registrar Cambios
+
+Valor anterior y nuevo.
+
+---
+
+## RF-AUD-005 Consultar Auditoría
+
+Búsqueda por:
+
+* usuario;
+* paciente;
+* fecha;
+* modelo.
+
+---
+
+## RF-AUD-006 Exportar Auditoría
+
+CSV.
+
+Excel.
+
+PDF.
+
+---
+
+# 48. Módulo Reportes
+
+## RF-REP-001 Dashboard General
+
+Indicadores operativos.
+
+---
+
+## RF-REP-002 Distribución de Triaje
+
+Por niveles.
+
+---
+
+## RF-REP-003 Tiempo Promedio
+
+Clasificación.
+
+---
+
+## RF-REP-004 Desempeño IA
+
+Accuracy.
+
+Precision.
+
+Recall.
+
+F1.
+
+AUC.
+
+---
+
+## RF-REP-005 Concordancia
+
+IA vs Profesional.
+
+---
+
+## RF-REP-006 Exportación
+
+Excel.
+
+PDF.
+
+CSV.
+
+---
+
+# 49. Módulo Gestión de Modelos
+
+## RF-MOD-001 Registrar Modelo
+
+Nuevo modelo.
+
+---
+
+## RF-MOD-002 Versionado
+
+Control de versiones.
+
+---
+
+## RF-MOD-003 Activar Modelo
+
+Promoción.
+
+---
+
+## RF-MOD-004 Desactivar Modelo
+
+Rollback.
+
+---
+
+## RF-MOD-005 Historial
+
+Mantener todas las versiones.
+
+---
+
+# 50. Módulo Seguridad
+
+## RF-SEC-001 Inicio de Sesión
+
+Autenticación.
+
+---
+
+## RF-SEC-002 Gestión de Roles
+
+Administrador.
+
+Médico.
+
+Enfermera.
+
+Investigador.
+
+Auditor.
+
+---
+
+## RF-SEC-003 Recuperación de Contraseña
+
+Cuando exista autenticación propia.
+
+---
+
+## RF-SEC-004 Cierre Automático
+
+Sesión expirada.
+
+---
+
+# 51. Módulo Integraciones
+
+## RF-INT-001 Historia Clínica
+
+Integración mediante API cuando exista disponibilidad institucional.
+
+---
+
+## RF-INT-002 Sistemas Hospitalarios
+
+Integración desacoplada.
+
+---
+
+## RF-INT-003 Exportación
+
+FHIR/JSON/CSV como formatos preferentes para interoperabilidad.
+
+---
+
+## RF-INT-004 Dataset de Entrenamiento
+
+Exportación anonimizada.
+
+---
+
+# 52. Matriz de Prioridades
+
+| Prioridad | Definición                                         |
+| --------- | -------------------------------------------------- |
+| Crítica   | Imprescindible para el funcionamiento del sistema. |
+| Alta      | Necesaria para la operación normal.                |
+| Media     | Mejora significativa del producto.                 |
+| Baja      | Funcionalidad futura o complementaria.             |
+
+---
+
+# 53. Trazabilidad de Requerimientos
+
+Cada requerimiento deberá mantener trazabilidad con:
+
+* Objetivos del negocio.
+* Reglas de negocio.
+* Casos de uso.
+* Historias de usuario.
+* Casos de prueba.
+* Componentes de arquitectura.
+* Módulos de software.
+* Métricas del proyecto.
+
+Esta trazabilidad permitirá evaluar el impacto de cambios, asegurar la cobertura funcional y facilitar la validación durante el desarrollo y las pruebas.
+
+---
+
+## Observaciones de mejora para el proyecto
+
+Como experto en levantamiento de requerimientos, añadiría dos módulos que suelen omitirse y que fortalecerán considerablemente el TFM y la futura implementación:
+
+### Módulo de Configuración Clínica
+
+Permitiría parametrizar sin cambios de código:
+
+* Rangos de signos vitales.
+* Umbrales de alerta.
+* Catálogos clínicos.
+* Reglas institucionales.
+* Versiones de protocolos.
+
+Esto evita que el sistema quede acoplado a una única IPS.
+
+### Módulo de Monitoreo del Modelo (MLOps Funcional)
+
+Aunque se desarrollará técnicamente más adelante, funcionalmente debería contemplar:
+
+* Monitoreo de deriva de datos (Data Drift).
+* Monitoreo de deriva de conceptos (Concept Drift).
+* Alertas por degradación del F1-Score.
+* Comparación entre versiones del modelo.
+* Recomendación de reentrenamiento.
+
+Estos módulos aumentan la escalabilidad y preparan la solución para un uso real en entornos hospitalarios.
+
+---
+
+## Fin de la Entrega 6
+
+# Documento Maestro de Contexto Funcional
+
+## Sistema Inteligente de Clasificación de Triaje Multimodal Basado en Inteligencia Artificial para Servicios de Urgencias en Colombia
+
+# ENTREGA 7
+
+---
+
+# 54. Catálogo de Casos de Uso
+
+## 54.1 Objetivo
+
+Los Casos de Uso describen la interacción entre los actores del sistema y las funcionalidades requeridas para cumplir los objetivos del proyecto.
+
+Cada caso de uso mantiene trazabilidad con:
+
+* Objetivos del negocio.
+* Requerimientos funcionales.
+* Reglas de negocio.
+* Componentes funcionales.
+* Casos de prueba.
+
+---
+
+# 54.2 Convenciones
+
+| Prefijo | Significado             |
+| ------- | ----------------------- |
+| CU      | Caso de Uso             |
+| ACT     | Actor                   |
+| RF      | Requerimiento Funcional |
+| RN      | Regla de Negocio        |
+
+---
+
+# 55. Mapa General de Casos de Uso
+
+```text
+                    SISTEMA DE TRIAJE IA
+
+                    ┌──────────────────────┐
+                    │   Administrador      │
+                    └──────────┬───────────┘
+                               │
+        ┌──────────────────────┼─────────────────────────┐
+        ▼                      ▼                         ▼
+ Configurar Sistema     Gestionar Usuarios       Gestionar Modelos
+
+
+                   ┌────────────────────────────┐
+                   │ Enfermera de Triaje        │
+                   └─────────────┬──────────────┘
+                                 │
+        ┌──────────────┬──────────┼──────────────┬─────────────┐
+        ▼              ▼          ▼              ▼             ▼
+ Registrar      Registrar     Ejecutar     Validar      Reclasificar
+ Paciente       Evaluación      IA         Resultado      Paciente
+
+
+                     ┌─────────────────────────┐
+                     │ Médico                  │
+                     └─────────────┬───────────┘
+                                   │
+                    ┌──────────────┴───────────────┐
+                    ▼                              ▼
+             Consultar Caso              Confirmar Clasificación
+
+
+                     ┌────────────────────────┐
+                     │ Investigador IA        │
+                     └─────────────┬──────────┘
+                                   │
+                ┌──────────────────┴─────────────────┐
+                ▼                                    ▼
+        Consultar Dataset                  Monitorear Modelo
+```
+
+---
+
+# CU-001 Registrar Paciente
+
+## Objetivo
+
+Registrar el ingreso del paciente al servicio de urgencias.
+
+---
+
+## Actores
+
+Principal
+
+* Personal Administrativo
+
+Secundarios
+
+* Enfermera
+
+---
+
+## Requerimientos Asociados
+
+* RF-PAC-001
+* RF-PAC-002
+* RF-PAC-004
+
+---
+
+## Reglas Asociadas
+
+* RNG-004
+* RNG-005
+
+---
+
+## Precondiciones
+
+* El sistema se encuentra disponible.
+* Usuario autenticado.
+
+---
+
+## Flujo Principal
+
+1. El usuario selecciona "Nuevo Paciente".
+
+2. El sistema solicita los datos básicos.
+
+3. El usuario registra la información.
+
+4. El sistema valida la información.
+
+5. El sistema genera el episodio de atención.
+
+6. El sistema crea el evento de triaje.
+
+---
+
+## Flujo Alternativo
+
+Documento existente.
+
+El sistema recupera información previa del paciente.
+
+---
+
+## Flujo de Excepción
+
+Información incompleta.
+
+El sistema solicita completar campos obligatorios.
+
+---
+
+## Postcondiciones
+
+Paciente registrado.
+
+Evento creado.
+
+---
+
+## Prioridad
+
+Crítica.
+
+---
+
+# CU-002 Registrar Evaluación Clínica
+
+## Objetivo
+
+Registrar toda la información clínica necesaria para ejecutar el modelo IA.
+
+---
+
+## Actor
+
+Enfermera.
+
+---
+
+## Requerimientos
+
+* RF-EVA-001
+* RF-EVA-002
+* RF-EVA-003
+* RF-VIT-001
+* RF-VIT-010
+
+---
+
+## Flujo Principal
+
+1. Abrir evento.
+
+2. Registrar signos vitales.
+
+3. Registrar dolor.
+
+4. Registrar antecedentes.
+
+5. Registrar motivo.
+
+6. Registrar observaciones.
+
+7. Guardar evaluación.
+
+---
+
+## Flujo Alternativo
+
+Paciente inconsciente.
+
+El profesional registra únicamente información disponible y continúa con la atención.
+
+---
+
+## Excepciones
+
+Valores inválidos.
+
+El sistema muestra advertencias y permite corregir los datos antes de continuar.
+
+---
+
+# CU-003 Ejecutar Inferencia IA
+
+## Objetivo
+
+Obtener una recomendación automática del nivel de triaje.
+
+---
+
+## Actor
+
+Enfermera.
+
+---
+
+## Requerimientos
+
+* RF-IA-001
+* RF-IA-002
+* RF-IA-006
+
+---
+
+## Reglas
+
+* RNA-001
+* RNA-002
+* RNA-003
+
+---
+
+## Flujo Principal
+
+1. El profesional selecciona "Ejecutar IA".
+
+2. El sistema valida los datos.
+
+3. Ejecuta el pipeline multimodal.
+
+4. Obtiene embeddings del texto.
+
+5. Ejecuta el modelo.
+
+6. Calcula probabilidades.
+
+7. Calcula confianza.
+
+8. Genera explicación SHAP.
+
+9. Presenta resultados.
+
+---
+
+## Flujo Alternativo
+
+Modelo no disponible.
+
+El sistema informa indisponibilidad y permite continuar con clasificación manual.
+
+---
+
+## Excepciones
+
+Datos insuficientes.
+
+El sistema identifica los campos faltantes y evita la inferencia hasta que se complete la información mínima requerida, salvo excepciones clínicas definidas en las reglas de negocio.
+
+---
+
+## Postcondiciones
+
+Predicción registrada.
+
+---
+
+# CU-004 Validar Clasificación
+
+## Objetivo
+
+Aceptar o modificar la clasificación sugerida por IA.
+
+---
+
+## Actor
+
+Enfermera.
+
+---
+
+## Flujo Principal
+
+1. Visualizar recomendación.
+
+2. Revisar explicación.
+
+3. Comparar signos vitales.
+
+4. Confirmar clasificación.
+
+5. Registrar decisión.
+
+---
+
+## Flujo Alternativo
+
+Modificar clasificación.
+
+El profesional selecciona un nivel diferente.
+
+Debe registrar motivo.
+
+---
+
+## Excepción
+
+No registrar motivo.
+
+El sistema impide finalizar la reclasificación.
+
+---
+
+# CU-005 Consultar Explicación SHAP
+
+## Objetivo
+
+Comprender las razones de la predicción.
+
+---
+
+## Actor
+
+Profesional sanitario.
+
+---
+
+## Flujo Principal
+
+1. Seleccionar explicación.
+
+2. Visualizar ranking.
+
+3. Revisar variables.
+
+4. Revisar contribución positiva.
+
+5. Revisar contribución negativa.
+
+---
+
+## Resultado
+
+Mayor confianza clínica.
+
+---
+
+# CU-006 Reclasificar Paciente
+
+## Objetivo
+
+Modificar el nivel de triaje cuando la condición clínica cambia.
+
+---
+
+## Actor
+
+Enfermera.
+
+---
+
+## Flujo Principal
+
+1. Abrir evento.
+
+2. Seleccionar reclasificar.
+
+3. Elegir nuevo nivel.
+
+4. Registrar justificación.
+
+5. Confirmar.
+
+6. Registrar auditoría.
+
+---
+
+## Regla
+
+Toda reclasificación requiere justificación clínica.
+
+---
+
+# CU-007 Consultar Historial
+
+## Actor
+
+Médico.
+
+---
+
+## Flujo Principal
+
+1. Buscar paciente.
+
+2. Abrir historial.
+
+3. Consultar eventos anteriores.
+
+4. Revisar clasificaciones.
+
+5. Revisar cambios.
+
+---
+
+# CU-008 Consultar Auditoría
+
+## Actor
+
+Auditor.
+
+---
+
+## Flujo
+
+1. Seleccionar auditoría.
+
+2. Definir filtros.
+
+3. Consultar registros.
+
+4. Exportar.
+
+---
+
+# CU-009 Exportar Resultados
+
+## Actor
+
+Investigador.
+
+---
+
+## Formatos
+
+* CSV
+* Excel
+* JSON
+
+---
+
+## Flujo
+
+1. Seleccionar rango.
+
+2. Seleccionar variables.
+
+3. Exportar.
+
+---
+
+# CU-010 Administrar Modelos
+
+## Actor
+
+Administrador IA.
+
+---
+
+## Funciones
+
+* Registrar modelo.
+* Activar.
+* Desactivar.
+* Versionar.
+* Comparar.
+
+---
+
+# CU-011 Comparar Modelos
+
+## Objetivo
+
+Comparar múltiples modelos utilizando el mismo conjunto de datos.
+
+---
+
+## Actor
+
+Científico de Datos.
+
+---
+
+## Flujo
+
+1. Seleccionar modelos.
+
+2. Seleccionar dataset.
+
+3. Ejecutar comparación.
+
+4. Visualizar:
+
+* Accuracy
+* Precision
+* Recall
+* F1
+* AUC
+* MCC
+* Curvas ROC
+* Matriz de confusión
+
+---
+
+# CU-012 Monitorear Desempeño
+
+## Actor
+
+Administrador IA.
+
+---
+
+## Flujo
+
+Consultar:
+
+* deriva;
+* precisión;
+* recall;
+* tiempos;
+* errores.
+
+---
+
+# CU-013 Generar Dashboard
+
+## Actor
+
+Coordinador.
+
+---
+
+## Indicadores
+
+* Pacientes por nivel.
+* Tiempo promedio.
+* IA vs Humano.
+* Reclasificaciones.
+* Alertas.
+
+---
+
+# CU-014 Gestionar Usuarios
+
+## Actor
+
+Administrador.
+
+---
+
+## Funciones
+
+* Crear.
+* Editar.
+* Desactivar.
+* Asignar Roles.
+
+---
+
+# CU-015 Configurar Parámetros Clínicos
+
+## Actor
+
+Administrador Clínico.
+
+---
+
+## Configuración
+
+* Rangos vitales.
+* Umbrales.
+* Alertas.
+* Catálogos.
+
+---
+
+# CU-016 Reentrenar Modelo
+
+## Actor
+
+Científico de Datos.
+
+---
+
+## Flujo
+
+1. Seleccionar dataset.
+
+2. Configurar algoritmo.
+
+3. Entrenar.
+
+4. Validar.
+
+5. Comparar.
+
+6. Aprobar.
+
+---
+
+# CU-017 Promover Modelo
+
+## Actor
+
+Administrador IA.
+
+---
+
+## Flujo
+
+1. Revisar métricas.
+
+2. Aprobar.
+
+3. Publicar versión.
+
+4. Registrar auditoría.
+
+---
+
+# CU-018 Generar Dataset
+
+## Actor
+
+Investigador.
+
+---
+
+## Flujo
+
+1. Definir filtros.
+
+2. Anonimizar.
+
+3. Exportar.
+
+---
+
+# CU-019 Consultar KPIs
+
+## Actor
+
+Gerencia.
+
+---
+
+## KPIs
+
+* F1.
+* Recall.
+* Accuracy.
+* Tiempo.
+* Casos diarios.
+* Concordancia.
+
+---
+
+# CU-020 Administrar Catálogos
+
+## Actor
+
+Administrador.
+
+---
+
+## Catálogos
+
+* EPS.
+* Municipios.
+* Diagnósticos.
+* Motivos.
+* Antecedentes.
+
+---
+
+# 56. Matriz de Trazabilidad de Casos de Uso
+
+| Caso de Uso | RF Relacionados | RN Relacionadas | Objetivo              |
+| ----------- | --------------- | --------------- | --------------------- |
+| CU-001      | RF-PAC          | RNG             | Registrar paciente    |
+| CU-002      | RF-EVA, RF-VIT  | RNC             | Registrar evaluación  |
+| CU-003      | RF-IA           | RNA             | Ejecutar IA           |
+| CU-004      | RF-TRI          | RNG             | Validar clasificación |
+| CU-005      | RF-XAI          | RNX             | Explicabilidad        |
+| CU-006      | RF-TRI          | RNO             | Reclasificación       |
+| CU-007      | RF-PAC          | RNG             | Historial             |
+| CU-008      | RF-AUD          | RNAU            | Auditoría             |
+| CU-009      | RF-REP          | RNGD            | Exportación           |
+| CU-010      | RF-MOD          | RNA             | Gestión de modelos    |
+
+---
+
+# 57. Observaciones del Arquitecto Funcional
+
+Como parte del levantamiento de requerimientos, recomiendo incorporar cuatro casos de uso adicionales que fortalecen la solución para un entorno hospitalario real:
+
+### CU-021 Gestión de Alertas Clínicas
+
+Permite configurar, visualizar y confirmar alertas críticas generadas por el sistema (por ejemplo, saturación baja o sospecha de sepsis), garantizando que sean atendidas y registradas.
+
+### CU-022 Monitoreo de Calidad del Dato
+
+Permite identificar registros incompletos, inconsistentes o fuera de rango antes de que ingresen al proceso de inferencia, reduciendo el riesgo de decisiones basadas en datos deficientes.
+
+### CU-023 Monitoreo de Deriva del Modelo
+
+Permite al equipo de IA detectar degradaciones del modelo por cambios en la distribución de los datos (Data Drift y Concept Drift), generando alertas y recomendaciones de reentrenamiento.
+
+### CU-024 Gestión de Consentimiento y Anonimización
+
+Gestiona el uso secundario de datos clínicos para investigación y entrenamiento de modelos, asegurando la anonimización y el cumplimiento de la normativa aplicable y de las políticas institucionales.
+
+Estos casos de uso no suelen incluirse en un TFM académico, pero son altamente recomendables para una solución preparada para producción y alineada con buenas prácticas de MLOps, gobernanza y regulación.
+
+---
+
+## Fin de la Entrega 7
+

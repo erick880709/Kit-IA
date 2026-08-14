@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arquitectura de los Modelos — TriajeIA</title>
+<style>
+:root{--primary:#0891B2;--accent:#059669;--bg:#FFFFFF;--fg:#164E63;--border:#A5F3FC;--code-bg:#ECFEFF;}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Fira Sans','Segoe UI',system-ui,sans-serif;background:#F0F9FA;color:var(--fg);line-height:1.65;}
+.wrap{max-width:960px;margin:0 auto;background:var(--bg);padding:48px 56px;box-shadow:0 0 24px rgba(8,145,178,.08);}
+h1,h2,h3,h4{color:var(--primary);font-weight:600;line-height:1.3;}
+h1{font-size:28px;border-bottom:3px solid var(--border);padding-bottom:12px;margin-bottom:8px;}
+h2{font-size:22px;border-bottom:2px solid var(--border);padding-bottom:6px;margin-top:36px;}
+h3{font-size:17px;margin-top:24px;}
+h4{font-size:15px;color:#0E7490;}
+p{margin:10px 0;}
+code{background:var(--code-bg);color:#0E7490;padding:2px 6px;border-radius:4px;font-family:'Fira Code',Consolas,monospace;font-size:13px;}
+pre{background:#164E63;color:#ECFEFF;padding:16px;border-radius:10px;overflow-x:auto;}
+pre code{background:transparent;color:inherit;padding:0;font-size:13px;}
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px;}
+th{background:var(--primary);color:#fff;text-align:left;padding:8px 10px;}
+td{border:1px solid var(--border);padding:8px 10px;vertical-align:top;}
+tr:nth-child(even) td{background:#F7FDFE;}
+blockquote{border-left:4px solid var(--primary);background:var(--code-bg);margin:12px 0;padding:8px 16px;color:#0E7490;font-size:14px;}
+figure.diagram{margin:16px 0;text-align:center;border:1px solid var(--border);border-radius:10px;padding:12px;background:#FFF;}
+figure.diagram svg{max-width:100%;height:auto;}
+a{color:var(--accent);}
+hr{border:none;border-top:2px solid var(--border);margin:28px 0;}
+ul,ol{padding-left:24px;}
+.footer{margin-top:40px;font-size:12px;color:#64748B;border-top:1px solid var(--border);padding-top:12px;}
+@media print{body{background:#fff}.wrap{box-shadow:none;padding:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1 id="arquitectura-de-los-modelos-triajeia">Arquitectura de los Modelos — TriajeIA</h1>
+<p><strong>Versión:</strong> 1.0 · <strong>Fecha:</strong> 2026-08-13 · <strong>Skill:</strong> <code>archi</code> (modo ML)
+<strong>Relación:</strong> complemento de <code>Documento_Arquitectura_TriajeIA.md</code> §5.1–5.4, §9.1 y §13.1.
+<strong>Diagramas oficiales:</strong> <code>Diagramas_TriajeIA.drawio</code> → pestañas <strong>5. ML C1 Contexto</strong>, <strong>6. ML C2 Pipeline</strong>, <strong>7. Arquitectura del Modelo</strong>.
+<strong>ADRs de modelo:</strong> <code>adr/ADR-003-desbalance-class-weights-umbrales.md</code>, <code>adr/ADR-004-fusion-tardia-vs-temprana.md</code>.</p>
+<hr />
+<h2 id="1-alcance-y-enfoque-del-componente-ml">1. Alcance y enfoque del componente ML</h2>
+<p>El sistema clasifica un evento de triaje en 5 niveles (Res. 5596/2015) combinando <strong>dos modalidades</strong>:</p>
+<ol>
+<li><strong>Modalidad estructurada:</strong> signos vitales (SpO₂, FC, FR, PA, T°), demografía, antecedentes, dolor/Glasgow.</li>
+<li><strong>Modalidad textual:</strong> motivo de consulta libre + descripción estructurada (CIE-10).</li>
+</ol>
+<p>El estudio compara <strong>fusión temprana</strong> (features concatenadas + clasificador único) contra <strong>fusión tardía</strong> (submodelos independientes + meta-modelo). Ambas son obligatorias (RT-002). La tardía es la candidata principal (ADR-004).</p>
+<p><strong>El modelo sugiere; el profesional decide.</strong> El sistema nunca autocompleta el nivel del profesional (RNF-008, RD-003).</p>
+<h2 id="2-fuentes-de-datos-y-pipeline">2. Fuentes de datos y pipeline</h2>
+<table>
+<thead>
+<tr>
+<th>Fuente</th>
+<th>Tipo</th>
+<th>Volumen</th>
+<th>Rol</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MIMIC-IV-ED</td>
+<td>Tabular + texto libre</td>
+<td>~425k visitas</td>
+<td>Preentrenamiento / baseline (pendiente CITI)</td>
+</tr>
+<tr>
+<td>Cohorte Hospital SJdD</td>
+<td>Tabular (morbilidad + etiqueta triaje)</td>
+<td>43.594 episodios</td>
+<td>Validación contexto local</td>
+</tr>
+<tr>
+<td>datos.gov.co triaje nacional</td>
+<td>Tabular</td>
+<td>89.453 eventos</td>
+<td>Calibración de distribución I–V</td>
+</tr>
+<tr>
+<td>BDUA (contributivo/subsidiado)</td>
+<td>Tabular</td>
+<td>~11 M</td>
+<td>Perfil demográfico</td>
+</tr>
+<tr>
+<td>Línea 123 Bogotá</td>
+<td>Texto</td>
+<td>~100 meses</td>
+<td>NLP motivo de consulta</td>
+</tr>
+<tr>
+<td>Sintéticos demo</td>
+<td>Tabular + texto</td>
+<td>Generados</td>
+<td>Demo funcional (calibrados con distribuciones reales)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="pipeline-13-pasos-rd-006">Pipeline (13 pasos — RD-006)</h3>
+<p><code>Ingesta CSV → validación de esquema → limpieza (nulos/outliers/deduplicación) → anonimización (Ley 1581) → feature engineering → split estratificado 70/15/15 → entrenamiento → evaluación → selección → registro → export demo</code>.</p>
+<p><strong>Anti-leakage (crítico):</strong>
+- El split es <strong>estratificado por nivel</strong> y ocurre <strong>antes</strong> de cualquier <code>fit</code>.
+- El vectorizador de texto usa un modelo preentrenado sin reentrenar sobre test.
+- Imputaciones y escaladores se ajustan <strong>solo</strong> con train y se aplican a val/test.
+- Semilla global fija (<code>RANDOM_SEED=42</code>) y versionado de datos (<code>data-v&lt;fecha&gt;-&lt;hash&gt;</code>).</p>
+<h2 id="3-arquitectura-de-entrenamiento">3. Arquitectura de entrenamiento</h2>
+<h3 id="31-baselines-obligatorios-rt-004">3.1 Baselines obligatorios (RT-004)</h3>
+<table>
+<thead>
+<tr>
+<th>Baseline</th>
+<th>Entrada</th>
+<th>Nota</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Regresión Logística</td>
+<td>Estructurado</td>
+<td>Cota inferior; pesos por clase</td>
+</tr>
+<tr>
+<td>Random Forest</td>
+<td>Estructurado</td>
+<td>Cota media</td>
+</tr>
+<tr>
+<td>XGBoost</td>
+<td>Estructurado</td>
+<td>Baseline fuerte</td>
+</tr>
+</tbody>
+</table>
+<p>Ningún modelo complejo se declara ganador sin superar estos baselines con significancia estadística.</p>
+<h3 id="32-submodelo-de-texto">3.2 Submodelo de texto</h3>
+<p>BERT clínico en español (familia BETO / biomédica) produce el embedding <code>[CLS]</code> del motivo de consulta (RT-003). Solo fine-tuning ligero o extracción de features — no reentrenamiento completo (datos limitados).</p>
+<h3 id="33-estrategias-de-fusion">3.3 Estrategias de fusión</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Fusión temprana</th>
+<th>Fusión tardía</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pipeline</td>
+<td>features ⊕ embedding → clasificador único</td>
+<td>XGBoost(structurado) y BERT(texto) → probs → meta-modelo</td>
+</tr>
+<tr>
+<td>Meta-modelo</td>
+<td>—</td>
+<td>Regresión Logística (RT-010)</td>
+</tr>
+<tr>
+<td>Explicabilidad</td>
+<td>SHAP sobre el clasificador único</td>
+<td>SHAP por submodelo + pesos del meta-modelo</td>
+</tr>
+<tr>
+<td>Ventaja</td>
+<td>Simplicidad, interacciones intermodalidad</td>
+<td>Modularidad, aislamiento de errores, interpretación por modalidad</td>
+</tr>
+</tbody>
+</table>
+<h3 id="34-optimizacion-y-tracking">3.4 Optimización y tracking</h3>
+<ul>
+<li><strong>Hiperparámetros:</strong> Optuna (bayesiana), objetivo F1-macro con restricción de recall I–II.</li>
+<li><strong>Tracking:</strong> MLflow local (<code>mlruns/</code>): parámetros, métricas, matriz de confusión, artefacto, semillas.</li>
+<li><strong>Versionado:</strong> convención <code>&lt;algoritmo&gt;_&lt;fusion&gt;_v&lt;YYYYMMDD&gt;.joblib</code> + registro en <code>artifacts/models/</code>.</li>
+<li><strong>Cómputo:</strong> CPU local del equipo (volumen y modelos lo permiten).</li>
+</ul>
+<h2 id="4-arquitectura-del-modelo-detalle">4. Arquitectura del modelo (detalle)</h2>
+<figure class="diagram"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1130.0 810.0" width="1130.0" height="810.0" role="img" aria-label="7. Arquitectura del Modelo"><defs><marker id="arr-0" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#F59E0B"/></marker><marker id="arr-1" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7C3AED"/></marker><marker id="arr-2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7C3AED"/></marker><marker id="arr-3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker><marker id="arr-4" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0891B2"/></marker><marker id="arr-5" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#F59E0B"/></marker><marker id="arr-6" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7C3AED"/></marker><marker id="arr-7" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#7C3AED"/></marker><marker id="arr-8" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#059669"/></marker><marker id="arr-9" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0891B2"/></marker><marker id="arr-10" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#0891B2"/></marker></defs><path d="M460.0,210.0 L460.0,260.0 L460.0,260.0" fill="none" stroke="#F59E0B" stroke-width="1.5"  marker-end="url(#arr-0)"/><path d="M160.0,210.0 L160.0,380.0 L300.0,380.0" fill="none" stroke="#7C3AED" stroke-width="1.5"  marker-end="url(#arr-1)"/><path d="M360.0,290.0 L480.0,290.0 L480.0,415.0" fill="none" stroke="#7C3AED" stroke-width="1.5"  marker-end="url(#arr-2)"/><path d="M300.0,450.0 L300.0,510.0 L300.0,510.0" fill="none" stroke="#059669" stroke-width="1.5"  marker-end="url(#arr-3)"/><path d="M715.0,210.0 L715.0,260.0 L715.0,260.0" fill="none" stroke="#0891B2" stroke-width="1.5"  marker-end="url(#arr-4)"/><path d="M955.0,210.0 L955.0,260.0 L955.0,260.0" fill="none" stroke="#F59E0B" stroke-width="1.5"  marker-end="url(#arr-5)"/><path d="M715.0,310.0 L715.0,380.0 L820.0,380.0" fill="none" stroke="#7C3AED" stroke-width="1.5"  marker-end="url(#arr-6)"/><path d="M860.0,285.0 L960.0,285.0 L960.0,415.0" fill="none" stroke="#7C3AED" stroke-width="1.5"  marker-end="url(#arr-7)"/><path d="M820.0,450.0 L820.0,510.0 L820.0,510.0" fill="none" stroke="#059669" stroke-width="1.5"  marker-end="url(#arr-8)"/><path d="M400.0,540.0 L480.0,540.0 L480.0,630.0" fill="none" stroke="#0891B2" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arr-9)"/><path d="M720.0,540.0 L690.0,540.0 L690.0,630.0" fill="none" stroke="#0891B2" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arr-10)"/><rect x="150.0" y="90.0" width="400.0" height="30.0" rx="0" fill="none" stroke="none" /><text x="350.0" y="107.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="16" fill="#164E63" font-weight="700">FUSIÓN TEMPRANA</text><rect x="680.0" y="90.0" width="420.0" height="30.0" rx="0" fill="none" stroke="none" /><text x="890.0" y="107.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="16" fill="#164E63" font-weight="700">FUSIÓN TARDÍA</text><rect x="90.0" y="170.0" width="200.0" height="70.0" rx="10" fill="#ECFEFF" stroke="#0891B2" /><text x="190.0" y="198.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">Features estructuradas</text><text x="190.0" y="213.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">(signos · demografía · antecedentes)</text><rect x="390.0" y="170.0" width="200.0" height="70.0" rx="10" fill="#ECFEFF" stroke="#0891B2" /><text x="490.0" y="198.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">Texto clínico libre</text><text x="490.0" y="213.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">(motivo de consulta)</text><rect x="390.0" y="290.0" width="200.0" height="60.0" rx="10" fill="#FFF3BF" stroke="#F59E0B" /><text x="490.0" y="313.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">BERT clínico español</text><text x="490.0" y="328.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">(embedding [CLS])</text><rect x="150.0" y="410.0" width="360.0" height="70.0" rx="10" fill="#D0BFFF" stroke="#7C3AED" /><text x="330.0" y="438.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">Concatenación de features</text><text x="330.0" y="453.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">+ clasificador único</text><rect x="230.0" y="540.0" width="200.0" height="60.0" rx="10" fill="#B2F2BB" stroke="#059669" /><text x="330.0" y="571.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">Probabilidades I-V</text><rect x="650.0" y="170.0" width="190.0" height="70.0" rx="10" fill="#ECFEFF" stroke="#0891B2" /><text x="745.0" y="198.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">Submodelo estructurado</text><text x="745.0" y="213.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">XGBoost (class weights)</text><rect x="890.0" y="170.0" width="190.0" height="70.0" rx="10" fill="#FFF3BF" stroke="#F59E0B" /><text x="985.0" y="198.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">Submodelo de texto</text><text x="985.0" y="213.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">BERT clínico español</text><rect x="650.0" y="290.0" width="190.0" height="50.0" rx="10" fill="#ECFEFF" stroke="#0891B2" /><text x="745.0" y="316.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">probs estructuradas</text><rect x="890.0" y="290.0" width="190.0" height="50.0" rx="10" fill="#FFF3BF" stroke="#F59E0B" /><text x="985.0" y="316.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">probs texto</text><rect x="710.0" y="410.0" width="280.0" height="70.0" rx="10" fill="#D0BFFF" stroke="#7C3AED" /><text x="850.0" y="438.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">Meta-modelo</text><text x="850.0" y="453.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">Regresión Logística (RT-010)</text><rect x="750.0" y="540.0" width="200.0" height="60.0" rx="10" fill="#B2F2BB" stroke="#059669" /><text x="850.0" y="563.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">Probabilidades I-V</text><text x="850.0" y="578.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">+ umbrales por clase</text><rect x="510.0" y="630.0" width="210.0" height="60.0" rx="10" fill="#A5D8FF" stroke="#0891B2" /><text x="615.0" y="653.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">SHAP</text><text x="615.0" y="668.8" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63">TreeExplainer · KernelExplainer</text><rect x="280.0" y="740.0" width="650.0" height="40.0" rx="0" fill="#E8F1F6" stroke="none" /><text x="605.0" y="761.3" text-anchor="middle" font-family="Fira Sans,sans-serif" font-size="11" fill="#164E63" font-style="italic">Ambos enfoques se entrenan y comparan con significancia estadística (McNemar) — objeto de estudio del TFM (RT-002)</text><g><rect x="436.0" y="574.0" width="98" height="15" fill="#FFFFFF" fill-opacity="0.85"/><text x="440.0" y="585.0" text-anchor="middle" font-size="11" font-family="Fira Sans,sans-serif" fill="#0891B2">explica ganador</text></g></svg></figure>
+<blockquote>
+<p>Diagrama visual completo (fusión temprana vs tardía lado a lado): <code>Diagramas_TriajeIA.drawio</code> → pestaña <strong>7. Arquitectura del Modelo</strong>.</p>
+</blockquote>
+<h2 id="5-evaluacion-y-metricas">5. Evaluación y métricas</h2>
+<table>
+<thead>
+<tr>
+<th>Métrica</th>
+<th>Meta (RNF-001)</th>
+<th>Alcance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>F1-score</td>
+<td>≥ 0.82</td>
+<td>Global y por clase I–V</td>
+</tr>
+<tr>
+<td>Precisión</td>
+<td>≥ 0.85</td>
+<td>Global y por clase</td>
+</tr>
+<tr>
+<td>Recall</td>
+<td>≥ 0.80</td>
+<td><strong>Prioridad I–II</strong> (RNF-003)</td>
+</tr>
+<tr>
+<td>AUC-ROC</td>
+<td>≥ 0.87</td>
+<td>One-vs-rest por nivel</td>
+</tr>
+</tbody>
+</table>
+<p>Obligatorio además:
+- Matriz de confusión 5×5 del modelo ganador.
+- Comparación contra baselines con <strong>McNemar</strong> (entre pares).
+- Comparación contra benchmark de literatura (MTS/ESI — RT-008).
+- Distribución real nacional como referencia de prevalencia (RNF-004).
+- Curvas de calibración de probabilidades (las probs se muestran al profesional).</p>
+<h2 id="6-explicabilidad-xai">6. Explicabilidad (XAI)</h2>
+<ul>
+<li><strong>Técnica:</strong> SHAP — TreeExplainer (XGBoost), KernelExplainer (meta-modelo), SHAP de transformers (texto).</li>
+<li><strong>Contrato con el usuario:</strong> top-N variables traducidas a lenguaje clínico + comparación implícita con criterios MTS; impactos +/− diferenciados (mockup <code>s-shap</code>).</li>
+<li><strong>Alcance:</strong> local (por evento) y global (importancia agregada, Dashboard fase 2).</li>
+</ul>
+<h2 id="7-inferencia-y-servicio">7. Inferencia y servicio</h2>
+<table>
+<thead>
+<tr>
+<th>Decisión</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Modo</td>
+<td>Online, síncrono, <strong>en proceso</strong> dentro de Streamlit</td>
+</tr>
+<tr>
+<td>Ubicación</td>
+<td><code>artifacts/models/&lt;artefacto&gt;.joblib</code> + metadatos MLflow</td>
+</tr>
+<tr>
+<td>Latencia</td>
+<td>&lt; 3 s (RNF-002); medición demo 1.8 s</td>
+</tr>
+<tr>
+<td>Degradación</td>
+<td>Si falla la inferencia, la app sigue usable en triaje manual (RNF-009)</td>
+</tr>
+<tr>
+<td>Reentrenamiento</td>
+<td>Manual bajo demanda (investigación); deriva monitorizada en fase 2</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8-estructura-del-proyecto-ml-reproducibilidad">8. Estructura del proyecto ML (reproducibilidad)</h2>
+<p>Convención para el código de entrenamiento (guia-notebooks-python):</p>
+<pre><code>triaje-ia/ml/                       # código del pipeline offline
+├── data/                           # versionado: data-v&lt;fecha&gt;-&lt;hash&gt; (DVC)
+│   ├── raw/            # nunca se edita
+│   └── processed/      # splits + features (generado)
+├── notebooks/          # 01-eda · 02-preproceso · 03-baselines · 04-fusion · 05-evaluacion
+├── src/                # lógica reutilizable (evita lógica crítica en notebooks)
+│   ├── features.py     # feature engineering versionado (anti training-serving skew)
+│   ├── evaluate.py     # métricas por clase + McNemar + calibración
+│   └── registry.py     # guardado/registro MLflow
+├── configs/            # hiperparámetros por experimento
+└── artifacts/          # salidas: modelos, métricas, shap
+</code></pre>
+<p>Reglas: semilla fija en <code>configs/</code>, los notebooks no contienen lógica reutilizable (solo orquestan <code>src/</code>), cada experimento queda registrado en MLflow con el hash del dataset.</p>
+<h2 id="9-gobernanza-etica-y-cumplimiento">9. Gobernanza, ética y cumplimiento</h2>
+<ul>
+<li><strong>Rol:</strong> apoyo a la decisión humana (no autónomo) — explícito en la UI.</li>
+<li><strong>Normativa:</strong> Ley 1581/2012 (datos personales) + Res. 5596/2015; autorización del Comité de Ética para datos clínicos (Art. 2.7 UNIR). Demo con datos <strong>sintéticos</strong>.</li>
+<li><strong>Sesgo:</strong> si el entrenamiento usa MIMIC (EE. UU.), documentar la limitación de representatividad y validar con el cohorte colombiano.</li>
+<li><strong>Trazabilidad:</strong> cada predicción persiste features relevantes, versión de modelo, output y decisión humana (RD-003).</li>
+<li><strong>Deriva:</strong> estrategia de monitoreo de distribución de features documentada (§13 del documento de arquitectura); implementación fase 2.</li>
+</ul>
+<h2 id="10-relacion-con-los-diagramas-oficiales">10. Relación con los diagramas oficiales</h2>
+<table>
+<thead>
+<tr>
+<th>Contenido</th>
+<th>Pestaña <code>.drawio</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Contexto del sistema ML</td>
+<td>5. ML C1 Contexto</td>
+</tr>
+<tr>
+<td>Pipeline de datos + entrenamiento</td>
+<td>6. ML C2 Pipeline</td>
+</tr>
+<tr>
+<td>Fusión temprana vs tardía + SHAP</td>
+<td>7. Arquitectura del Modelo</td>
+</tr>
+<tr>
+<td>C4 de la aplicación</td>
+<td>1–4</td>
+</tr>
+<tr>
+<td>Despliegue y secuencias</td>
+<td>8–10</td>
+</tr>
+</tbody>
+</table>
+<div class="footer">Generado con asistencia de IA · Kit-IA (skill archi) · 2026-08-13 · Los diagramas están embebidos como imágenes SVG exportadas de
+<code>Diagramas_TriajeIA.drawio</code> (11 pestañas).</div>
+</div>
+</body>
+</html>
