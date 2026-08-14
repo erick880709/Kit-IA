@@ -117,6 +117,14 @@ def test_timeout_devuelve_fallback_sin_bloquear(dir_modelos, monkeypatch):
     assert time.perf_counter() - inicio < 5, "shutdown no debe bloquear"
 
 
+def test_vista_gestion_modelos_usa_el_singleton_recargable():
+    """Regresión: activar modelo llamaba inference_service.recargar() sobre el
+    MÓDULO (AttributeError). La vista debe importar el singleton."""
+    from app.views import gestion_modelos
+
+    assert callable(getattr(gestion_modelos.inference_service, "recargar", None))
+
+
 def test_recargar_usa_modelo_activo_desde_bd(tmp_path, monkeypatch):
     """Bloqueante resuelto: el rollback de modelo invalida la caché."""
     # Dos artefactos distintos en el directorio temporal

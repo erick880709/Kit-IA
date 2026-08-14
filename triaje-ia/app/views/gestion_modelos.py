@@ -13,7 +13,8 @@ import streamlit as st
 
 from app.domain.exceptions import ProhibidoError, ValidationError
 from app.infra.db import SessionLocal
-from app.services import authorization_service, inference_service, modelo_service
+from app.services import authorization_service, modelo_service
+from app.services.inference_service import inference_service
 
 
 def _metricas_cortas(modelo) -> str:

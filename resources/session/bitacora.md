@@ -1,5 +1,17 @@
 # Bitácora de Sesiones — Kit IA
 
+## Sesión 24 — 2026-08-14
+
+**Objetivo:** Corregir AttributeError en Gestión de modelos al activar un modelo.
+
+**Causa raíz:** `gestion_modelos.py` importaba el MÓDULO `app.services.inference_service` (vía `from app.services import ... inference_service`) y llamaba `inference_service.recargar()`, pero `recargar` es método del singleton `InferenceService` (línea 330), no del módulo.
+
+**Corrección:** importar el singleton explícitamente (`from app.services.inference_service import inference_service`). Test de regresión `test_vista_gestion_modelos_usa_el_singleton_recargable` (wiring de la vista).
+
+**Verificaciones:** pytest **105/105** · ruff 0 · servidor relanzado en :8599 (healthcheck 200).
+
+---
+
 ## Sesión 23 — 2026-08-14
 
 **Objetivo:** Corrección de prueba funcional: administrador con acceso total + flujo directo registro → signos vitales.
