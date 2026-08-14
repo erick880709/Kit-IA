@@ -1,5 +1,21 @@
 # Bitácora de Sesiones — Kit IA
 
+## Sesión 19 — 2026-08-14
+
+**Objetivo:** Paso 4 post-desarrollo — `entrega-continua`: historia limpia de commits, pipeline CI/CD, checklist de pre-lanzamiento y push a `origin/main`.
+
+**Commits atómicos (6):** skills nuevas del kit (tfm-redactor, validacion-cientifica-ml) → herramientas + assets de diseño → sistema TriajeIA E1–E6 completo → resources/contexto del proyecto → vault Obsidian + grafo graphify → CI + checklist. Push `b2c6201..05c85b6` a `main`.
+
+**Corrección de .gitignore:** `data/*` (anclado) no excluía `ml/data/raw/` — corregido a `ml/data/raw/*`; verificada exclusión de `.venv`, `*.db`, `artifacts/models/*`, `datasets/` (raíz, ~350 MB de datos abiertos NO versionados, RNF-006).
+
+**CI/CD:** `.github/workflows/ci.yml` — pipeline con los mismos gates manuales: ruff (app/ml/tests/scripts) + pytest + pip-audit sobre `requirements.txt` (shift-left, cancellation de corridas superpuestas).
+
+**Checklist de pre-lanzamiento:** `resources/engineering/release/checklist-v1.0.0.md` — gates verificados (103 tests, ruff 0, pip-audit limpio, p95 26 ms), plan de rollback explícito (revert atómico / re-seed de BD sintética / rollback de modelo vía UI), monitoreo activo, feature flags n/a (demo local), deprecaciones (width="stretch", sin código zombie).
+
+**Próximos pasos:** `memoria` (guardar estado para próxima sesión) → `tfm-redactor` (capítulos del TFM con métricas reales).
+
+---
+
 ## Sesión 18 — 2026-08-14
 
 **Objetivo:** Paso 3 post-desarrollo — `seguridad-rendimiento` con el agente Muralla (auditoría OWASP Top 10 + presupuestos de performance).
