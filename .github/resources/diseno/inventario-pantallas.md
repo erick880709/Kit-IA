@@ -1,9 +1,47 @@
-# 📋 Inventario de Pantallas — STriAI Frontend React
+# Inventario de Pantallas — Sistema de Triaje Multimodal IA (Demo TFM)
 
-**Proyecto:** STriAI — Sistema de Triaje Multimodal IA
-**Frontend:** React 19 + TypeScript + Vite + Tailwind CSS
-**Fecha auditoría:** 2026-07-21
+**Stack decidido (refinador 2026-08-13):** Python 3.12 + **Streamlit**
+**Fuente:** `resources/design/models/RD-004-inventario-pantallas.md` + HU/TT de `resources/functional/hu/`
+**Fecha:** 2026-08-13 · **Skill:** figma-prd-mockups
+**Alcance:** 8 pantallas del flujo clínico principal (4 de soporte diferidas)
+
+---
+
+## Flujo clínico principal (8 pantallas diseñadas)
+
+| # | Pantalla | Propósito (JTBD) | Entidades/acciones | HU/TT que implementa | Estados diseñados |
+|---|---|---|---|---|---|
+| 1 | Login | Autenticar por rol | Credenciales, bloqueo por intentos | HU-E1-01, HU-E1-04 | Error credenciales |
+| 2 | Registro de paciente | Alta con detección de duplicados | Paciente (11 campos + ViaLlegada) | HU-E2-01, HU-E7-01 | Duplicado 0/1 |
+| 3 | Captura de signos vitales | Ingreso de 8 signos con rangos | SignosVitales, IMC auto | HU-E2-04 | Alerta fuera de rango |
+| 4 | Evaluación clínica | Motivo + dolor + Glasgow + antecedentes | EvaluacionClinica | HU-E2-05 | — |
+| 5 | Ejecutar clasificación IA | Inferencia + probabilidades + nivel profesional | EventoTriaje (registro dual) | HU-E4-01, HU-E4-03 | Cargando, error inferencia |
+| 6 | Explicación SHAP | Top variables en lenguaje clínico | SHAP, comparación MTS | HU-E4-02 | — |
+| 7 | Validación de triaje | Confirmar nivel, capturar discrepancia | MotivoDiscrepancia | HU-E4-03, HU-E2-07 | Discrepancia (motivo obligatorio) |
+| 8 | Cierre del evento | Resumen normativo + persistencia dual | Registro de triaje | HU-E2-08, HU-E5-02 | — |
+
+## Pantallas diferidas (fase 2 — soporte/administración, RD-005)
+
+| Pantalla | HU/TT | Estado |
+|---|---|---|
+| Comparación de modelos | HU-E4-04 | ⏳ Diferida |
+| Gestión de modelos | HU-E6-02 | ⏳ Diferida |
+| Dashboard operativo | HU-E6-01 | ⏳ Diferida |
+| Auditoría | HU-E5-01 | ⏳ Diferida |
+| Registro de triaje descargable (PDF) | HU-E5-02 | Parcial — botón en pantalla 8 |
+
+## Navegación
+
+`Login → Registro → Signos vitales → Evaluación clínica → Clasificación IA → SHAP → Validación → Cierre`
+(rama: discrepancia → motivo obligatorio → cierre; reclasificación como evento separado)
+
+---
+
+## Anexo histórico — Auditoría STriAI React (2026-07-21)
+
+**Stack previo:** React 19 + TypeScript + Vite + Tailwind CSS
 **Total pantallas:** 14 (13 autenticadas + 1 login)
+**Nota:** iteración anterior con frontend React; superada por la decisión Streamlit del refinador (2026-08-13). Los hallazgos de accesibilidad/estados sirven como checklist de calidad para la demo nueva.
 
 ---
 

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TriajeIA — Mockups (Design System v1.0)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#0891B2; --secondary:#22D3EE; --accent:#059669;
+    --bg:#ECFEFF; --fg:#164E63; --muted:#E8F1F6; --border:#A5F3FC;
+    --destructive:#DC2626; --warning:#F59E0B;
+    --green:#22C55E; --green-soft:#B2F2BB; --amber-soft:#FFF3BF;
+    --red-soft:#FFC9C9; --blue-soft:#A5D8FF; --purple-soft:#D0BFFF;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--fg); font-family:'Fira Sans',system-ui,sans-serif; padding:40px 24px;}
+  .gallery-title{font-size:28px; font-weight:700; color:var(--primary); margin-bottom:8px;}
+  .gallery-sub{font-size:15px; color:var(--fg); opacity:.75; margin-bottom:32px; font-family:'Fira Code',monospace;}
+  .screen{margin:0 auto 48px auto; background:var(--bg); border:1px solid var(--border); border-radius:12px;
+          overflow:hidden; box-shadow:0 6px 24px rgba(8,145,178,.12);}
+  .screen:last-child{margin-bottom:0;}
+  .screen-head{background:var(--primary); color:#fff; padding:14px 22px; font-size:20px; font-weight:600;
+               display:flex; justify-content:space-between; align-items:center;}
+  .screen-head .tag{font-family:'Fira Code',monospace; font-size:12px; background:rgba(255,255,255,.18);
+               padding:4px 10px; border-radius:999px; font-weight:500;}
+  .screen-body{padding:22px; display:flex; flex-direction:column; gap:12px;}
+  .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
+  label{font-size:13px; font-weight:600; opacity:.8; display:block; margin-bottom:4px;}
+  input, select, textarea{width:100%; border:1px solid var(--border); border-radius:8px; padding:10px 12px;
+    font-size:15px; font-family:'Fira Sans',sans-serif; color:var(--fg); background:#fff;}
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--secondary);}
+  .field{flex:1; min-width:180px;}
+  .field.narrow{flex:0 0 140px;}
+  .btn{display:inline-flex; align-items:center; justify-content:center; border:none; border-radius:8px;
+    padding:12px 22px; font-size:16px; font-weight:600; cursor:pointer; font-family:'Fira Sans',sans-serif;}
+  .btn-primary{background:var(--accent); color:#fff;}
+  .btn-info{background:var(--blue-soft); color:var(--fg);}
+  .btn-right{margin-left:auto;}
+  .badge{font-size:12px; font-weight:600; padding:4px 12px; border-radius:999px; font-family:'Fira Code',monospace;}
+  .badge-green{background:var(--green-soft); color:#166534;}
+  .badge-amber{background:var(--amber-soft); color:#92400E;}
+  .badge-red{background:var(--red-soft); color:#991B1B;}
+  .badge-blue{background:var(--blue-soft); color:#1E40AF;}
+  .badge-purple{background:var(--purple-soft); color:#5B21B6;}
+  .card{background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px;}
+  .hint{font-size:13px; background:var(--blue-soft); color:#1E40AF; border-radius:8px; padding:8px 14px;}
+  .hint-amber{background:var(--amber-soft); color:#92400E;}
+  .hint-green{background:var(--green-soft); color:#166534;}
+  .hint-red{background:var(--red-soft); color:#991B1B;}
+  .mono{font-family:'Fira Code',monospace;}
+  .kpi{font-size:15px; font-weight:600;}
+  .prob-row{display:flex; align-items:center; gap:10px; font-size:14px; font-family:'Fira Code',monospace;}
+  .prob-bar{height:16px; border-radius:4px;}
+  .flow{display:flex; flex-wrap:wrap; align-items:center; gap:10px;}
+  .flow-box{background:#fff; border:2px solid var(--blue-soft); color:var(--fg); border-radius:10px;
+    padding:14px 16px; font-size:15px; font-weight:600; text-align:center;}
+  .flow-box.ia{border-color:var(--purple-soft); background:var(--purple-soft);}
+  .flow-box.no{border-color:var(--red-soft); background:var(--red-soft);}
+  .flow-box.ok{border-color:var(--green-soft); background:var(--green-soft);}
+  .flow-arrow{font-size:22px; color:var(--primary); font-weight:700;}
+  .diamond{width:110px; height:110px; background:var(--amber-soft); border:2px solid var(--warning);
+    border-radius:8px; transform:rotate(45deg); display:flex; align-items:center; justify-content:center;
+    margin:26px;}
+  .diamond span{transform:rotate(-45deg); font-size:14px; font-weight:700; color:#92400E; text-align:center;}
+  .flow-col{display:flex; flex-direction:column; align-items:center; gap:8px;}
+  .stat{display:flex; gap:24px; flex-wrap:wrap;}
+  .stat-box{background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px 18px; text-align:center;}
+  .stat-box .n{font-size:22px; font-weight:700; color:var(--primary);}
+  .stat-box .l{font-size:12px; opacity:.75;}
+</style>
+</head>
+<body>
+<div class="gallery-title">TriajeIA — Sistema de Triaje Multimodal IA (Demo TFM)</div>
+<div class="gallery-sub">Design system: "Calm cyan + health green" · Primary #0891B2 · Fira Sans / Fira Code · 9 vistas</div>
+
+<!-- ============ 1. LOGIN ============ -->
+<section class="screen" id="s-login">
+  <div class="screen-head"><span>Acceso clínico</span><span class="tag">s-login · HU-E1-01</span></div>
+  <div class="screen-body">
+    <div class="card" style="max-width:560px;">
+      <label>Correo institucional</label>
+      <input type="email" value="m.sanchez@hospital.gov.co" readonly style="opacity:.85;">
+      <label style="margin-top:12px;">Contraseña</label>
+      <input type="password" value="••••••••••" readonly style="opacity:.85;">
+      <div class="row" style="margin-top:16px;">
+        <button class="btn btn-primary">Ingresar</button>
+        <span class="badge badge-blue">Intento 2 de 3</span>
+      </div>
+    </div>
+    <div class="hint">Uso de demostración académica — no es un dispositivo médico · bloqueo 15 min tras 3 intentos</div>
+  </div>
+</section>
+
+<!-- ============ 2. REGISTRO PACIENTE ============ -->
+<section class="screen" id="s-registro">
+  <div class="screen-head"><span>Registro de paciente</span><span class="tag">s-registro · HU-E2-01 · HU-E7-01</span></div>
+  <div class="screen-body">
+    <div class="row">
+      <div class="field"><label>Tipo y número de documento</label>
+        <div class="row" style="gap:8px;">
+          <select style="flex:0 0 110px;"><option>CC</option><option>TI</option><option>CE</option></select>
+          <input value="52.148.903">
+        </div>
+      </div>
+      <div class="field"><label>Nombres</label><input value="María"></div>
+      <div class="field"><label>Apellidos</label><input value="Gómez Ruiz"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Fecha de nacimiento</label><input type="date" value="1986-02-12"></div>
+      <div class="field narrow"><label>Sexo</label><select><option>Femenino</option></select></div>
+      <div class="field"><label>Departamento / Municipio</label><input value="Cundinamarca · Bogotá D.C."></div>
+      <div class="field"><label>Régimen</label><select><option>Contributivo</option></select></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Tipo de sangre</label><select><option>O+</option></select></div>
+      <div class="field"><label>Alergias conocidas</label><input value="Penicilina"></div>
+      <div class="field"><label>Vía de llegada</label><select><option>Caminando</option></select></div>
+    </div>
+    <div class="hint-green">✓ No se encontraron duplicados (0 coincidencias) — continúa con paciente nuevo</div>
+    <button class="btn btn-primary btn-right">Continuar</button>
+  </div>
+</section>
+
+<!-- ============ 3. SIGNOS VITALES ============ -->
+<section class="screen" id="s-signos">
+  <div class="screen-head"><span>Captura de signos vitales</span><span class="tag">s-signos · HU-E2-04</span></div>
+  <div class="screen-body">
+    <div class="row">
+      <div class="field narrow"><label>SpO₂ (%)</label><input value="88"><span class="badge badge-amber">Fuera de rango</span></div>
+      <div class="field narrow"><label>FC (lpm)</label><input value="88"></div>
+      <div class="field narrow"><label>FR (rpm)</label><input value="16"></div>
+      <div class="field narrow"><label>PA (mmHg)</label><input value="120/80"></div>
+      <div class="field narrow"><label>T (°C)</label><input value="36.8"></div>
+    </div>
+    <div class="row">
+      <div class="field narrow"><label>Glasgow</label><input value="15"></div>
+      <div class="field narrow"><label>Dolor (0-10)</label><input value="6"></div>
+      <div class="field narrow"><label>Peso (kg)</label><input value="64"></div>
+      <div class="field narrow"><label>Talla (m)</label><input value="1.62"></div>
+      <div class="field narrow"><label>IMC</label><input value="24.4" disabled><span class="badge badge-green">Auto</span></div>
+    </div>
+    <div class="hint-amber">SpO₂ 88 % está por debajo del umbral de normalidad (≥ 94 %)</div>
+    <button class="btn btn-primary btn-right">Continuar</button>
+  </div>
+</section>
+
+<!-- ============ 4. EVALUACIÓN CLÍNICA ============ -->
+<section class="screen" id="s-evaluacion">
+  <div class="screen-head"><span>Evaluación clínica — María Gómez</span><span class="tag">s-evaluacion · HU-E2-05</span></div>
+  <div class="screen-body">
+    <div class="field" style="max-width:640px;">
+      <label>Motivo estructurado (CIE-10)</label>
+      <input value="R07.4 — Dolor torácico no especificado">
+    </div>
+    <div class="field" style="max-width:640px;">
+      <label>Texto libre del paciente / profesional</label>
+      <textarea rows="3" readonly>"Dolor opresivo retroesternal desde hace 2 horas, irradiado a brazo izquierdo"</textarea>
+    </div>
+    <div class="row">
+      <div class="card" style="min-width:220px;"><span class="kpi">Dolor: 6/10</span></div>
+      <div class="card" style="min-width:220px;"><span class="kpi">Glasgow: 15</span></div>
+      <div class="card" style="min-width:220px;"><span class="kpi">Conciencia: Alerta</span></div>
+    </div>
+    <div class="row">
+      <div class="card" style="min-width:260px;">Antecedentes: HTA, DM tipo 2 (autorreporte)</div>
+      <div class="card" style="min-width:200px;">Alergias: Penicilina</div>
+      <div class="card" style="min-width:160px;">Embarazo: No</div>
+    </div>
+    <div class="hint">Texto vacío → la inferencia continúa solo con datos estructurados (NLP es complemento)</div>
+    <button class="btn btn-primary btn-right">Continuar</button>
+  </div>
+</section>
+
+<!-- ============ 5. CLASIFICACIÓN IA ============ -->
+<section class="screen" id="s-clasificacion">
+  <div class="screen-head"><span>Ejecutar clasificación IA</span><span class="tag">s-clasificacion · HU-E4-01</span></div>
+  <div class="screen-body">
+    <div class="row">
+      <div class="card" style="background:var(--red-soft); border-color:#FCA5A5; min-width:280px;">
+        <div class="kpi" style="font-size:19px;">Nivel sugerido: II — Emergencia</div>
+        <div class="mono" style="font-size:12px;">atención objetivo ≤ 30 min</div>
+      </div>
+      <span class="badge badge-purple">Modelo v1.4 · late fusion</span>
+    </div>
+    <div class="card" style="max-width:640px;">
+      <div style="font-weight:600; margin-bottom:8px;">Probabilidades por nivel</div>
+      <div class="prob-row">I&nbsp;&nbsp;<span class="prob-bar" style="width:14px; background:#EF4444;"></span> 2%</div>
+      <div class="prob-row">II&nbsp;<span class="prob-bar" style="width:390px; background:#F59E0B;"></span> 78%</div>
+      <div class="prob-row">III<span class="prob-bar" style="width:75px; background:#8B5CF6;"></span> 15%</div>
+      <div class="prob-row">IV&nbsp;<span class="prob-bar" style="width:20px; background:#22D3EE;"></span> 4%</div>
+      <div class="prob-row">V&nbsp;&nbsp;<span class="prob-bar" style="width:6px; background:#64748B;"></span> 1%</div>
+    </div>
+    <div class="row">
+      <span class="badge badge-green">Inferencia: 1.8 s (&lt; 3 s)</span>
+      <div class="field narrow" style="margin-left:auto;"><label>Nivel asignado por profesional</label><select><option>II — Emergencia</option></select></div>
+      <span class="badge badge-green">Concordancia: Sí</span>
+    </div>
+    <button class="btn btn-primary btn-right">Registrar evento</button>
+  </div>
+</section>
+
+<!-- ============ 6. SHAP ============ -->
+<section class="screen" id="s-shap">
+  <div class="screen-head"><span>Explicación SHAP — ¿por qué Nivel II?</span><span class="tag">s-shap · HU-E4-02</span></div>
+  <div class="screen-body">
+    <div class="hint">"La saturación de O₂ baja (88 %) fue el factor de mayor peso en la clasificación"</div>
+    <div class="card mono" style="max-width:640px; line-height:2;">
+      SpO₂ 88 % &nbsp;&nbsp;&nbsp;▮▮▮▮▮▮▮▮▮▮ +0.42<br>
+      Dolor torácico &nbsp;▮▮▮▮▮▮ &nbsp;&nbsp;+0.31<br>
+      Edad 40 años &nbsp;&nbsp;&nbsp;▮▮▮ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+0.12<br>
+      Frec. respiratoria ▮▮ &nbsp;&nbsp;&nbsp;&nbsp;−0.08<br>
+      Presión arterial ▮ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;−0.05
+    </div>
+    <div class="hint-amber">Comparación implícita MTS: criterio coincidente con la escala Manchester</div>
+    <div class="row">
+      <span class="badge badge-blue">Impacto + / − diferenciado</span>
+      <span class="badge badge-blue">Force plot disponible</span>
+      <button class="btn btn-info btn-right">Exportar explicación</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 7. VALIDACIÓN / DISCREPANCIA ============ -->
+<section class="screen" id="s-validacion">
+  <div class="screen-head"><span>Validación de triaje — discrepancia</span><span class="tag">s-validacion · HU-E4-03</span></div>
+  <div class="screen-body">
+    <div class="row">
+      <div class="card" style="background:var(--blue-soft); border-color:#7FC2F5; min-width:220px; text-align:center;">
+        <div style="font-size:12px; opacity:.8;">Sugerencia IA</div><div class="kpi" style="font-size:20px;">III — Urgencia</div>
+      </div>
+      <div class="card" style="background:var(--amber-soft); border-color:#FCD34D; min-width:220px; text-align:center;">
+        <div style="font-size:12px; opacity:.8;">Profesional</div><div class="kpi" style="font-size:20px;">II — Emergencia</div>
+      </div>
+      <span class="badge badge-red">Concordancia: No</span>
+    </div>
+    <div class="field" style="max-width:640px;">
+      <label>Motivo de discrepancia (obligatorio)</label>
+      <textarea rows="2">Dolor torácico con irradiación a brazo izquierdo — riesgo vital, prioridad superior a la sugerida</textarea>
+    </div>
+    <div class="hint-red">La decisión del profesional prevalece · ambos niveles se persisten sin sobrescribir la IA</div>
+    <button class="btn btn-primary btn-right">Confirmar</button>
+  </div>
+</section>
+
+<!-- ============ 8. CIERRE ============ -->
+<section class="screen" id="s-cierre">
+  <div class="screen-head"><span>Cierre del evento de triaje</span><span class="tag">s-cierre · HU-E2-08</span></div>
+  <div class="screen-body">
+    <div class="card" style="max-width:680px; line-height:1.9;">
+      <div class="mono" style="font-size:14px;">Paciente anonimizado · Ingreso 14/08/2026 08:31 · Atención 08:53</div>
+      <div><b>Nivel IA:</b> II · <b>Nivel profesional:</b> II · <b>Concordancia:</b> Sí</div>
+      <div><b>Signos:</b> SpO₂ 88 % · FC 88 · FR 16 · PA 120/80 · T 36.8 °C</div>
+      <div><b>Motivo:</b> Dolor torácico · <b>SHAP top:</b> SpO₂ baja, dolor torácico, edad</div>
+      <div class="mono" style="font-size:12px; opacity:.8;">Modelo v1.4 · versión registrada en auditoría</div>
+    </div>
+    <div class="row">
+      <button class="btn btn-info">Registro de triaje descargable (PDF)</button>
+      <span class="badge badge-green">Ambos niveles persistidos permanentemente</span>
+    </div>
+    <button class="btn btn-primary btn-right">Cerrar evento</button>
+  </div>
+</section>
+
+<!-- ============ 9. FLUJO ============ -->
+<section class="screen" id="s-flujo">
+  <div class="screen-head"><span>Flujo clínico principal — 8 pantallas</span><span class="tag">s-flujo · navegación</span></div>
+  <div class="screen-body" style="align-items:center;">
+    <div class="flow">
+      <div class="flow-box">1 · Login</div><span class="flow-arrow">→</span>
+      <div class="flow-box">2 · Registro</div><span class="flow-arrow">→</span>
+      <div class="flow-box">3 · Signos vitales</div><span class="flow-arrow">→</span>
+      <div class="flow-box">4 · Evaluación</div><span class="flow-arrow">→</span>
+      <div class="flow-box ia">5 · Clasificación IA</div><span class="flow-arrow">→</span>
+      <div class="flow-box ia">6 · SHAP</div>
+    </div>
+    <div class="flow-col">
+      <span class="flow-arrow">↓</span>
+      <div class="diamond"><span>¿Concordancia?</span></div>
+    </div>
+    <div class="flow">
+      <div class="flow-col"><span class="badge badge-green">Sí</span><span class="flow-arrow">↓</span></div>
+      <div class="flow-box no">7 · Motivo discrepancia</div>
+      <span class="flow-arrow">→</span>
+      <div class="flow-box ok">8 · Cierre del evento</div>
+    </div>
+    <div class="hint" style="max-width:680px;">Reclasificación posterior genera un evento separado con trazabilidad completa (HU-E2-07)</div>
+  </div>
+</section>
+
+</body>
+</html>
