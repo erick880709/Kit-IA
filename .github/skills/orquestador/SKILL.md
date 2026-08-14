@@ -1,6 +1,6 @@
 ---
 name: orquestador
-description: 'Meta-skill de enrutamiento. SIEMPRE se consulta primero, antes de invocar cualquier otro skill, para decidir qué skill(s) aplican a la tarea actual y en qué orden. Combina el pipeline de negocio-a-arquitectura-a-scaffold (janus, refinador, desglosador, figma-prd-mockups, archi, genesis, builder, qa) con la disciplina de ingeniería de implementación tomada de addyosmani/agent-skills (tdd-implementacion, revision-calidad, seguridad-rendimiento, entrega-continua, documentacion-observabilidad, y los 24 skills fuente en .github/skills-addy/skills/). Incluye gestión de memoria entre sesiones (memoria) y exportación a Obsidian (obsidian). Úsala cuando el usuario inicie una sesión, cuando no quede claro qué skill corresponde, cuando la tarea cruce más de una fase (p. ej. "de la RFP al código funcionando"), o cuando termine un skill y haga falta decidir cuál sigue.'
+description: 'Meta-skill de enrutamiento. SIEMPRE se consulta primero, antes de invocar cualquier otro skill, para decidir qué skill(s) aplican a la tarea actual y en qué orden. Combina el pipeline de negocio-a-arquitectura-a-scaffold (janus, refinador, desglosador, figma-prd-mockups, archi, genesis, builder, qa) con la disciplina de ingeniería de implementación tomada de addyosmani/agent-skills (tdd-implementacion, validacion-cientifica-ml, revision-calidad, seguridad-rendimiento, entrega-continua, documentacion-observabilidad, y los 24 skills fuente en .github/skills-addy/skills/). Incluye gestión de memoria entre sesiones (memoria), exportación a Obsidian (obsidian) y cierre académico (tfm-redactor). Úsala cuando el usuario inicie una sesión, cuando no quede claro qué skill corresponde, cuando la tarea cruce más de una fase (p. ej. "de la RFP al código funcionando"), o cuando termine un skill y haga falta decidir cuál sigue. Extensiones: validacion-cientifica-ml y tfm-redactor según references/extension-tfm-ml.md.'
 ---
 
 # Orquestador — Router del Kit Agéntico Unificado
@@ -131,6 +131,19 @@ Llega una tarea
 │  │     └──→ tdd-implementacion  (slices verticales + red-green-refactor;
 │  │           envuelve incremental-implementation + test-driven-development)
 │  │
+│  ├── ¿`builder` activó el modo "Pipeline de Machine Learning" y
+│  │    `tdd-implementacion` acaba de producir artifacts/metrics/ nuevos
+│  │    (un modelo entrenado, baseline o candidato)?
+│  │     └──→ validacion-cientifica-ml  (leakage, McNemar/DeLong, calibración,
+│  │           equidad por subgrupo, model card)
+│  │         ├── ❌ hallazgo bloqueante → vuelve a tdd-implementacion a corregir
+│  │         │      el pipeline, NO continúa a qa/entrega-continua
+│  │         └── ✅ sin bloqueantes → continúa el flujo normal
+│  │
+│  ├── ¿El usuario pide "desplegar la demo" o cerrar el modelo como definitivo?
+│  │     └──→ GATE: validacion-cientifica-ml sin bloqueantes pendientes para ESE
+│  │           modelo antes de entrega-continua (re-ejecutar si el modelo cambió)
+│  │
 │  ├── ¿Se necesita contexto de librería/framework verificado contra fuentes
 │  │    oficiales antes de codear, o cargar el contexto correcto de sesión?
 │  │     └──→ usar directamente .github/skills-addy/skills/source-driven-development
@@ -180,6 +193,14 @@ Llega una tarea
 │              contexto.md y bitacora.md, registra lecciones aprendidas.
 │              Si el usuario quiere exportar el estado final al vault:
 │              obsidian (para sesiones/ y learning/)
+│
+│  └── ¿El proyecto es un TFM/TFG (brief_finalizacion_tfm.md o pedido
+│       explícito) y hay que redactar capítulos, revisar cumplimiento
+│       normativo o preparar el depósito?
+│        └──→ tfm-redactor  (precondición: validacion-cientifica-ml sin
+│              bloqueantes para los artefactos citados; auditoría UNIR +
+│              redacción con evidencia trazable → resources/tfm/capitulos/)
+│              → docx (maquetación final: portada, numeración, TOC)
 ```
 
 ## Secuencia completa de referencia (ciclo de vida end-to-end)
@@ -200,6 +221,10 @@ Para una iniciativa completa, de "llegó una RFP" a "está en producción":
  8. context-engineering/          carga el contexto correcto antes de programar
     source-driven-development     (addy, uso directo)
  9. tdd-implementacion            scaffold → código con lógica real, slice a slice, TDD
+
+ 9.5 validacion-cientifica-ml     leakage → CV estratificado → McNemar/DeLong →
+      ★ NUEVO (extension-tfm-ml)  calibración → equidad → trazabilidad → model card
+      │                            ❌ bloqueante → vuelve a 9 · ✅ → continúa
 10. doubt-driven-development      (addy, uso directo) — solo si el slice es de alto riesgo
 11. qa + browser-testing-         pruebas E2E, evidencia, inspección en vivo del navegador
     with-devtools (addy)
@@ -208,10 +233,17 @@ Para una iniciativa completa, de "llegó una RFP" a "está en producción":
 13. seguridad-rendimiento         hardening OWASP + presupuesto de performance
     obsidian (exportar hallazgos) convierte hallazgos de seguridad a notas del vault
 14. documentacion-observabilidad  ADRs de decisiones tomadas en 9–13 + instrumentación
+
+ GATE validacion-cientifica-ml   re-chequeo si el modelo cambió desde 9.5
+      ★ NUEVO (extension-tfm-ml)  (nuevo hiperparámetro/split/datos → re-ejecutar)
+
 15. entrega-continua              commit atómico, pipeline CI/CD, checklist de shipping
     obsidian (exportar release)   convierte checklist de release a nota del vault
 16. memoria (escritura)           guarda estado final de la sesión, lecciones aprendidas
     obsidian (exportar sesión)    convierte bitácora y learning a notas del vault
+17. tfm-redactor                  solo si hay entregable académico (TFM/TFG) ★ NUEVO
+      ★ NUEVO (extension-tfm-ml)  auditoría normativa UNIR + capítulos con evidencia
+                                  trazable → resources/tfm/capitulos/ → docx
 ```
 
 No toda tarea recorre las 15 fases. Una corrección de bug puntual, por ejemplo, puede

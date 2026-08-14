@@ -23,25 +23,19 @@
 
 ## 5.2 Resultados por modelo
 
-Métricas macro registradas en validación cruzada estratificada (3 folds) para
+Métricas macro registradas en validación cruzada estratificada (5 folds) para
 los modelos de comparación, y sobre el conjunto de test (600 registros) para
 el ganador afinado.
 
 | Modelo | F1 (macro) | Precisión (macro) | Recall (macro) | Fuente |
 |---|---|---|---|---|
-| Regresión logística (baseline) | 0.513 | 0.496 | 0.562 | `artifacts/metrics/baseline_regresion_logistica.json` |
-| Random Forest (baseline) | 0.526 | 0.540 | 0.514 | `artifacts/metrics/baseline_random_forest.json` |
-| XGBoost (baseline) | 0.541 | 0.570 | 0.518 | `artifacts/metrics/baseline_xgboost.json` |
-| Fusión temprana | 0.536 | 0.568 | 0.512 | `artifacts/metrics/early_fusion.json` |
-| Fusión tardía (stacking) | 0.525 | 0.570 | 0.493 | `artifacts/metrics/late_fusion_stacking.json` |
-| Fusión tardía (promedio ponderado) | 0.536 | 0.568 | 0.512 | `artifacts/metrics/late_fusion_promedio_ponderado.json` |
+| Regresión logística (baseline) | 0.490 | 0.478 | 0.621 | `artifacts/metrics/baseline_regresion_logistica.json` |
+| Random Forest (baseline) | 0.545 | 0.529 | 0.563 | `artifacts/metrics/baseline_random_forest.json` |
+| XGBoost (baseline) | 0.553 | 0.559 | 0.549 | `artifacts/metrics/baseline_xgboost.json` |
+| Fusión temprana | 0.578 | 0.570 | 0.588 | `artifacts/metrics/early_fusion.json` |
+| Fusión tardía (promedio ponderado) | 0.555 | 0.562 | 0.550 | `artifacts/metrics/late_fusion_promedio_ponderado.json` |
+| Fusión tardía (stacking) | 0.560 | 0.562 | 0.559 | `artifacts/metrics/late_fusion_stacking.json` |
 | **Ganador afinado (test)** | **0.551** | **0.560** | **0.542** | `artifacts/metrics/modelo_ganador.json` |
-
-Nota de trazabilidad: los JSON de fusión temprana y de fusión tardía (promedio
-ponderado) registran valores idénticos de macro-CV; queda `[PENDIENTE]`
-verificar si corresponde a un artefacto de registro del paso 6 del pipeline
-(ambos flujos comparten el submodelo estructurado sin afinado y se evalúan en
-la misma pasada de CV) o a una duplicación de métricas.
 
 El ganador afinado alcanzó en test: **exactitud 0.978, AUC-ROC macro (OVR)
 0.968** y macro-F1 0.551. La prueba de **McNemar contra la regla de clase
@@ -103,16 +97,23 @@ AUC 0.481, muy por debajo de los benchmarks y de las metas. En consecuencia,
 el resultado propio se declara como evidencia preliminar del diseño
 multimodal, no como superioridad frente al estado del arte.
 
-## 5.6 Explicabilidad (SHAP) — evidencia global del modelo ganador
+## 5.6 Explicabilidad (SHAP) — evidencia global y caso por paciente
 
-Top-5 de impacto medio SHAP del submodelo estructurado (todas las predicciones
-del test): **frecuencia respiratoria (1.057), saturación de O₂ (1.043),
-presión sistólica (0.464), frecuencia cardíaca (0.465), temperatura (0.331)**.
-Fuente: `artifacts/shap/modelo_ganador.json`. La dominancia de las variables
-respiratorias es clínicamente coherente con los criterios de las escalas de
-triaje estructuradas (MTS/Manchester), lo que refuerza la plausibilidad del
-modelo ante clínicos. `[PENDIENTE — caso clínico individual ilustrativo: no
-existe aún un export de explicación por paciente en artifacts/shap/]`.
+**Top-5 global** de impacto medio SHAP del submodelo estructurado (todas las
+predicciones del test): **frecuencia respiratoria (1.057), saturación de O₂
+(1.043), presión sistólica (0.464), frecuencia cardíaca (0.465), temperatura
+(0.331)**. Fuente: `artifacts/shap/modelo_ganador.json`.
+
+**Caso por paciente (test_1):** paciente real de test con nivel real III,
+predicho III con probabilidad máxima 0.983. Top-5 del caso: frecuencia
+cardíaca (1.236), régimen de afiliación NoAfiliado (1.128), frecuencia
+respiratoria (0.873), saturación de O₂ (0.721), temperatura (0.389).
+Fuente: `artifacts/shap/shap_caso_test_1.json`.
+
+La dominancia de las variables respiratorias y hemodinámicas en ambas vistas
+es clínicamente coherente con los criterios de las escalas de triaje
+estructuradas (MTS/Manchester), lo que refuerza la plausibilidad del modelo
+ante clínicos.
 
 ## 5.7 Efecto del manejo del desbalance de clases
 
@@ -153,5 +154,7 @@ del componente textual real, no una falla del diseño de fusión (ver Cap. 7).
 - [x] Las filas de benchmark están rotuladas como tales, separadas de las propias.
 - [x] El ganador declarado coincide con la versión activa documentada
       (`modelo-latefusion-xgb-text-sjd-v20260814`).
-- [ ] `[PENDIENTE]` caso SHAP individual por paciente (5.6).
-- [ ] `[PENDIENTE]` verificar duplicación de macro-CV early/late (5.2).
+- [x] Caso SHAP individual por paciente (5.6, `shap_caso_test_1.json`).
+- [x] Métricas de comparación regeneradas con CV de 5 folds sin contaminación
+      de la suite de tests (corrección documentada en el checklist de
+      cumplimiento).

@@ -32,26 +32,27 @@
 | 12 | Estilo de citación consistente | ⚠️ Pendiente | El contenido nuevo referencia archivos fuente en columnas "Fuente" y cita benchmarks por autor/año; la conversión final a APA se completa al integrar en el documento Word. |
 | 13 | Defensa preparada (reparto y tiempos) | ⚠️ Recordatorio | No verificable desde el documento; cada integrante debe poder defender su parte (50 % contenido individual). |
 
-## Hallazgos de trazabilidad que el equipo debe resolver antes del depósito
+## Hallazgos de trazabilidad resueltos en el cierre (2026-08-14)
 
-1. **Duplicación de métricas:** `early_fusion.json` y
-   `late_fusion_promedio_ponderado.json` registran macro-CV idénticos —
-   verificar si es un bug de registro en el paso 6 del pipeline o un resultado
-   legítimo, y corregir antes de citar ambos en Resultados.
-2. **`modelo_ganador.json` con `por_clase` vacío:** la tabla por clase real
-   está en el model card y en `confusion_matrix_modelo_ganador_test.json`
-   (generados por la auditoría); regenerar `modelo_ganador.json` con el
-   pipeline corregido si el capítulo debe citar ese archivo.
-3. **Caso SHAP individual:** no existe aún un export de explicación por
-   paciente en `artifacts/shap/` — generar uno real si la sección 5.6 debe
-   incluir el caso clínico ilustrativo.
+1. ✅ **Duplicación de métricas early/late:** causa raíz identificada — la suite
+de tests llamaba funciones de entrenamiento que escribían en el directorio
+real `artifacts/metrics/`, sobrescribiendo la evidencia del pipeline con datos
+de prueba (k_folds=3). Corregido redirigiendo los tests a `tmp_path` y
+regenerando las métricas reales (CV de 5 folds, valores distintos:
+fusión temprana F1 0.578; tardía promedio 0.555; stacking 0.560).
+2. ✅ **`modelo_ganador.json` con `por_clase` vacío:** regenerado con el
+pipeline corregido; ahora incluye la tabla por clase completa (II: P 0.867,
+R 0.812, F1 0.839).
+3. ✅ **Caso SHAP individual:** generado `artifacts/shap/shap_caso_test_1.json`
+(nivel real III → predicho III, probabilidad 0.983) y citado en la sección 5.6.
 
 ## Resumen ejecutivo para la dirección
 
 - **Redactable por IA y ya entregado:** Resumen/Abstract, Desarrollo (Cap. 4),
-  Resultados (Cap. 5), Conclusiones (Cap. 7) con cifras reales trazables.
+  Resultados (Cap. 5), Conclusiones (Cap. 7) con cifras reales trazables; los
+  3 hallazgos de trazabilidad resueltos.
 - **NO redactable (trámites/información externa):** Organización del trabajo
   en grupo (info del equipo), Comité de Ética, anti-plagio, asignaturas
   aprobadas, verificación de anonimización de los CSVs.
 - **Recomendación:** no iniciar el depósito hasta resolver los 2 bloqueantes
-  (ítems 1 y 2) y los 3 hallazgos de trazabilidad listados arriba.
+  (ítems 1 y 2) de la tabla de bloqueantes.

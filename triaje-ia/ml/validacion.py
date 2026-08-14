@@ -19,7 +19,7 @@ import numpy as np
 from sklearn.metrics import confusion_matrix
 
 from ml.pipeline import _preparar, _split_estratificado
-from ml.src import ARTIFACTS_METRICS, ARTIFACTS_MODELS, ML_ROOT, SEMILLA_GLOBAL
+from ml.src import ARTIFACTS_METRICS, ARTIFACTS_MODELS, ARTIFACTS_SHAP, ML_ROOT, SEMILLA_GLOBAL
 from ml.src.data.ingesta import generar_datos_sinteticos, ingestar_csv_local
 from ml.src.evaluation.metrics import CLASES, mcnemar, metricas_por_clase
 from ml.src.evaluation.validacion_cientifica import (
@@ -59,6 +59,10 @@ def _cargar_ganador() -> tuple[dict, Path]:
 
 
 def ejecutar(n: int = 4000) -> dict:
+    import sys
+
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     SALIDA.mkdir(parents=True, exist_ok=True)
     print("Carga del artefacto ganador y reconstrucción del split (sin fuga)")
     paquete, ruta_artefacto = _cargar_ganador()
@@ -103,6 +107,31 @@ def ejecutar(n: int = 4000) -> dict:
         ), encoding="utf-8",
     )
     hallazgos_f1.append(("info", f"Matriz de confusión del ganador guardada: {ruta_matriz.name}"))
+
+    # Evidencia 5.6: explicación SHAP por paciente del primer caso de test
+    from ml.src.evaluation.shap_explain import explicar_shap
+
+    modelo_arbol = getattr(paquete["modelo"], "sub_a", paquete["modelo"])
+    try:
+        nombres = list(pipeline.get_feature_names_out())
+    except AttributeError:
+        nombres = [f"f{i}" for i in range(X_te.shape[1])]
+    caso = explicar_shap(modelo_arbol, X_te[0:1], nombres_features=nombres)
+    nivel_real = y[te_idx[0]]
+    nivel_pred = CLASES[int(pred_te[0])]
+    caso_shap = {
+        "caso": "test_1",
+        "nivel_real": str(nivel_real),
+        "nivel_predicho": nivel_pred,
+        "probabilidad_maxima": float(proba_te[0].max()),
+        "top_5": caso["top"],
+    }
+    (ARTIFACTS_SHAP / "shap_caso_test_1.json").write_text(
+        json.dumps(caso_shap, ensure_ascii=False, indent=2), encoding="utf-8",
+    )
+    hallazgos_f1.append(
+        ("info", f"Caso SHAP guardado: nivel real {nivel_real} → predicho {nivel_pred}")
+    )
 
     # Fase 2 · CV estratificado (verificado en código)
     hallazgos_f2 = [

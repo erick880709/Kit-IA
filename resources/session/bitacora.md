@@ -1,5 +1,26 @@
 # Bitácora de Sesiones — Kit IA
 
+## Sesión 21 — 2026-08-14
+
+**Objetivo:** Validación del trabajo contra `context/extension-orquestador-tfm-ml.md` y cierre de los ajustes pendientes.
+
+**Gap analysis vs secuencia extendida (0-17):** cumplidos janus→builder→tdd (9), validacion-cientifica (9.5 ✓), revision-calidad (12 ✓), seguridad-rendimiento (13 ✓), entrega-continua (15 ✓), memoria (16 ✓), tfm-redactor (17 ✓). **Faltantes encontrados y cerrados en esta sesión:**
+- `documentacion-observabilidad` (14): ADR-005 (CWE-502, hash antes de deserializar) + ADR-006 (aislamiento tests vs artifacts) + `resources/engineering/observability/instrumentacion-triaje-ia.md`.
+- `qa` (11): runbook formal `resources/qa/runbook-e2e-triajeia.md` (E2E ya verificado en builder).
+- `obsidian` (16): vault actualizado (notas capitulos-tfm, evidencia-ingenieria + MOC con cierre del proyecto).
+- Instalación de la extensión: `orquestador/references/extension-tfm-ml.md` copiado + 2 ramas nuevas en el árbol + GATE + paso 17 en secuencia + descripción actualizada.
+- README `.github/README.md`: 24 skills con `validacion-cientifica-ml` y `tfm-redactor`.
+
+**Bug raíz resuelto (corrupción de evidencia):** la suite de tests llamaba funciones de entrenamiento que escribían en `artifacts/metrics/` REAL, sobrescribiendo las métricas del pipeline con datos de prueba (k_folds=3) — explicaba la duplicación early/late y el `por_clase` vacío. Corrección: tests redirigidos a `tmp_path` (3 tests con assert de destino) + pipeline re-ejecutado (k=5): early F1 0.578 / late promedio 0.555 / stacking 0.560, `modelo_ganador.json` con `por_clase` completo. Capítulo 5 y checklist TFM actualizados (hallazgos 1-3 resueltos).
+- Caso SHAP por paciente: `artifacts/shap/shap_caso_test_1.json` (III→III, p=0.983) y sección 5.6 actualizada.
+- `ml/validacion.py`: stdout UTF-8 robusto (fin del UnicodeEncodeError en consola cp1252).
+
+**Verificaciones:** pytest **103/103** · ruff 0 errores · pipeline y auditoría re-ejecutados con evidencia real.
+
+**Pendientes solo externos:** organización del trabajo en grupo (equipo), Comité de Ética (Art. 2.7), anti-plagio, MIMIC-IV-ED, maquetación `docx` del documento final.
+
+---
+
 ## Sesión 20 — 2026-08-14
 
 **Objetivo:** Paso 5 post-desarrollo — `memoria` (estado para próxima sesión) + `tfm-redactor` (capítulos del TFM con métricas reales).

@@ -159,9 +159,9 @@ Todos los skills leen y escriben bajo `resources/` en la raíz del proyecto dest
 
 ---
 
-## 🛠️ Skills incluidos (22)
+## 🛠️ Skills incluidos (24)
 
-### Pipeline principal (17 skills en español)
+### Pipeline principal (19 skills en español)
 
 | Skill | Categoría | Trigger |
 |---|---|---|
@@ -176,11 +176,13 @@ Todos los skills leen y escriben bajo `resources/` en la raíz del proyecto dest
 | `genesis` | Scaffold | "inicializar el repo", "crear proyecto base", "bootstrap" |
 | `builder` | Scaffold | "generar scaffold", "crear módulo CRUD", "scaffold de HU" |
 | `tdd-implementacion` | Ingeniería | "implementar la lógica de", "hacer TDD de", "escribir código" |
+| `validacion-cientifica-ml` | ML | "validar mi modelo", "¿hay fuga de datos?", "McNemar", "model card", "auditar sesgo" |
 | `qa` | Ingeniería | "pruebas E2E", "grabar evidencia", "runbook de QA" |
 | `revision-calidad` | Ingeniería | "revisar PR", "code review", "¿está listo para mergear?" |
 | `seguridad-rendimiento` | Ingeniería | "revisar seguridad", "OWASP", "optimizar performance", "por qué está lento" |
 | `documentacion-observabilidad` | Ingeniería | "escribir ADR", "agregar logging", "métricas", "trazas" |
 | `entrega-continua` | Ingeniería | "commitear", "pipeline CI/CD", "preparar release", "desplegar" |
+| `tfm-redactor` | Académico | "redactar capítulo del TFM", "preparar depósito", "checklist UNIR" |
 | `obsidian` | Conocimiento | "exportar a Obsidian", "crear vault", "vincular notas" |
 
 ### Skills de utilidad (5 en inglés)

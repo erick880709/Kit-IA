@@ -177,25 +177,32 @@ def datos_modelo(df_preparado):
     return X, y, pipeline
 
 
-def test_baselines_cv_completo(datos_modelo):
+def test_baselines_cv_completo(datos_modelo, tmp_path, monkeypatch):
+    # Los entrenamientos de prueba NUNCA deben sobrescribir las métricas reales
+    # de artifacts/metrics/ (LNN-006).
+    monkeypatch.setattr("ml.src.evaluation.metrics.ARTIFACTS_METRICS", tmp_path)
     X, y, _ = datos_modelo
     resultados = entrenar_baselines(X, y, k_folds=3)
     assert set(resultados) == {"regresion_logistica", "random_forest", "xgboost"}
     for _nombre, res in resultados.items():
         for k in ("precision", "recall", "f1"):
             assert 0.0 <= res["macro_cv"][k] <= 1.0
+    assert (tmp_path / "baseline_xgboost.json").exists()
 
 
-def test_early_fusion_metricas(datos_modelo):
+def test_early_fusion_metricas(datos_modelo, tmp_path, monkeypatch):
+    monkeypatch.setattr("ml.src.evaluation.metrics.ARTIFACTS_METRICS", tmp_path)
     X, y, _ = datos_modelo
     X_txt, _ = vectorizar_texto(
         pd.DataFrame({"motivo_texto": [""] * len(y)}), max_features=50
     )
     res = entrenar_early_fusion(X, y, X_txt, k_folds=3)
     assert 0.0 <= res["macro_cv"]["f1"] <= 1.0
+    assert (tmp_path / "early_fusion.json").exists()
 
 
-def test_late_fusion_combinadores(datos_modelo):
+def test_late_fusion_combinadores(datos_modelo, tmp_path, monkeypatch):
+    monkeypatch.setattr("ml.src.evaluation.metrics.ARTIFACTS_METRICS", tmp_path)
     X, y, _ = datos_modelo
     X_txt, _ = vectorizar_texto(
         pd.DataFrame({"motivo_texto": [""] * len(y)}), max_features=50
@@ -205,6 +212,7 @@ def test_late_fusion_combinadores(datos_modelo):
     assert set(res) == {"promedio_ponderado", "stacking"}
     for _nombre, macro in res.items():
         assert 0.0 <= macro["f1"] <= 1.0
+    assert (tmp_path / "late_fusion_stacking.json").exists()
 
 
 # ---------- TT-E3-07 · Umbrales ----------

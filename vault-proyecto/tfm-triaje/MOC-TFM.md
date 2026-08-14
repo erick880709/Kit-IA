@@ -43,3 +43,9 @@ flowchart LR
     D --> E[validacion-cientifica-ml]
     E --> F[tfm-redactor]
 ```
+
+## Cierre del proyecto (2026-08-14)
+
+- [[tfm-triaje/capitulos-tfm|Capítulos TFM generados]] — resumen, desarrollo, resultados, conclusiones + checklist UNIR
+- [[tfm-triaje/evidencia-ingenieria|Evidencia de ingeniería]] — hardening, performance, release, auditoría científica
+- [[sesiones/learning/LNN-003-gitignore-patron-anclado|LNN-003 · gitignore anclado]] · [[sesiones/learning/LNN-004-hash-antes-de-deserializar|LNN-004 · CWE-502]] · [[sesiones/learning/LNN-005-timeout-deterministico|LNN-005 · timeout flaky]]
