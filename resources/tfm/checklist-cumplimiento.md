@@ -13,7 +13,7 @@
 
 | # | Regla | Estado | Evidencia / hallazgo |
 |---|---|---|---|
-| 1 | Organización del trabajo en grupo avalada antes de la introducción | ❌ **Bloqueante** | El Cap. 1 del documento base contiene placeholders `[COMPLETAR]`. NO se redactó por el skill (anti-patrón: nunca inventar el reparto del equipo). Se requiere información real de los 3 integrantes y aval de la directora. |
+| 1 | Organización del trabajo en grupo avalada antes de la introducción | ⚠️ **Casi resuelto** | Redactado con la información real del equipo (portavoz: Medina; reparto por integrante; reuniones cada 3 días) en `resources/tfm/capitulos/00-organizacion-trabajo-grupo.md`. Falta únicamente el **aval de la directora**. |
 | 2 | Autorización del Comité de Ética (datos sanitarios de terceros) | ❌ **Bloqueante** | Se usó la cohorte del Hospital San Juan de Dios (43.594 eventos). No existe constancia de autorización en el contexto. Trámite externo obligatorio (Art. 2.7) — sin él no hay depósito ni defensa. |
 | 3 | Ausencia de plagio verificada con herramienta oficial | ⚠️ Pendiente | No hay evidencia de corrida anti-plagio en el contexto. Trámite del director (Art. 11). |
 | 4 | Asignaturas aprobadas antes de la convocatoria | ⚠️ Pendiente | Trámite administrativo externo — nunca verificable desde el documento. |
@@ -49,10 +49,16 @@ R 0.812, F1 0.839).
 ## Resumen ejecutivo para la dirección
 
 - **Redactable por IA y ya entregado:** Resumen/Abstract, Desarrollo (Cap. 4),
-  Resultados (Cap. 5), Conclusiones (Cap. 7) con cifras reales trazables; los
+  Resultados (Cap. 5), Conclusiones (Cap. 7), Organización del trabajo en
+  grupo (Cap. 0, con info real del equipo) — cifras reales trazables; los
   3 hallazgos de trazabilidad resueltos.
-- **NO redactable (trámites/información externa):** Organización del trabajo
-  en grupo (info del equipo), Comité de Ética, anti-plagio, asignaturas
-  aprobadas, verificación de anonimización de los CSVs.
-- **Recomendación:** no iniciar el depósito hasta resolver los 2 bloqueantes
-  (ítems 1 y 2) de la tabla de bloqueantes.
+- **Maquetación:** `TFM_TriajeIA_UNIR.docx` generado (portada, índice,
+  capítulos 0/4/5/7) — pendiente integrar capítulos 1–3 del documento base.
+- **Trámites preparados:** borrador de solicitud al Comité de Ética
+  (`resources/tfm/tramites/solicitud-comite-etica.md`) y hoja de ruta de
+  trámites externos (`pendientes-tramites.md`).
+- **NO redactable (trámites/información externa):** aval de la directora,
+  autorización del Comité de Ética, anti-plagio, asignaturas aprobadas,
+  credenciales MIMIC, verificación de anonimización de los CSVs.
+- **Recomendación:** no iniciar el depósito hasta resolver el ítem 2
+  (Comité de Ética) y el aval de la directora sobre el Cap. 0.

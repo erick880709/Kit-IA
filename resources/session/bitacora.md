@@ -1,5 +1,23 @@
 # Bitácora de Sesiones — Kit IA
 
+## Sesión 22 — 2026-08-14
+
+**Objetivo:** Cerrar los 4 pendientes externos/del documento (organización grupal, comité de ética, trámites, maquetación Word).
+
+**Entregados:**
+1. `resources/tfm/capitulos/00-organizacion-trabajo-grupo.md` — redactado con la info real del equipo (portavoz: Medina; reparto: Medina caps 1-2/estado del arte, Rivera metodología+desarrollo, Soto resultados+conclusiones; reuniones cada 3 días + repo compartido). Solo falta el aval de la directora.
+2. `resources/tfm/tramites/solicitud-comite-etica.md` — borrador honesto para presentar (NO es evidencia de autorización; Art. 2.7).
+3. `resources/tfm/tramites/pendientes-tramites.md` — hoja de ruta de 6 trámites externos con responsable y criterio de cierre (aval, comité, anti-plagio, asignaturas, MIMIC/PhysioNet con adaptador ya implementado, verificación de anonimización).
+4. Maquetación Word: `.github/tools/generar-tfm-docx.js` (docx-js, A4 explícito, Arial, TOC) → `resources/tfm/TFM_TriajeIA_UNIR.docx` validado (477 párrafos, 7 tablas, 1 campo TOC). Instalados: `docx` global + `lxml` en el venv.
+
+**Nota técnica:** el validador del skill docx falla en Windows por codificación cp1252 (bug del validador, no del documento) — verificado con parseo lxml independiente. LNN candidata para la próxima sesión.
+
+**Checklist UNIR:** ítem 1 pasa de ❌ a ⚠️ (redactado, falta aval); ítem 2 sigue ⏳ bloqueante externo.
+
+**Próximos pasos:** aval de la directora sobre Cap. 0 → presentar comité de ética → integrar caps 1–3 del documento base al Word → depósito.
+
+---
+
 ## Sesión 21 — 2026-08-14
 
 **Objetivo:** Validación del trabajo contra `context/extension-orquestador-tfm-ml.md` y cierre de los ajustes pendientes.
