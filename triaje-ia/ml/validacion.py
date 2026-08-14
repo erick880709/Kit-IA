@@ -16,9 +16,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
+from sklearn.metrics import confusion_matrix
 
 from ml.pipeline import _preparar, _split_estratificado
-from ml.src import ARTIFACTS_MODELS, ML_ROOT, SEMILLA_GLOBAL
+from ml.src import ARTIFACTS_METRICS, ARTIFACTS_MODELS, ML_ROOT, SEMILLA_GLOBAL
 from ml.src.data.ingesta import generar_datos_sinteticos, ingestar_csv_local
 from ml.src.evaluation.metrics import CLASES, mcnemar, metricas_por_clase
 from ml.src.evaluation.validacion_cientifica import (
@@ -90,6 +91,18 @@ def ejecutar(n: int = 4000) -> dict:
     proba_te = paquete["modelo"].predict_proba(X_te, X_txt_te)
     y_te_enc = np.array([CLASES.index(c) for c in y[te_idx]])
     pred_te = aplicar_umbrales(proba_te, paquete["umbrales"])
+
+    # Evidencia 5.4: matriz de confusión del ganador sobre test (trazable)
+    matriz = confusion_matrix(y_te_enc, pred_te, labels=list(range(len(CLASES))))
+    ruta_matriz = ARTIFACTS_METRICS / "confusion_matrix_modelo_ganador_test.json"
+    ruta_matriz.write_text(
+        json.dumps(
+            {"clases": CLASES, "matriz": matriz.tolist(),
+             "n_test": int(len(y_te_enc)), "umbrales": paquete["umbrales"]},
+            ensure_ascii=False, indent=2,
+        ), encoding="utf-8",
+    )
+    hallazgos_f1.append(("info", f"Matriz de confusión del ganador guardada: {ruta_matriz.name}"))
 
     # Fase 2 · CV estratificado (verificado en código)
     hallazgos_f2 = [

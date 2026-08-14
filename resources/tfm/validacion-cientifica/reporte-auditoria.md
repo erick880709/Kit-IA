@@ -1,8 +1,8 @@
 # Reporte de Auditoría Científica — TriajeIA
 
-- **Fecha:** 2026-08-14 14:22 UTC
+- **Fecha:** 2026-08-14 14:50 UTC
 - **Modelo:** modelo-latefusion-xgb-text-sjd-v20260814 · **Artefacto:** modelo-latefusion-xgb-text-sjd-v20260814.joblib
-- **Semilla:** 42 · **Git:** b2c6201
+- **Semilla:** 42 · **Git:** 975e627
 
 ## Fase 1 · Prevención de fuga de datos
 | Severidad | Hallazgo |
@@ -10,6 +10,7 @@
 | info | Split 70/15/15 estratificado por nivel, sin solape de filas: True |
 | info | Escalador/imputación ajustados SOLO con train (corregido en pipeline v3) |
 | info | TF-IDF ajustado con textos de train + cohorte SJdD (test solo transformado) |
+| info | Matriz de confusión del ganador guardada: confusion_matrix_modelo_ganador_test.json |
 
 ## Fase 2 · Estrategia de validación cruzada
 | Severidad | Hallazgo |
@@ -38,7 +39,7 @@
 ## Fase 6 · Trazabilidad y reproducibilidad
 | Severidad | Hallazgo |
 |---|---|
-| info | Semilla 42 · artefacto modelo-latefusion-xgb-text-sjd-v20260814 · git b2c6201 |
+| info | Semilla 42 · artefacto modelo-latefusion-xgb-text-sjd-v20260814 · git 975e627 |
 
 ## Veredicto
 - **Leakage:** SIN EVIDENCIA DE FUGA tras corrección (escalador solo en train,

@@ -1,5 +1,23 @@
 # Bitácora de Sesiones — Kit IA
 
+## Sesión 20 — 2026-08-14
+
+**Objetivo:** Paso 5 post-desarrollo — `memoria` (estado para próxima sesión) + `tfm-redactor` (capítulos del TFM con métricas reales).
+
+**Memoria:** `estado.json` reescrito (fase entrega, 19 sesiones, hitos E1–E6 + pasos 1–4, pendientes y riesgos abiertos) · `contexto.md` regenerado (1 página) · 3 lecciones nuevas: LNN-003 (.gitignore anclado por barra intermedia), LNN-004 (hash antes de deserializar pickle, CWE-502), LNN-005 (timeout=0 en tests es carrera — parchear al trabajador) + INDEX actualizado.
+
+**tfm-redactor:**
+- `ml/validacion.py` ahora guarda `confusion_matrix_modelo_ganador_test.json` (evidencia 5.4 trazable).
+- Capítulos generados en `resources/tfm/capitulos/`: `00-resumen-abstract.md` (ES/EN, cifras verificadas), `04-desarrollo-de-la-contribucion.md`, `05-resultados-experimentales.md` (5.1–5.10 con columna Fuente por cifra), `07-conclusiones-y-trabajo-futuro.md`.
+- `resources/tfm/checklist-cumplimiento.md`: 13 ítems UNIR con estados — 2 bloqueantes (organización del trabajo en grupo con `[COMPLETAR]`; Comité de Ética Art. 2.7), 3 hallazgos de trazabilidad (macro-CV duplicado early/late, por_clase vacío en modelo_ganador.json, caso SHAP individual pendiente).
+- Regla de oro cumplida: ninguna cifra inventada; las no alcanzadas (F1 0.551 vs 0.82) declaradas honestamente.
+
+**Verificaciones:** ruff 0 errores · pytest **103/103**.
+
+**Próximos pasos:** resolver los 2 bloqueantes con el equipo (info de organización grupal + autorización ética) · corregir los 3 hallazgos de trazabilidad · maquetar en Word con `docx` cuando el documento base se integre.
+
+---
+
 ## Sesión 19 — 2026-08-14
 
 **Objetivo:** Paso 4 post-desarrollo — `entrega-continua`: historia limpia de commits, pipeline CI/CD, checklist de pre-lanzamiento y push a `origin/main`.
