@@ -1,0 +1,48 @@
+name: CI TriajeIA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "triaje-ia/**"
+      - ".github/workflows/ci.yml"
+  pull_request:
+    paths:
+      - "triaje-ia/**"
+      - ".github/workflows/ci.yml"
+
+concurrency:
+  group: ci-triajeia-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  calidad:
+    name: Gates de calidad (ruff + pytest + pip-audit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: triaje-ia
+    env:
+      PYTHONPATH: triaje-ia
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: triaje-ia/requirements-dev.txt
+
+      - name: Instalar dependencias
+        run: pip install -r requirements-dev.txt
+
+      - name: Ruff (mismos archivos que el gate manual)
+        run: ruff check app ml tests scripts
+
+      - name: Pytest (misma suite que el gate manual)
+        run: pytest -q
+
+      - name: pip-audit (CVE sobre dependencias declaradas)
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt

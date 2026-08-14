@@ -28,3 +28,9 @@ resources/session/estado.json
 # Binarios y paquetes
 *.skill
 *.zip
+# Datasets reales (pesados / datos abiertos descargables — RNF-006)
+datasets/
+
+# Bases de datos locales de demo
+*.db
+*.sqlite3
