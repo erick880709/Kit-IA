@@ -1,0 +1,22 @@
+# Despliegue local/servidor de TriajeIA (demo TFM UNIR)
+# Uso:  docker compose up -d --build
+services:
+  triaje-ia:
+    build: .
+    image: triaje-ia:demo
+    ports:
+      - "8501:8501"
+    environment:
+      # En un servidor real: generar una clave y pasarla por variable/archivo
+      APP_SECRET_KEY: ${APP_SECRET_KEY:-cambiar-en-produccion}
+      DB_PATH: /app/data/triaje.db
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      MODELS_DIR: /app/artifacts/models
+    volumes:
+      - triaje_data:/app/data
+      - triaje_logs:/app/logs
+    restart: unless-stopped
+
+volumes:
+  triaje_data:
+  triaje_logs:

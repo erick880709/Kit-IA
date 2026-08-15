@@ -2,6 +2,30 @@
 
 Skill: `documentacion-observabilidad` · Fecha: 2026-08-14
 
+## Actualización 2026-08-14 (post-cierre): logs de acciones + bug de modelo activo
+
+**Logs por acción (solicitud del usuario):** cada acción relevante ahora emite
+una línea JSON estructurada, tanto a stdout como al archivo rotativo
+`triaje-ia/logs/app.log` (2 MB × 5 backups, agregado a `.gitignore`):
+
+| Servicio | Acciones logueadas |
+|---|---|
+| `auth_service` | login exitoso, correo inexistente, usuario inactivo, bloqueo temporal, bloqueo por intentos, contraseña incorrecta (con intentos restantes), token de recuperación |
+| `paciente_service` | paciente creado, paciente actualizado, verificación por documento (DEBUG) |
+| `triaje_service` | evento creado, transición de estado (desde → hacia), signos registrados (IMC), evaluación clínica (CIE-10), clasificación IA persistida (nivel/versión/ms), validación profesional (concordancia), cierre de evento |
+| `inference_service` | carga de modelo, inferencia OK (nivel/confianza/ms/versión), timeout, errores, circuit breaker |
+| `main` | cierre de sesión (motivo + usuario) |
+
+**Bug corregido (evidencia en logs del servidor 22:24:51 UTC):** la BD tenía
+activo `modelo-latefusion-xgboost-v20260814` (XGBoost plano) en vez del ganador
+`xgb-text-sjd`. Además `_predecir_proba` pasaba `X_txt` como 2º argumento
+posicional → XGBoost lo interpretaba como `ntree_limit`/`validate_features` →
+`ValueError: ambiguous truth` → fallback manual. Arreglos: (1) `_predecir_proba`
+solo pasa ambos argumentos si el modelo es `LateFusionClassifier` (`sub_b`);
+(2) se activó el modelo ganador vía `modelo_service.activar` (auditado).
+Regresión cubierta: `test_predecir_proba_modelo_plano_sin_submodelo_texto`.
+Verificado E2E en navegador: nivel IV sugerido, 919.7 ms, sin fallback.
+
 ## Instrumentación existente (verificada, no nueva)
 
 - **Logs estructurados:** `app/infra/logging_config.py` — formato JSON con
