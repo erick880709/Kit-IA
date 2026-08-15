@@ -12,7 +12,12 @@ from sqlalchemy.pool import StaticPool
 from app.domain.base import Base
 from app.domain.entities import Auditoria
 from app.domain.exceptions import ValidationError
-from app.services.paciente_service import buscar_duplicados, registrar_paciente
+from app.services.paciente_service import (
+    buscar_duplicados,
+    buscar_por_documento,
+    datos_precarga,
+    registrar_paciente,
+)
 
 
 @pytest.fixture()
@@ -97,6 +102,25 @@ def test_catalogo_quindio_completo() -> None:
     assert all(len(CIUDADES_POR_DEPARTAMENTO[d]) >= 1 for d in CIUDADES_POR_DEPARTAMENTO)
 
 
+def test_catalogo_motivos_integridad_y_trauma_presente() -> None:
+    """El catálogo de motivos debe tener códigos únicos, descripciones y
+    categorías no vacías, y cubrir trauma y motivos frecuentes."""
+    from app.domain.catalogos import CATALOGO_MOTIVOS
+
+    codigos = [codigo for codigo, _, _ in CATALOGO_MOTIVOS]
+    assert len(codigos) == len(set(codigos)), "códigos CIE-10 duplicados"
+    assert all(desc.strip() for _, desc, _ in CATALOGO_MOTIVOS)
+    assert all(cat.strip() for _, _, cat in CATALOGO_MOTIVOS)
+    descripciones = " | ".join(desc for _, desc, _ in CATALOGO_MOTIVOS).casefold()
+    for motivo in ("fractura", "arma de fuego", "cortopunzante", "quemadura",
+                   "estreñimiento", "tos", "disnea", "taquicardia", "celulitis"):
+        assert motivo in descripciones, f"falta motivo: {motivo}"
+    # Categorías esperadas del catálogo clínico
+    categorias = {cat for _, _, cat in CATALOGO_MOTIVOS}
+    assert {"Digestivo", "Respiratorio", "Neurológico", "Cardiovascular",
+            "Trauma", "Salud mental", "Signos/Síntomas generales"} <= categorias
+
+
 def test_ca3_telefono_minimo_10_digitos_y_acepta_57(session: Session) -> None:
     p = registrar_paciente(session, usuario_id=None, datos=_datos(telefono="+57 300 123 4567"))
     assert p.telefono == "3001234567"  # normalizado a 10 dígitos locales
@@ -162,3 +186,91 @@ def test_ca4_alta_queda_auditada(session: Session) -> None:
     registrar_paciente(session, usuario_id="usr-1", datos=_datos())
     registros = session.query(Auditoria).all()
     assert any(r.accion == "CREAR_PACIENTE" and r.usuario_id == "usr-1" for r in registros)
+
+
+# ---------- Ajuste: nuevo triaje para paciente existente ----------
+
+def test_buscar_por_documento_exacto_devuelve_paciente(session: Session) -> None:
+    """Verificación por documento: coincide aunque el tipo llegue en minúsculas."""
+    p = registrar_paciente(session, usuario_id=None, datos=_datos())
+    encontrado = buscar_por_documento(
+        session, tipo_documento="cc", numero_documento=" 52148903 "
+    )
+    assert encontrado is not None
+    assert encontrado.id == p.id
+
+
+def test_buscar_por_documento_sin_coincidencias_devuelve_none(session: Session) -> None:
+    registrar_paciente(session, usuario_id=None, datos=_datos())
+    assert (
+        buscar_por_documento(session, tipo_documento="CC", numero_documento="999")
+        is None
+    )
+    assert (
+        buscar_por_documento(session, tipo_documento="CC", numero_documento="")
+        is None
+    )
+
+
+def test_buscar_duplicados_con_formulario_vacio_no_devuelve_todos(
+    session: Session,
+) -> None:
+    """Guard: verificar con el formulario vacío no debe tratar a TODOS como duplicados."""
+    registrar_paciente(session, usuario_id=None, datos=_datos())
+    dup = buscar_duplicados(
+        session,
+        tipo_documento="CC",
+        numero_documento="",
+        nombres="",
+        apellidos="",
+    )
+    assert dup == []
+
+
+def test_datos_precarga_mapean_todos_los_campos_del_formulario(session: Session) -> None:
+    p = registrar_paciente(session, usuario_id=None, datos=_datos())
+    precarga = datos_precarga(p)
+    assert precarga == {
+        "tipo_documento": "CC",
+        "numero_documento": "52148903",
+        "nombres": "María",
+        "apellidos": "Gómez Ruiz",
+        "fecha_nacimiento": date(1986, 2, 12),
+        "sexo": "Femenino",
+        "via_llegada": "Ambulancia",
+        "episodios_previos_urgencias": 2,
+        "telefono": "3001234567",
+        "correo": "m.gomez@correo.com",
+        "contacto_emergencia": "Carlos Gómez",
+        "numero_contacto_emergencia": "3107654321",
+        "departamento": "Cundinamarca",
+        "ciudad": "Bogotá D.C.",
+        "direccion_residencia": "Calle 10 # 5-20",
+        "regimen": "Contributivo",
+        "eps": "",
+        "tipo_sangre": "O+",
+        "alergias": "Penicilina",
+    }
+
+
+def test_datos_precarga_opcionales_none_se_mapean_a_vacio(session: Session) -> None:
+    p = registrar_paciente(
+        session,
+        usuario_id=None,
+        datos=_datos(
+            telefono="",
+            correo="",
+            direccion_residencia="",
+            regimen="",
+            eps="",
+            tipo_sangre="",
+            alergias="",
+        ),
+    )
+    precarga = datos_precarga(p)
+    assert precarga["telefono"] == ""
+    assert precarga["correo"] == ""
+    assert precarga["eps"] == ""
+    assert precarga["regimen"] == ""
+    assert precarga["tipo_sangre"] == ""
+    assert precarga["alergias"] == ""

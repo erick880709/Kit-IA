@@ -154,10 +154,19 @@ class InferenceService:
     @staticmethod
     def _predecir_proba(paquete: dict, X_est, X_txt) -> np.ndarray:
         modelo = paquete["modelo"]
-        try:
+        # El artefacto ganador es LateFusionClassifier (sub_a + sub_b) y acepta
+        # (X_estructurada, X_texto). Un modelo plano (XGBoost/RF) interpreta el
+        # segundo argumento posicional como ntree_limit/validate_features y
+        # explota con ValueError de array ambiguo (bug real 2026-08-14).
+        if getattr(modelo, "sub_b", None) is not None and X_txt is not None:
             return np.asarray(modelo.predict_proba(X_est, X_txt))
-        except TypeError:  # artefacto antiguo sin submodelo de texto
-            return np.asarray(modelo.predict_proba(X_est))
+        if getattr(modelo, "sub_b", None) is None and X_txt is not None:
+            logger.warning(
+                "Artefacto %s sin submodelo de texto — predicción solo con "
+                "features estructuradas",
+                paquete.get("version"),
+            )
+        return np.asarray(modelo.predict_proba(X_est))
 
     @staticmethod
     def _vectorizar_texto(paquete: dict, datos: dict):
@@ -215,6 +224,10 @@ class InferenceService:
             nivel = sugerir_nivel(probabilidades, umbrales)
             confianza = max(probabilidades.values())
             self._fallos = 0
+            logger.info(
+                "Inferencia OK: nivel=%s confianza=%.3f tiempo_ms=%.1f version=%s",
+                nivel, confianza, tiempo_ms, paquete.get("version"),
+            )
             return {
                 "estado": "ok",
                 "nivel_sugerido": nivel,

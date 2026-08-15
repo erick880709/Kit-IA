@@ -41,6 +41,7 @@ def render() -> None:
 
     with SessionLocal() as session:
         indicadores = dashboard_service.calcular_indicadores(session)
+        tendencia = dashboard_service.conteo_por_dia(session, dias=14)
 
     # CA1 · tarjetas de indicadores
     c1, c2, c3, c4 = st.columns(4)
@@ -59,6 +60,20 @@ def render() -> None:
 
     st.subheader("Distribución de triaje por nivel (CA1)")
     st.bar_chart(pd.Series(indicadores["distribucion"]))
+
+    st.subheader("Tendencia diaria de eventos (14 días)")
+    if tendencia:
+        serie = pd.DataFrame(tendencia).set_index("fecha")
+        st.line_chart(serie)
+    else:
+        st.info("Sin eventos en los últimos 14 días.")
+
+    st.subheader("Concordancia IA vs profesional por nivel")
+    conc_nivel = pd.Series(indicadores["concordancia_por_nivel"]).dropna()
+    if not conc_nivel.empty:
+        st.bar_chart(conc_nivel)
+    else:
+        st.info("Sin eventos cerrados para calcular concordancia por nivel.")
 
     # CA2 · semáforo de metas RNF-001
     st.subheader("Semáforo de metas del modelo (RNF-001)")
@@ -113,7 +128,7 @@ def render() -> None:
         )
     with col2:
         xlsx_bytes, nombre = dashboard_service.exportar_reporte(
-            indicadores, formato="excel"
+            indicadores, formato="excel", tendencia=tendencia,
         )
         st.download_button(
             "⬇ Excel", data=xlsx_bytes, file_name=nombre,
@@ -122,7 +137,7 @@ def render() -> None:
         )
     with col3:
         pdf_bytes, nombre = dashboard_service.exportar_reporte(
-            indicadores, formato="pdf"
+            indicadores, formato="pdf", tendencia=tendencia,
         )
         st.download_button(
             "⬇ PDF", data=pdf_bytes, file_name=nombre, mime="application/pdf",

@@ -174,6 +174,36 @@ def test_exportar_reporte_formatos(session):
         dashboard_service.exportar_reporte(indicadores, formato="json")
 
 
+def test_exportar_excel_incluye_graficos(session):
+    """HU-E6-03: el Excel debe bajar CON gráficos (barras + línea de tendencia)."""
+    from io import BytesIO
+
+    from openpyxl import load_workbook
+
+    _evento(session, sugerido="III", asignado="III")
+    indicadores = dashboard_service.calcular_indicadores(session)
+    xlsx_bytes, _ = dashboard_service.exportar_reporte(
+        indicadores, formato="excel",
+        tendencia=[{"fecha": "2026-08-13", "n": 2}, {"fecha": "2026-08-14", "n": 1}],
+    )
+    wb = load_workbook(BytesIO(xlsx_bytes))
+    assert "graficos" in wb.sheetnames
+    assert len(wb["graficos"]._charts) == 3  # 2 barras + 1 línea  # noqa: SLF001
+
+
+def test_exportar_pdf_incluye_graficos(session):
+    """HU-E6-03: el PDF debe bajar CON los gráficos dibujados."""
+    _evento(session, sugerido="II", asignado="II")
+    indicadores = dashboard_service.calcular_indicadores(session)
+    pdf_bytes, _ = dashboard_service.exportar_reporte(
+        indicadores, formato="pdf", tendencia=[{"fecha": "2026-08-14", "n": 1}],
+    )
+    assert pdf_bytes.startswith(b"%PDF")
+    assert b"Distribucion de triaje por nivel" in pdf_bytes
+    assert b"Concordancia IA vs profesional por nivel" in pdf_bytes
+    assert b"Tendencia diaria de eventos" in pdf_bytes
+
+
 def test_exportar_reporte_sin_identificadores(session):
     p = _paciente(session, "99999999")
     e = EventoTriaje(

@@ -1,10 +1,11 @@
 """Pantalla de registro de paciente (HU-E2-01, mockup s-registro).
 
-Flujo: formulario en 4 secciones → verificación de duplicados (CA2) →
-si el paciente ya existe, se PRECARGAN sus datos personales y de contacto de
-emergencia y la acción principal es continuar con el registro existente
-(evita registros repetidos); si no existe, alta con validaciones (CA3) y
-auditoría (CA4).
+Flujo: formulario en 4 secciones → «Verificar documento» (CA2):
+- Si el paciente YA existe por documento: se PRECARGAN sus datos y la acción
+  principal es «➕ Iniciar nuevo triaje» — una persona puede tener N triajes,
+  uno por cada visita a urgencias (relación 1:N Paciente→EventoTriaje).
+- Si no existe por documento, se busca por nombre/apellidos para advertir
+  duplicados; si no hay ninguno, alta con validaciones (CA3) y auditoría (CA4).
 """
 
 from __future__ import annotations
@@ -21,6 +22,7 @@ from app.domain.catalogos import (
     SEXO,
     VIA_LLEGADA,
 )
+from app.domain.entities import Paciente
 from app.domain.exceptions import ValidationError
 from app.infra.db import SessionLocal
 from app.services import paciente_service, triaje_service
@@ -60,7 +62,12 @@ def _datos_desde_form() -> dict | None:
         min_value=date(1900, 1, 1),
         max_value=date.today(),
     )
-    datos["via_llegada"] = c2.selectbox("Vía de llegada", VIA_LLEGADA)
+    datos["via_llegada"] = c2.selectbox(
+        "Vía de llegada",
+        VIA_LLEGADA,
+        index=VIA_LLEGADA.index(p["via_llegada"])
+        if p.get("via_llegada") in VIA_LLEGADA else 0,
+    )
     datos["episodios_previos_urgencias"] = st.number_input(
         "Episodios previos de urgencias",
         min_value=0,
@@ -145,19 +152,27 @@ def render() -> None:
     if st.session_state.get("precarga_paciente"):
         st.success(
             "Datos personales y de contacto precargados del paciente existente — "
-            "verifíquelos y continúe (o use «Continuar con el registro existente»)."
+            "verifíquelos y continúe con su nuevo triaje."
         )
 
     datos = _datos_desde_form()
     c1, c2 = st.columns(2)
-    verificar = c1.button("Verificar duplicados", width="stretch")
+    verificar = c1.button("Verificar documento", width="stretch")
     registrar_igual = c2.button(
         "Registrar como paciente nuevo", width="stretch"
     )
 
-    if verificar or registrar_igual:
+    if verificar:
+        duplicados: list = []
         with SessionLocal() as session:
-            if verificar:
+            existente = paciente_service.buscar_por_documento(
+                session,
+                tipo_documento=datos["tipo_documento"],
+                numero_documento=datos["numero_documento"],
+            )
+            if existente is None:
+                # CA2 (nombre/apellidos): sin coincidencia exacta por documento,
+                # se busca por nombre para advertir posibles duplicados.
                 duplicados = paciente_service.buscar_duplicados(
                     session,
                     tipo_documento=datos["tipo_documento"],
@@ -165,73 +180,100 @@ def render() -> None:
                     nombres=datos["nombres"],
                     apellidos=datos["apellidos"],
                 )
-                if duplicados:
-                    # Observación del negocio: si ya está registrado, precargar sus
-                    # datos personales y de contacto, y priorizar continuar con él.
-                    existente = duplicados[0]
-                    st.session_state["precarga_paciente"] = {
-                        "tipo_documento": existente.tipo_documento,
-                        "numero_documento": existente.numero_documento,
-                        "nombres": existente.nombres,
-                        "apellidos": existente.apellidos,
-                        "fecha_nacimiento": existente.fecha_nacimiento,
-                        "sexo": existente.sexo,
-                        "via_llegada": existente.via_llegada,
-                        "episodios_previos_urgencias": (
-                            existente.episodios_previos_urgencias
-                        ),
-                        "telefono": existente.telefono or "",
-                        "correo": existente.correo or "",
-                        "contacto_emergencia": existente.contacto_emergencia,
-                        "numero_contacto_emergencia": existente.numero_contacto_emergencia,
-                        "departamento": existente.departamento,
-                        "ciudad": existente.ciudad,
-                        "direccion_residencia": existente.direccion_residencia or "",
-                        "regimen": existente.regimen or "",
-                        "eps": existente.eps or "",
-                        "tipo_sangre": existente.tipo_sangre or "",
-                        "alergias": existente.alergias or "",
-                    }
-                    st.session_state["duplicados_actuales"] = [
-                        p.id for p in duplicados
-                    ]
-                    st.rerun()
-                else:
-                    st.success("Sin duplicados — proceda a registrar.")
-                    registrar_igual = True
+        if existente is not None:
+            # El paciente ya está registrado (1:N): precargar sus datos para
+            # iniciar un NUEVO evento de triaje — cada visita a urgencias es
+            # un evento independiente, no se duplica al paciente.
+            st.session_state["precarga_paciente"] = paciente_service.datos_precarga(
+                existente
+            )
+            st.session_state["paciente_existente_id"] = existente.id
+            st.session_state.pop("duplicados_actuales", None)
+            st.rerun()
+        if duplicados:
+            st.session_state["duplicados_actuales"] = [
+                p.id for p in duplicados
+            ]
+            st.rerun()
+        st.success(
+            "Sin registros con ese documento — complete el formulario y "
+            "regístrelo como paciente nuevo."
+        )
 
-            if registrar_igual:
-                try:
-                    paciente = paciente_service.registrar_paciente(
-                        session, usuario_id=usuario_id, datos=datos
-                    )
-                except ValidationError as exc:
-                    st.error(f"{exc.mensaje}" + (f" · {exc.detalle}" if exc.detalle else ""))
-                    return
-                st.session_state["paciente_id"] = paciente.id
-                st.session_state.pop("precarga_paciente", None)
-                st.session_state.pop("duplicados_actuales", None)
-                st.success(
-                    f"Paciente registrado: {paciente.nombres} {paciente.apellidos} "
-                    f"({paciente.tipo_documento} {paciente.numero_documento})"
+    if registrar_igual:
+        with SessionLocal() as session:
+            try:
+                paciente = paciente_service.registrar_paciente(
+                    session, usuario_id=usuario_id, datos=datos
                 )
-                b1, b2 = st.columns(2)
-                if b1.button(
-                    "➕ Iniciar triaje (signos vitales)",
-                    type="primary", width="stretch",
-                ):
-                    with SessionLocal() as session:
-                        nuevo = triaje_service.crear_evento(
-                            session,
-                            paciente_id=paciente.id,
-                            usuario_id=usuario_id,
-                        )
-                    st.session_state["evento_id"] = nuevo.id
-                    st.session_state["pantalla"] = "signos_vitales"
-                    st.rerun()
-                if b2.button("Volver al inicio", width="stretch"):
-                    st.session_state["pantalla"] = "inicio"
-                    st.rerun()
+            except ValidationError as exc:
+                st.error(f"{exc.mensaje}" + (f" · {exc.detalle}" if exc.detalle else ""))
+                return
+        st.session_state["paciente_id"] = paciente.id
+        st.session_state.pop("precarga_paciente", None)
+        st.session_state.pop("duplicados_actuales", None)
+        st.session_state.pop("paciente_existente_id", None)
+        st.success(
+            f"Paciente registrado: {paciente.nombres} {paciente.apellidos} "
+            f"({paciente.tipo_documento} {paciente.numero_documento})"
+        )
+        b1, b2 = st.columns(2)
+        if b1.button(
+            "➕ Iniciar triaje (signos vitales)",
+            type="primary", width="stretch",
+        ):
+            with SessionLocal() as session:
+                nuevo = triaje_service.crear_evento(
+                    session,
+                    paciente_id=paciente.id,
+                    usuario_id=usuario_id,
+                )
+            st.session_state["evento_id"] = nuevo.id
+            st.session_state["pantalla"] = "signos_vitales"
+            st.rerun()
+        if b2.button("Volver al inicio", width="stretch"):
+            st.session_state["pantalla"] = "inicio"
+            st.rerun()
+
+    existente_id = st.session_state.get("paciente_existente_id")
+    if existente_id:
+        with SessionLocal() as session:
+            existente = session.get(Paciente, existente_id)
+            triajes_previos = len(
+                triaje_service.historial_eventos(session, paciente_id=existente_id)
+            )
+        if existente is not None:
+            st.success("Paciente ya registrado — puede iniciar su nuevo triaje.")
+            st.info(
+                f"**{existente.nombres} {existente.apellidos}** · "
+                f"{existente.tipo_documento} {existente.numero_documento} · "
+                f"Triajes previos: {triajes_previos}"
+            )
+            st.warning(
+                "Cada visita a urgencias es un evento independiente: iniciar un "
+                "nuevo triaje NO crea un paciente duplicado."
+            )
+            b1, b2 = st.columns(2)
+            if b1.button("➕ Iniciar nuevo triaje", type="primary", width="stretch"):
+                with SessionLocal() as session:
+                    nuevo = triaje_service.crear_evento(
+                        session,
+                        paciente_id=existente.id,
+                        usuario_id=usuario_id,
+                    )
+                st.session_state["paciente_id"] = existente.id
+                st.session_state["evento_id"] = nuevo.id
+                st.session_state.pop("precarga_paciente", None)
+                st.session_state.pop("paciente_existente_id", None)
+                st.session_state.pop("duplicados_actuales", None)
+                st.session_state["pantalla"] = "signos_vitales"
+                st.rerun()
+            if b2.button("Volver al inicio", width="stretch"):
+                st.session_state.pop("precarga_paciente", None)
+                st.session_state.pop("paciente_existente_id", None)
+                st.session_state.pop("duplicados_actuales", None)
+                st.session_state["pantalla"] = "inicio"
+                st.rerun()
 
     duplicados_ids = st.session_state.get("duplicados_actuales")
     if duplicados_ids:
@@ -249,5 +291,6 @@ def render() -> None:
     if st.button("← Volver sin registrar"):
         st.session_state.pop("precarga_paciente", None)
         st.session_state.pop("duplicados_actuales", None)
+        st.session_state.pop("paciente_existente_id", None)
         st.session_state["pantalla"] = "inicio"
         st.rerun()

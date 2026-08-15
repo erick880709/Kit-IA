@@ -153,8 +153,142 @@ def _hoja_exportacion(indicadores: dict) -> list[dict]:
     return base
 
 
-def exportar_reporte(indicadores: dict, *, formato: str) -> tuple[bytes, str]:
-    """HU-E6-03 CA1/CA2: exportación CSV/Excel/PDF sin identificadores."""
+def _excel_con_graficos(base: list[dict], indicadores: dict, tendencia: list[dict] | None) -> bytes:
+    """Excel con hojas 'dashboard' + 'graficos' (gráficos nativos de Excel)."""
+    from openpyxl import Workbook
+    from openpyxl.chart import BarChart, LineChart, Reference
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "dashboard"
+    ws.append(list(base[0].keys()))
+    for fila in base:
+        ws.append([fila.get(c) for c in base[0]])
+
+    g = wb.create_sheet("graficos")
+    # Distribución por nivel
+    g["A1"] = "Nivel"
+    g["B1"] = "Proporcion"
+    dist = indicadores["distribucion"]
+    for i, nivel in enumerate(NIVELES_TRIaje):
+        g[f"A{i + 2}"] = nivel
+        g[f"B{i + 2}"] = round(float(dist.get(nivel, 0)), 4)
+    bar = BarChart()
+    bar.title = "Distribucion de triaje por nivel"
+    bar.y_axis.title = "Proporcion"
+    bar.add_data(Reference(g, min_col=2, min_row=1, max_row=1 + len(NIVELES_TRIaje)),
+                 titles_from_data=True)
+    bar.set_categories(Reference(g, min_col=1, min_row=2, max_row=1 + len(NIVELES_TRIaje)))
+    g.add_chart(bar, "D2")
+
+    # Concordancia por nivel
+    inicio = 9
+    g[f"A{inicio}"] = "Nivel"
+    g[f"B{inicio}"] = "Concordancia"
+    conc = indicadores["concordancia_por_nivel"]
+    for i, nivel in enumerate(NIVELES_TRIaje):
+        g[f"A{inicio + 1 + i}"] = nivel
+        g[f"B{inicio + 1 + i}"] = (
+            round(float(conc[nivel]), 4) if conc.get(nivel) is not None else 0.0
+        )
+    bar2 = BarChart()
+    bar2.title = "Concordancia IA vs profesional por nivel"
+    bar2.add_data(
+        Reference(g, min_col=2, min_row=inicio, max_row=inicio + len(NIVELES_TRIaje)),
+        titles_from_data=True,
+    )
+    bar2.set_categories(
+        Reference(g, min_col=1, min_row=inicio + 1, max_row=inicio + len(NIVELES_TRIaje))
+    )
+    g.add_chart(bar2, "D16")
+
+    # Tendencia diaria (si hay serie)
+    if tendencia:
+        ini2 = 18
+        g[f"A{ini2}"] = "Fecha"
+        g[f"B{ini2}"] = "Eventos"
+        for i, fila in enumerate(tendencia):
+            g[f"A{ini2 + 1 + i}"] = str(fila["fecha"])
+            g[f"B{ini2 + 1 + i}"] = int(fila["n"])
+        linea = LineChart()
+        linea.title = "Tendencia diaria de eventos"
+        linea.add_data(
+            Reference(g, min_col=2, min_row=ini2, max_row=ini2 + len(tendencia)),
+            titles_from_data=True,
+        )
+        linea.set_categories(
+            Reference(g, min_col=1, min_row=ini2 + 1, max_row=ini2 + len(tendencia))
+        )
+        g.add_chart(linea, "D30")
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    return buffer.getvalue()
+
+
+def _barras_pdf(pdf, titulo: str, datos: dict, x: float, y: float, ancho: float) -> float:
+    """Barras horizontales simples dibujadas en el PDF. Devuelve la nueva y."""
+    pdf.setFont("Helvetica-Bold", 11)
+    pdf.setFillColor("#164E63")
+    pdf.drawString(x, y, titulo)
+    y -= 0.8 * cm
+    valores = {k: float(v or 0.0) for k, v in datos.items()}
+    maximo = max(valores.values()) or 1.0
+    for clave, valor in valores.items():
+        pdf.setFont("Helvetica", 9)
+        pdf.setFillColor("#164E63")
+        pdf.drawString(x, y + 0.12 * cm, clave)
+        ancho_barra = (valor / maximo) * (ancho * 0.72)
+        pdf.setFillColor("#0891B2")
+        pdf.roundRect(x + 1.2 * cm, y, ancho_barra, 0.5 * cm, 2, stroke=0, fill=1)
+        pdf.setFillColor("#164E63")
+        pdf.drawString(x + 1.4 * cm + ancho_barra, y + 0.12 * cm, f"{valor:.3f}")
+        y -= 0.7 * cm
+    return y - 0.3 * cm
+
+
+def _tendencia_pdf(
+    pdf, tendencia: list[dict], x: float, y: float, ancho: float, alto: float
+) -> float:
+    """Línea de tendencia diaria dibujada en el PDF. Devuelve la nueva y."""
+    pdf.setFont("Helvetica-Bold", 11)
+    pdf.setFillColor("#164E63")
+    pdf.drawString(x, y, "Tendencia diaria de eventos (14 dias)")
+    y -= 0.5 * cm
+    if not tendencia:
+        return y - 0.5 * cm
+    maximo = max(int(f["n"]) for f in tendencia) or 1
+    n = len(tendencia)
+    paso = ancho / max(n - 1, 1)
+    puntos = [
+        (x + i * paso, y + (int(f["n"]) / maximo) * alto)
+        for i, f in enumerate(tendencia)
+    ]
+    pdf.setStrokeColor("#0891B2")
+    pdf.setLineWidth(1.4)
+    p = pdf.beginPath()
+    p.moveTo(*puntos[0])
+    for px, py in puntos[1:]:
+        p.lineTo(px, py)
+    pdf.drawPath(p, stroke=1, fill=0)
+    pdf.setStrokeColor("#94A3B8")
+    pdf.setLineWidth(0.8)
+    pdf.line(x, y, x + ancho, y)
+    pdf.setFont("Helvetica", 8)
+    pdf.setFillColor("#164E63")
+    pdf.drawString(x, y - 0.4 * cm, str(tendencia[0]["fecha"]))
+    pdf.drawRightString(x + ancho, y - 0.4 * cm, str(tendencia[-1]["fecha"]))
+    return y - 0.9 * cm
+
+
+def exportar_reporte(
+    indicadores: dict, *, formato: str, tendencia: list[dict] | None = None,
+) -> tuple[bytes, str]:
+    """HU-E6-03 CA1/CA2: exportación CSV/Excel/PDF anonimizada CON gráficos.
+
+    Excel incluye gráficos nativos (barras y línea) en la hoja «graficos»;
+    el PDF incluye los gráficos dibujados además de la tabla de indicadores.
+    """
     base = _hoja_exportacion(indicadores)
     if formato == "csv":
         buffer = io.StringIO()
@@ -164,9 +298,7 @@ def exportar_reporte(indicadores: dict, *, formato: str) -> tuple[bytes, str]:
         escritor.writerows(base)
         return buffer.getvalue().encode("utf-8-sig"), "reporte_dashboard.csv"
     if formato == "excel":
-        buffer = io.BytesIO()
-        pd.DataFrame(base).to_excel(buffer, index=False, sheet_name="dashboard")
-        return buffer.getvalue(), "reporte_dashboard.xlsx"
+        return _excel_con_graficos(base, indicadores, tendencia), "reporte_dashboard.xlsx"
     if formato == "pdf":
         buffer = io.BytesIO()
         pdf = canvas.Canvas(buffer, pagesize=A4, pageCompression=0)
@@ -190,8 +322,29 @@ def exportar_reporte(indicadores: dict, *, formato: str) -> tuple[bytes, str]:
             if y < 2 * cm:
                 pdf.showPage()
                 y = h - 2.5 * cm
+        # Gráfico 1: distribución por nivel
+        if y < 7 * cm:
+            pdf.showPage()
+            y = h - 2.5 * cm
+        y = _barras_pdf(
+            pdf, "Distribucion de triaje por nivel", indicadores["distribucion"],
+            2 * cm, y - 0.6 * cm, w - 4 * cm,
+        )
+        # Gráfico 2: concordancia por nivel
+        if y < 6.5 * cm:
+            pdf.showPage()
+            y = h - 2.5 * cm
+        y = _barras_pdf(
+            pdf, "Concordancia IA vs profesional por nivel",
+            indicadores["concordancia_por_nivel"], 2 * cm, y - 0.3 * cm, w - 4 * cm,
+        )
+        # Gráfico 3: tendencia diaria
+        if y < 8 * cm:
+            pdf.showPage()
+            y = h - 2.5 * cm
+        y = _tendencia_pdf(pdf, tendencia or [], 2 * cm, y - 0.3 * cm, w - 4 * cm, 4 * cm)
         pdf.drawString(
-            2 * cm, y,
+            2 * cm, y - 0.4 * cm,
             "Reporte anonimizado — sin identificadores directos de pacientes.",
         )
         pdf.showPage()

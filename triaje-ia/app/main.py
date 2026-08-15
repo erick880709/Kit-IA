@@ -17,8 +17,15 @@ from app.domain.exceptions import ProhibidoError
 from app.infra.config import settings
 from app.infra.db import SessionLocal, db_ok, init_db
 from app.infra.logging_config import setup_logging
-from app.services import audit_service, authorization_service, session_service, triaje_service
+from app.services import (
+    audit_service,
+    authorization_service,
+    seed_service,
+    session_service,
+    triaje_service,
+)
 from app.views import (
+    acerca_de,
     admin_roles,
     auditoria,
     buscar_paciente,
@@ -31,6 +38,7 @@ from app.views import (
     gestion_modelos,
     historial_paciente,
     login,
+    manual_uso,
     registro_paciente,
     signos_vitales,
     validacion_triaje,
@@ -39,7 +47,7 @@ from app.views import (
 CLAVES_SESION = (
     "usuario_id", "usuario_nombre", "usuario_rol", "ultima_actividad",
     "pantalla", "paciente_id", "evento_id", "evento_reclasificar",
-    "precarga_paciente", "duplicados_actuales",
+    "precarga_paciente", "duplicados_actuales", "paciente_existente_id",
 )
 
 PANTALLA_POR_ESTADO = {
@@ -56,6 +64,10 @@ def bootstrap() -> None:
     """Inicializa plomería transversal (idempotente)."""
     setup_logging(settings.log_level)
     init_db()
+    # Demo auto-arrancable en entornos efímeros (Community Cloud, contenedores):
+    # siembra usuarios/roles demo solo cuando la BD está vacía (idempotente).
+    with SessionLocal() as session:
+        seed_service.seed_demo_si_vacio(session)
     if settings.app_secret == "cambiar-en-produccion":
         logging.getLogger(__name__).warning(
             "APP_SECRET_KEY usa el valor por defecto ('cambiar-en-produccion') — "
@@ -77,6 +89,9 @@ def cerrar_sesion(motivo: str | None = None) -> None:
             )
     for clave in CLAVES_SESION:
         st.session_state.pop(clave, None)
+    logging.getLogger(__name__).info(
+        "Sesión cerrada: %s (usuario %s)", motivo or "manual", usuario_id
+    )
 
 
 def render_home() -> None:
@@ -172,6 +187,15 @@ def render_home() -> None:
         if st.button("🧠 Gestión de modelos", width="stretch"):
             st.session_state["pantalla"] = "gestion_modelos"
             st.rerun()
+
+    st.divider()
+    st.subheader("Soporte")
+    if st.button("📖 Manual de uso", width="stretch"):
+        st.session_state["pantalla"] = "manual_uso"
+        st.rerun()
+    if st.button("ℹ️ Acerca de", width="stretch"):
+        st.session_state["pantalla"] = "acerca_de"
+        st.rerun()
     if st.button("Cerrar sesión"):
         cerrar_sesion()
         st.rerun()
@@ -228,6 +252,8 @@ def main() -> None:
             "validacion_triaje": validacion_triaje.render,
             "cierre_evento": cierre_evento.render,
             "admin_roles": admin_roles.render,
+            "manual_uso": manual_uso.render,
+            "acerca_de": acerca_de.render,
         }.get(pantalla, render_home)()
 
     if not db_ok():

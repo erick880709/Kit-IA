@@ -8,6 +8,7 @@ CA4: modificaciones registradas en auditoría (ControlCambios).
 
 from __future__ import annotations
 
+import logging
 import re
 from datetime import UTC, datetime
 
@@ -18,6 +19,8 @@ from app.domain.catalogos import SEXO, VIA_LLEGADA
 from app.domain.entities import Paciente
 from app.domain.exceptions import ValidationError
 from app.services import audit_service
+
+logger = logging.getLogger(__name__)
 
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -80,6 +83,9 @@ def buscar_duplicados(
 
     nombre = nombres.strip().casefold()
     apellido = apellidos.strip().casefold()
+    if not nombre and not apellido:
+        # Guard: formulario vacío no debe devolver TODOS los pacientes como duplicados.
+        return []
     return list(
         session.scalars(
             select(Paciente).where(
@@ -90,6 +96,61 @@ def buscar_duplicados(
             )
         ).all()
     )
+
+
+def buscar_por_documento(
+    session: Session, *, tipo_documento: str, numero_documento: str
+) -> Paciente | None:
+    """Búsqueda EXACTA por documento para el flujo de nuevo triaje (1:N).
+
+    Usada por la pantalla de registro: si el paciente ya existe, se precargan
+    sus datos y se inicia un NUEVO evento de triaje (cada visita a urgencias
+    es un evento independiente).
+    """
+    num = (numero_documento or "").strip()
+    if not num:
+        return None
+    resultado = session.scalar(
+        select(Paciente).where(
+            Paciente.tipo_documento == (tipo_documento or "").strip().upper(),
+            Paciente.numero_documento == num,
+        )
+    )
+    logger.debug(
+        "Verificación por documento: %s %s → %s",
+        (tipo_documento or "").strip().upper(), num,
+        "encontrado" if resultado else "sin registro",
+    )
+    return resultado
+
+
+def datos_precarga(paciente: Paciente) -> dict:
+    """Dict de precarga del formulario desde un paciente existente (CA2).
+
+    Centraliza el mapeo entidad→formulario para que la vista no lo duplique;
+    los campos opcionales `None` se mapean a cadena vacía.
+    """
+    return {
+        "tipo_documento": paciente.tipo_documento,
+        "numero_documento": paciente.numero_documento,
+        "nombres": paciente.nombres,
+        "apellidos": paciente.apellidos,
+        "fecha_nacimiento": paciente.fecha_nacimiento,
+        "sexo": paciente.sexo,
+        "via_llegada": paciente.via_llegada,
+        "episodios_previos_urgencias": paciente.episodios_previos_urgencias,
+        "telefono": paciente.telefono or "",
+        "correo": paciente.correo or "",
+        "contacto_emergencia": paciente.contacto_emergencia or "",
+        "numero_contacto_emergencia": paciente.numero_contacto_emergencia or "",
+        "departamento": paciente.departamento,
+        "ciudad": paciente.ciudad,
+        "direccion_residencia": paciente.direccion_residencia or "",
+        "regimen": paciente.regimen or "",
+        "eps": paciente.eps or "",
+        "tipo_sangre": paciente.tipo_sangre or "",
+        "alergias": paciente.alergias or "",
+    }
 
 
 def registrar_paciente(
@@ -149,6 +210,10 @@ def registrar_paciente(
     )
     session.add(paciente)
     session.commit()
+    logger.info(
+        "Paciente creado: %s %s (id=%s) por usuario %s",
+        tipo_doc, num_doc, paciente.id, usuario_id,
+    )
     audit_service.registrar(
         session,
         usuario_id=usuario_id,
@@ -193,6 +258,7 @@ def actualizar_paciente(
         commit=False,
     )
     session.commit()
+    logger.info("Paciente actualizado: %s por usuario %s", paciente_id, usuario_id)
     return paciente
 
 

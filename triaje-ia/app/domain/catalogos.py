@@ -322,18 +322,96 @@ GRUPOS_SANGUINEOS: list[str] = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"
 # Niveles de triaje Res. 5596/2015 (RD-001).
 NIVELES_TRIaje: list[str] = ["I", "II", "III", "IV", "V"]
 
-# Top-10 motivos reales sembrados desde RD-002 (código CIE-10, descripción).
-CATALOGO_MOTIVOS: list[tuple[str, str]] = [
-    ("R10.4", "Dolor abdominal no especificado"),
-    ("J00", "Rinofaringitis aguda (resfriado común)"),
-    ("R51", "Cefalea"),
-    ("A09", "Gastroenteritis de presunto origen infeccioso"),
-    ("M54.5", "Lumbago no especificado"),
-    ("R07.4", "Dolor torácico no especificado"),
-    ("R50.9", "Fiebre no especificada"),
-    ("J18.9", "Neumonía no especificada"),
-    ("N39.0", "Infección de vías urinarias"),
-    ("S09.9", "Traumatismo craneal no especificado"),
+# Catálogo de motivos de urgencias: (código CIE-10, descripción, categoría).
+# Ampliado desde el top-10 inicial (RD-002) con el catálogo clínico completo.
+CATALOGO_MOTIVOS: list[tuple[str, str, str]] = [
+    # Digestivo
+    ("R10.4", "Dolor abdominal no especificado", "Digestivo"),
+    ("K59.0", "Estreñimiento", "Digestivo"),
+    ("R11", "Náuseas y vómitos", "Digestivo"),
+    ("K92.2", "Hemorragia gastrointestinal no especificada", "Digestivo"),
+    ("K35.80", "Apendicitis aguda no especificada", "Digestivo"),
+    ("A09", "Gastroenteritis de presunto origen infeccioso", "Digestivo"),
+    ("R10.0", "Abdomen agudo", "Digestivo"),
+    ("K29.7", "Gastritis no especificada", "Digestivo"),
+    # Respiratorio
+    ("J00", "Rinofaringitis aguda (resfriado común)", "Respiratorio"),
+    ("J06.9", "Infección aguda de vías respiratorias superiores, no especificada", "Respiratorio"),
+    ("J20.9", "Bronquitis aguda no especificada", "Respiratorio"),
+    ("J45.9", "Asma, no especificada", "Respiratorio"),
+    ("J18.9", "Neumonía no especificada", "Respiratorio"),
+    ("R05", "Tos", "Respiratorio"),
+    ("R06.0", "Disnea", "Respiratorio"),
+    ("J96.0", "Insuficiencia respiratoria aguda", "Respiratorio"),
+    # Neurológico
+    ("R51", "Cefalea", "Neurológico"),
+    ("R42", "Mareo y desvanecimiento", "Neurológico"),
+    ("R55", "Síncope y colapso", "Neurológico"),
+    ("R56.9", "Convulsiones, no especificadas", "Neurológico"),
+    ("G43.9", "Migraña, no especificada", "Neurológico"),
+    ("S09.9", "Traumatismo craneal no especificado", "Neurológico"),
+    # Cardiovascular
+    ("R07.4", "Dolor torácico no especificado", "Cardiovascular"),
+    ("I10", "Hipertensión esencial (primaria)", "Cardiovascular"),
+    ("R00.0", "Taquicardia, no especificada", "Cardiovascular"),
+    ("R00.1", "Bradicardia, no especificada", "Cardiovascular"),
+    # Musculoesquelético
+    ("M54.5", "Lumbago no especificado", "Musculoesquelético"),
+    ("S93.4", "Esguince de tobillo", "Musculoesquelético"),
+    ("S52.9", "Fractura de antebrazo, parte no especificada", "Musculoesquelético"),
+    ("S61.9", "Herida de muñeca y de la mano, no especificada", "Musculoesquelético"),
+    ("T14.1", "Herida abierta, región del cuerpo no especificada", "Musculoesquelético"),
+    ("T30.0", "Quemadura de región del cuerpo no especificada, grado no "
+     "especificado", "Musculoesquelético"),
+    # Trauma
+    ("T14.2", "Fractura de región no especificada", "Trauma"),
+    ("S62.9", "Fractura de muñeca y mano, no especificada", "Trauma"),
+    ("S72.9", "Fractura de fémur, no especificada", "Trauma"),
+    ("S82.9", "Fractura de pierna, no especificada", "Trauma"),
+    ("S06.9", "Traumatismo intracraneal no especificado (TEC)", "Trauma"),
+    ("W34.9", "Herida por arma de fuego, no especificada", "Trauma"),
+    ("W26.0", "Herida por arma cortopunzante (cuchillo/daga)", "Trauma"),
+    ("T14.3", "Luxación, esguince o torcedura de región no especificada", "Trauma"),
+    ("T07", "Traumatismos múltiples no especificados (politraumatismo)", "Trauma"),
+    ("T14.7", "Lesión por aplastamiento o amputación traumática", "Trauma"),
+    ("W54", "Mordedura o ataque de perro", "Trauma"),
+    ("W19.9", "Caída no especificada", "Trauma"),
+    ("T75.4", "Electrocución (descarga eléctrica)", "Trauma"),
+    ("T75.1", "Ahogamiento y sumersión no mortal", "Trauma"),
+    # Genitourinario
+    ("N39.0", "Infección de vías urinarias", "Genitourinario"),
+    ("N23", "Cólico renal, no especificado", "Genitourinario"),
+    ("R30.0", "Disuria", "Genitourinario"),
+    ("R31", "Hematuria no especificada", "Genitourinario"),
+    # Ginecológico/Obstétrico
+    ("N94.6", "Dismenorrea, no especificada", "Ginecológico/Obstétrico"),
+    ("O26.9", "Complicación relacionada con el embarazo, no "
+     "especificada", "Ginecológico/Obstétrico"),
+    # Piel/Alergia
+    ("L03.90", "Celulitis, no especificada", "Piel/Alergia"),
+    ("R21", "Erupción y otras erupciones cutáneas no especificadas", "Piel/Alergia"),
+    ("L29.9", "Prurito, no especificado", "Piel/Alergia"),
+    ("T78.40", "Alergia, no especificada", "Piel/Alergia"),
+    ("L50.9", "Urticaria no especificada", "Piel/Alergia"),
+    # ORL/Oftalmológico
+    ("J02.9", "Faringitis aguda, no especificada", "ORL/Oftalmológico"),
+    ("J03.90", "Amigdalitis aguda, no especificada", "ORL/Oftalmológico"),
+    ("H66.90", "Otitis media, no especificada", "ORL/Oftalmológico"),
+    ("H10.9", "Conjuntivitis, no especificada", "ORL/Oftalmológico"),
+    # Salud mental
+    ("F41.9", "Trastorno de ansiedad, no especificado", "Salud mental"),
+    ("R45.1", "Inquietud y agitación", "Salud mental"),
+    # Endocrino/Metabólico
+    ("E16.2", "Hipoglicemia no especificada", "Endocrino/Metabólico"),
+    # Hematológico
+    ("D50.9", "Anemia no especificada", "Hematológico"),
+    # Signos/Síntomas generales
+    ("R50.9", "Fiebre no especificada", "Signos/Síntomas generales"),
+    ("E86.0", "Deshidratación", "Signos/Síntomas generales"),
+    ("R53", "Malestar y fatiga", "Signos/Síntomas generales"),
+    ("R63.0", "Anorexia", "Signos/Síntomas generales"),
+    ("R41.0", "Desorientación, no especificada", "Signos/Síntomas generales"),
+    ("B34.9", "Infección viral no especificada", "Signos/Síntomas generales"),
 ]
 
 NIVEL_CONCIENCIA: list[str] = [

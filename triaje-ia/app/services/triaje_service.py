@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import UTC, datetime
 
 from sqlalchemy import select
@@ -33,6 +34,8 @@ from app.domain.entities import (
 )
 from app.domain.exceptions import ValidationError
 from app.services import audit_service
+
+logger = logging.getLogger(__name__)
 
 # ---------- Búsqueda e historial (HU-E2-02 / HU-E2-03) ----------
 
@@ -84,6 +87,10 @@ def crear_evento(session: Session, *, paciente_id: str, usuario_id: str | None) 
         entidad="EventoTriaje", detalle=evento.id, commit=False,
     )
     session.commit()  # cambio + auditoría en una sola transacción
+    logger.info(
+        "Evento de triaje creado: %s (paciente %s, usuario %s)",
+        evento.id, paciente_id, usuario_id,
+    )
     return evento
 
 
@@ -105,7 +112,12 @@ def transicionar_estado(
             f"Transición inválida: {evento.estado} → {nuevo_estado}",
             detalle=evento_id,
         )
+    estado_anterior = evento.estado
     evento.estado = nuevo_estado
+    logger.info(
+        "Transición de estado: %s → %s (evento %s, usuario %s)",
+        estado_anterior, nuevo_estado, evento_id, usuario_id,
+    )
     audit_service.registrar(
         session, usuario_id=usuario_id, accion="CAMBIO_ESTADO",
         entidad="EventoTriaje", detalle=f"{evento_id}: {nuevo_estado}",
@@ -191,6 +203,10 @@ def registrar_signos(
         entidad="EventoTriaje", detalle=evento_id, commit=False,
     )
     session.commit()
+    logger.info(
+        "Signos vitales registrados: evento %s (IMC %.1f, usuario %s)",
+        evento_id, imc, usuario_id,
+    )
     return signos
 
 
@@ -249,6 +265,10 @@ def registrar_evaluacion(
         entidad="EventoTriaje", detalle=f"{evento_id} · {codigo}", commit=False,
     )
     session.commit()
+    logger.info(
+        "Evaluación clínica registrada: evento %s (CIE-10 %s, usuario %s)",
+        evento_id, codigo, usuario_id,
+    )
     return motivo, evaluacion
 
 
@@ -334,6 +354,10 @@ def registrar_clasificacion_ia(
                 f"{json.dumps(resultado.get('umbrales', {}))}",  # RNA-010
         commit=False,
     )
+    logger.info(
+        "Clasificación IA persistida: evento %s nivel %s version %s (%.1f ms)",
+        evento_id, nivel, resultado.get("version"), resultado.get("tiempo_ms"),
+    )
     session.commit()
     return evento
 
@@ -378,6 +402,10 @@ def validar_nivel_profesional(
                 f"{nivel_profesional} · concordancia {evento.concordancia}",
         commit=False,
     )
+    logger.info(
+        "Validación profesional: evento %s IA %s vs %s (concordancia %s)",
+        evento_id, evento.nivel_sugerido_ia, nivel_profesional, evento.concordancia,
+    )
     session.commit()
     return evento
 
@@ -399,6 +427,11 @@ def cerrar_evento(session: Session, *, evento_id: str, usuario_id: str | None) -
         session, usuario_id=usuario_id, accion="CIERRE_EVENTO",
         entidad="EventoTriaje", evento_id=evento_id, detalle=evento_id,
         commit=False,
+    )
+    logger.info(
+        "Evento cerrado: %s — IA %s vs profesional %s (usuario %s)",
+        evento_id, evento.nivel_sugerido_ia, evento.nivel_asignado_profesional,
+        usuario_id,
     )
     session.commit()
     return evento

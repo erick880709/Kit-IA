@@ -32,9 +32,13 @@ def render() -> None:
             if paciente else None
         )
 
-    opciones = [f"{codigo} — {desc}" for codigo, desc in CATALOGO_MOTIVOS]
-    motivo = st.selectbox("Motivo estructurado (CIE-10)", opciones)
-    codigo = motivo.split(" — ")[0]
+    opciones = [
+        f"{codigo} — {desc} · {categoria}"
+        for codigo, desc, categoria in CATALOGO_MOTIVOS
+    ]
+    seleccion = st.selectbox("Motivo estructurado (CIE-10)", opciones)
+    codigo = seleccion.split(" — ")[0]
+    descripcion = seleccion.split(" — ", 1)[1].rsplit(" · ", 1)[0]
     texto_libre = st.text_area(
         "Texto libre (opcional — alimenta el NLP)",
         placeholder='"Dolor opresivo retroesternal desde hace 2 horas…"',
@@ -78,7 +82,7 @@ def render() -> None:
                     usuario_id=st.session_state.get("usuario_id"),
                     datos={
                         "codigo_cie10": codigo,
-                        "descripcion_estructurada": motivo,
+                        "descripcion_estructurada": descripcion,
                         "texto_libre": texto_libre,
                         "escala_dolor": dolor,
                         "glasgow": glasgow,

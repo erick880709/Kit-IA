@@ -32,6 +32,9 @@ PERMISOS_PANTALLA: dict[str, set[str]] = {
     "dashboard": {"Administrador", "Auditor", "Investigador", "Medico"},  # HU-E6-01
     "auditoria": {"Auditor", "Administrador"},
     "admin_roles": {"Administrador"},
+    # Soporte transversal: visibles para todos los roles (contenido por rol).
+    "manual_uso": {"Administrador", "Medico", "Enfermera", "Investigador", "Auditor"},
+    "acerca_de": {"Administrador", "Medico", "Enfermera", "Investigador", "Auditor"},
 }
 
 

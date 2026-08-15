@@ -97,6 +97,24 @@ def test_predecir_indisponible_sin_artefacto(tmp_path):
     assert "motivo" in resultado
 
 
+def test_predecir_proba_modelo_plano_sin_submodelo_texto():
+    """Regresión (bug real 2026-08-14): un modelo plano (XGBoost/RF) recibía
+    X_txt como 2º argumento posicional de predict_proba, que XGBoost interpreta
+    como ntree_limit/validate_features → ValueError de array ambiguo → fallback
+    manual. Debe predecir solo con features estructuradas."""
+    rng = np.random.RandomState(0)
+    modelo = RandomForestClassifier(n_estimators=10, random_state=0).fit(
+        rng.rand(40, 5), np.tile(np.arange(5), 8)
+    )
+    X_est = rng.rand(2, 5)
+    X_txt = rng.rand(2, 3)
+    proba = InferenceService._predecir_proba(
+        {"modelo": modelo, "version": "modelo-plano-v1"}, X_est, X_txt
+    )
+    assert proba.shape == (2, 5)
+    assert np.allclose(proba.sum(axis=1), 1.0)
+
+
 def test_timeout_devuelve_fallback_sin_bloquear(dir_modelos, monkeypatch):
     """Debe corregirse resuelto: timeout → fallback y sin shutdown bloqueante."""
     import time

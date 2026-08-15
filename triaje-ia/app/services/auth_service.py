@@ -10,6 +10,7 @@ Reglas:
 from __future__ import annotations
 
 import hashlib
+import logging
 import secrets
 from datetime import UTC, datetime, timedelta
 
@@ -25,6 +26,8 @@ from app.domain.exceptions import (
 )
 from app.infra.auth import hash_password, verify_password
 from app.infra.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 def registrar_usuario(
@@ -66,9 +69,11 @@ def autenticar(session: Session, *, correo: str, password: str) -> Usuario:
     correo_norm = correo.strip().lower()
     usuario = session.scalar(select(Usuario).where(Usuario.correo == correo_norm))
     if usuario is None:
+        logger.warning("Login fallido: correo inexistente %s", correo_norm)
         raise AutenticacionError("Credenciales incorrectas")
 
     if not usuario.activo:
+        logger.warning("Login rechazado: usuario inactivo %s", correo_norm)
         raise AutenticacionError("Usuario inactivo — contacte al administrador")
 
     ahora = datetime.now(UTC)
@@ -79,6 +84,10 @@ def autenticar(session: Session, *, correo: str, password: str) -> Usuario:
             bloqueado = usuario.bloqueado_hasta
         if bloqueado > ahora:
             minutos = int((bloqueado - ahora).total_seconds() // 60) + 1
+            logger.warning(
+                "Login rechazado: bloqueo temporal vigente para %s (%d min)",
+                correo_norm, minutos,
+            )
             raise UsuarioBloqueadoError(
                 f"Cuenta bloqueada temporalmente — reintente en {minutos} min",
                 detalle=str(bloqueado),
@@ -90,12 +99,20 @@ def autenticar(session: Session, *, correo: str, password: str) -> Usuario:
             usuario.bloqueado_hasta = ahora + timedelta(minutes=settings.bloqueo_login_min)
             usuario.intentos_fallidos = 0
             session.commit()
+            logger.warning(
+                "Cuenta bloqueada por intentos fallidos: %s (%d min)",
+                correo_norm, settings.bloqueo_login_min,
+            )
             raise UsuarioBloqueadoError(
                 f"Demasiados intentos fallidos — cuenta bloqueada por "
                 f"{settings.bloqueo_login_min} minutos"
             )
         session.commit()
         restantes = settings.max_intentos_login - usuario.intentos_fallidos
+        logger.warning(
+            "Login fallido (contraseña incorrecta): %s — intentos restantes %d",
+            correo_norm, restantes,
+        )
         raise AutenticacionError(
             "Credenciales incorrectas", detalle=f"Intentos restantes: {restantes}"
         )
@@ -103,6 +120,7 @@ def autenticar(session: Session, *, correo: str, password: str) -> Usuario:
     usuario.intentos_fallidos = 0
     usuario.bloqueado_hasta = None
     session.commit()
+    logger.info("Login exitoso: %s", correo_norm)
     return usuario
 
 
@@ -124,6 +142,7 @@ def solicitar_recuperacion(session: Session, *, correo: str) -> str | None:
         minutes=settings.token_recuperacion_min
     )
     session.commit()
+    logger.info("Token de recuperación generado para %s", correo_norm)
     return token
 
 
