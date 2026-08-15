@@ -48,4 +48,6 @@ flowchart LR
 
 - [[tfm-triaje/capitulos-tfm|Capítulos TFM generados]] — resumen, desarrollo, resultados, conclusiones + checklist UNIR
 - [[tfm-triaje/evidencia-ingenieria|Evidencia de ingeniería]] — hardening, performance, release, auditoría científica
+- [[tfm-triaje/validacion-motivos-catalogo|Validación de motivos + RIPS Medellín]] — 1,7 M registros, cobertura 61/71, ajuste de vocabulario TF-IDF, MIMIC-IV-ED listo
+- [[tfm-triaje/despliegue-docker-hostinger|Despliegue Docker + Hostinger]] — imagen `triaje-ia:demo`, VPS KVM 2 recomendado
 - [[sesiones/learning/LNN-003-gitignore-patron-anclado|LNN-003 · gitignore anclado]] · [[sesiones/learning/LNN-004-hash-antes-de-deserializar|LNN-004 · CWE-502]] · [[sesiones/learning/LNN-005-timeout-deterministico|LNN-005 · timeout flaky]]

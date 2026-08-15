@@ -1,5 +1,23 @@
 # Bitácora de Sesiones — Kit IA
 
+## Sesión 27 — 2026-08-14 (tarde)
+
+**Objetivo:** Datos públicos, validación de motivos en la IA, Docker, Hostinger, dashboard con gráficos en exportaciones y cierre de soporte.
+
+**Hecho:**
+- **Catálogo de motivos:** ampliado a 71 entradas (código CIE-10 + descripción + categoría), categoría visible en el selector; RIPS urgencias Medellín descargado (1.708.104 filas) — 61/71 motivos presentes en datos reales.
+- **Validación científica:** los motivos nuevos hoy NO cambian la inferencia (1/71) por vocabulario TF-IDF; ajuste: `VectorizadorTexto.fit(textos_extra=...)` + pipeline con catálogo; MIMIC-IV-ED: sin vía legítima sin credenciales (CITI+DUA) — `ingestar_mimic_ed()` listo + cableado + tests; NHAMCS ED 2018-2022 descargado (SAS CPORT ilegible sin SAS). Auditoría 7 fases del modelo reejecutada: APROBADO.
+- **Manual por rol + Acerca de + GIFs animados** (Pillow) para todos los roles.
+- **Docker:** imagen `triaje-ia:demo` (2,62 GB) reconstruida con los últimos cambios y contenedor redesplegado healthy en :8502; Hostinger: VPS KVM 2 recomendado (guía en `resources/engineering/release/despliegue-hostinger.md`).
+- **Dashboard:** tendencia diaria + concordancia por nivel; exportaciones Excel/PDF con gráficos (3 charts nativos / dibujados) + tests.
+- **Logs por acción:** JSON a stdout + `logs/app.log` rotativo (auth, pacientes, triaje, inferencia, sesión).
+
+**Verificaciones:** pytest suite completa EXIT 0 · ruff 0 · auditoría científica 7 fases APROBADO · contenedor healthy · login verificado en :8501 y :8502.
+
+**Pendientes:** CITI del usuario → descargar MIMIC-IV-ED a `datasets/mimic-iv-ed/` → reentrenar; comprar VPS KVM 2 Hostinger → desplegar con `docker compose`.
+
+---
+
 ## Sesión 26 — 2026-08-14
 
 **Objetivo:** Validar el cálculo del IMC en signos vitales.

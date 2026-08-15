@@ -6,6 +6,13 @@ proyecto: Kit IA
 
 # Bitácora de sesiones
 
+## Sesión 6 — 2026-08-14 (tarde)
+**Objetivo:** Despliegue, datos públicos, validación de motivos en la IA y cierre de soporte.
+**Skills:** orquestador, tdd-implementacion, validacion-cientifica-ml, entrega-continua, documentacion-observabilidad, obsidian, graphify.
+**Artefactos:** catálogo 71 motivos con categoría; RIPS Medellín (1,7 M filas); `validacion-motivos-catalogo-rips.md`; `ingestar_mimic_ed()` + pipeline MIMIC; NHAMCS ED 2018-2022; manual por rol + GIFs; Dockerfile/compose + imagen `triaje-ia:demo`; dashboard con gráficos en Excel/PDF; `logs/app.log` por acción; guía `despliegue-hostinger.md`.
+**Decisiones:** MIMIC-IV-ED requiere CITI+DUA del usuario (sin vía legítima alternativa); Hostinger VPS KVM 2 ($8.79/mo promo) como producto de despliegue.
+**Pendientes:** CITI del usuario → MIMIC → reentrenar; adquirir VPS y desplegar.
+
 ## Sesión 5 — 2026-08-13
 **Objetivo:** Actualizar estado con archivos nuevos + regenerar grafo graphify y vault Obsidian.
 **Skills:** memoria (escritura), obsidian, graphify.

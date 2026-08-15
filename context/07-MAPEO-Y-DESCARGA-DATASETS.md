@@ -6,6 +6,56 @@ Extiende `03-CATALOGO-DATOS-Y-VARIABLES.md`. Aquí se fija, para cada fuente pú
 
 ---
 
+## ⭐ Actualización 2026-08-14: dataset #9 DESCARGADO (RIPS observación Medellín)
+
+El RIPS de urgencias con observación (`xveb-6jax`) está **federado hacia `medata.gov.co`** (no es SODA directo). Descargado con éxito en la máquina local:
+
+| Campo | Valor |
+|---|---|
+| CSV | `datasets/rips_urgencias_observacion_medellin.csv` — 207 MB, **1.708.104 filas**, 23 columnas, años 2019-2022 |
+| Diccionario | `datasets/diccionario_rips_urgencias_medellin.json` |
+| URL origen | `https://medata.gov.co/sites/default/files/distribution/1-026-22-000128/registro_atencion_unidad_observacion_urgencia.csv` |
+| Descarga | `curl -sk -o rips_urgencias_observacion_medellin.csv "<URL>"` (el portal exige `-k`: cadena TLS no confiable desde Windows) |
+| Columnas clave | `FechaIngreso`, `CausaExterna` (01-15), `CodigoDiagnosticoPrincipalSalida` (CIE-10 **sin punto y con sufijo X**), `DestinoUsuario`, `EstadoSalida` (1 vivo / 2 muerto), `Edad`, `UnidadMedidaEdad`, `Sexo`, `Ano` |
+| Análisis | `triaje-ia/scripts/analisis_rips_medellin.py` → `artifacts/metrics/rips_medellin_resumen.json` |
+| Hallazgos | 61/71 motivos del catálogo presentes (26,94 % de filas); mortalidad real por CIE-10 (J96.0 28 %, J18.9 7,6 %…); ver `resources/tfm/validacion-cientifica/validacion-motivos-catalogo-rips.md` |
+| Normalización CIE | El portal codifica sin punto y con `X` de relleno (`R104`, `A09X`) — normalizar antes de cruzar con el catálogo |
+
+---
+
+## ⭐ Actualización 2026-08-14 (2): MIMIC-IV-ED + NHAMCS (camino al 100%)
+
+### MIMIC-IV-ED (PhysioNet) — SIN vía legítima sin credenciales
+
+Verificado en physionet.org/content/mimic-iv-ed/2.2: acceso restringido a
+usuarios acreditados. NO existe descarga legal sin este proceso (gratuito,
+1-2 días hábiles):
+
+1. Crear cuenta en **physionet.org** y completar la acreditación
+   (`Settings → Credentialing`).
+2. Completar el curso **CITI «Data or Specimens Only Research»** (gratis) y
+   subir el certificado en `Settings → Training`.
+3. Firmar el **DUA de MIMIC-IV-ED v2.2** en la página del proyecto.
+4. Descargar los CSV (`triage.csv`, `edstays.csv`, `diagnosis.csv`) a
+   `datasets/mimic-iv-ed/`.
+
+**Código YA listo:** `ml/src/data/ingesta.py::ingestar_mimic_ed()` mapea
+acuity 1-5 → I-V, chiefcomplaint → motivo_texto y ICD → motivo_codigo_cie10;
+`ml/pipeline.py` entrena el submodelo de texto con MIMIC automáticamente si
+encuentra el directorio. Tests: `tests/test_ingesta_mimic.py`.
+
+### NHAMCS (CDC) — alternativa pública descargada (formato SAS)
+
+Microdatos ED de EE. UU. (2018-2022) descargados desde el FTP del CDC:
+`datasets/ED2018.zip` … `ed2022.zip` (extraídos en `nhamcs_ED*`). Contienen
+`IMMED` (inmediatez 1-5), `DIAG1-3` (CIE-10) y `RFV1-3` (motivo). ⚠ Los
+archivos están en **CPORT/XPT v8 de SAS**: ni pandas ni haven/readstat los
+leen. Conversión: usar SAS (o SAS Universal Viewer) o `R` con el paquete que
+soporte ese formato; script de conversión en `triaje-ia/scripts/convertir_nhamcs.R`
+(pendiente de formato legible).
+
+---
+
 ## 1. Tabla de mapeo dataset → catálogo → acceso
 
 | # | Dataset | Entidad/campo del catálogo que resuelve | Resource ID (Socrata) | Endpoint SODA (JSON, paginable) | Endpoint CSV completo | Granularidad |
