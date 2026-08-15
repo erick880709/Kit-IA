@@ -28,8 +28,19 @@ class VectorizadorTexto:
     def __init__(self, max_features: int = 500, ngram: tuple[int, int] = (1, 2)) -> None:
         self._vectorizador = TfidfVectorizer(max_features=max_features, ngram_range=ngram)
 
-    def fit(self, textos: pd.Series) -> VectorizadorTexto:
-        self._vectorizador.fit(textos.fillna(""))
+    def fit(self, textos: pd.Series, textos_extra: pd.Series | None = None) -> VectorizadorTexto:
+        """Ajusta el vocabulario sobre `textos` (+ `textos_extra` sin etiqueta).
+
+        `textos_extra` permite incluir términos del catálogo de motivos en el
+        vocabulario aunque no aparezcan en el corpus etiquetado (validación
+        2026-08-14: 8/71 motivos tenían 0% de cobertura de vocabulario).
+        Nota: los términos que solo están en `textos_extra` tendrán coeficiente
+        0 en sub_b hasta que existan ejemplos etiquetados (p. ej. MIMIC-IV-ED).
+        """
+        corpus = textos.fillna("")
+        if textos_extra is not None and len(textos_extra):
+            corpus = pd.concat([corpus, textos_extra.fillna("")], ignore_index=True)
+        self._vectorizador.fit(corpus)
         return self
 
     def transformar(self, textos: pd.Series) -> np.ndarray:
@@ -50,6 +61,7 @@ class VectorizadorTexto:
 def vectorizar_texto(
     df: pd.DataFrame, *, columna: str = "motivo_texto",
     max_features: int = 500, entrenar: bool = True,
+    textos_extra: pd.Series | None = None,
 ) -> tuple[np.ndarray, VectorizadorTexto | None]:
     """Devuelve matriz de embeddings y el vectorizador (None si no hay textos)."""
     textos = df[columna].fillna("") if columna in df.columns else pd.Series([""] * len(df))
@@ -57,6 +69,6 @@ def vectorizar_texto(
         return None, None
     vectorizador = VectorizadorTexto(max_features=max_features)
     if entrenar:
-        vectorizador.fit(textos)
+        vectorizador.fit(textos, textos_extra=textos_extra)
     matriz = vectorizador.transformar(textos)
     return matriz, vectorizador

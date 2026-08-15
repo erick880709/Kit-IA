@@ -15,6 +15,12 @@ __pycache__/
 # Artefactos pesados / datos (los reales NUNCA se versionan — RNF-006)
 artifacts/models/*
 !artifacts/models/.gitkeep
+# Excepción: modelos demo LIVIANOS (~1,4 MB c/u) versionados para despliegue
+# gratuito (Streamlit Community Cloud / HF Spaces).
+!artifacts/models/modelo-latefusion-xgboost-v20260814.joblib
+!artifacts/models/modelo-latefusion-xgb-text-sjd-v20260814.joblib
+!artifacts/models/modelo-latefusion-xgboost-v20260814.manifest.json
+!artifacts/models/modelo-latefusion-xgb-text-sjd-v20260814.manifest.json
 mlruns/*
 !mlruns/.gitkeep
 ml/data/raw/*
@@ -23,3 +29,6 @@ datasets/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Logs de la aplicación
+logs/

@@ -1,0 +1,296 @@
+{
+  "filas": 1708104,
+  "anios": [
+    2019,
+    2020,
+    2021,
+    2022
+  ],
+  "total_diagnosticos_unicos": 7821,
+  "top15_diagnosticos": {
+    "R104": 54160,
+    "N390": 48063,
+    "R688": 40570,
+    "R51X": 36995,
+    "N23X": 25917,
+    "I10X": 21537,
+    "R074": 21459,
+    "K297": 20974,
+    "R509": 20633,
+    "O471": 20014,
+    "A09X": 19894,
+    "J00X": 18961,
+    "J441": 18646,
+    "O620": 17569,
+    "M545": 16456
+  },
+  "cobertura_catalogo": {
+    "filas_con_motivo_del_catalogo": 460210,
+    "pct_filas": 26.94,
+    "motivos_del_catalogo_presentes": 61,
+    "total_motivos_catalogo": 71
+  },
+  "mortalidad_por_causa_externa": {
+    "1": 0.1,
+    "2": 0.63,
+    "3": 3.01,
+    "4": 0.39,
+    "5": 2.79,
+    "6": 9.6,
+    "7": 1.2,
+    "8": 5.18,
+    "9": 2.08,
+    "10": 4.4,
+    "11": 0.16,
+    "12": 0.0,
+    "13": 2.75,
+    "14": 5.36,
+    "15": 1.43
+  },
+  "severidad_motivos_catalogo": {
+    "R10.4": {
+      "n": 54160,
+      "mortalidad_pct": 3.1
+    },
+    "K59.0": {
+      "n": 5602,
+      "mortalidad_pct": 2.39
+    },
+    "R11": {
+      "n": 10819,
+      "mortalidad_pct": 2.32
+    },
+    "K92.2": {
+      "n": 8586,
+      "mortalidad_pct": 4.36
+    },
+    "A09": {
+      "n": 19894,
+      "mortalidad_pct": 1.73
+    },
+    "R10.0": {
+      "n": 1081,
+      "mortalidad_pct": 2.96
+    },
+    "K29.7": {
+      "n": 20974,
+      "mortalidad_pct": 1.03
+    },
+    "J00": {
+      "n": 18961,
+      "mortalidad_pct": 3.14
+    },
+    "J06.9": {
+      "n": 9524,
+      "mortalidad_pct": 2.13
+    },
+    "J20.9": {
+      "n": 6517,
+      "mortalidad_pct": 3.71
+    },
+    "J45.9": {
+      "n": 9856,
+      "mortalidad_pct": 2.87
+    },
+    "J18.9": {
+      "n": 7800,
+      "mortalidad_pct": 7.59
+    },
+    "R05": {
+      "n": 1017,
+      "mortalidad_pct": 1.87
+    },
+    "R06.0": {
+      "n": 6301,
+      "mortalidad_pct": 7.57
+    },
+    "J96.0": {
+      "n": 1554,
+      "mortalidad_pct": 28.31
+    },
+    "R51": {
+      "n": 36995,
+      "mortalidad_pct": 1.72
+    },
+    "R42": {
+      "n": 7976,
+      "mortalidad_pct": 2.19
+    },
+    "R55": {
+      "n": 6556,
+      "mortalidad_pct": 1.72
+    },
+    "G43.9": {
+      "n": 12827,
+      "mortalidad_pct": 3.01
+    },
+    "S09.9": {
+      "n": 6800,
+      "mortalidad_pct": 2.71
+    },
+    "R07.4": {
+      "n": 21459,
+      "mortalidad_pct": 2.35
+    },
+    "I10": {
+      "n": 21537,
+      "mortalidad_pct": 0.93
+    },
+    "R00.0": {
+      "n": 1397,
+      "mortalidad_pct": 2.0
+    },
+    "R00.1": {
+      "n": 1154,
+      "mortalidad_pct": 1.47
+    },
+    "M54.5": {
+      "n": 16456,
+      "mortalidad_pct": 1.93
+    },
+    "S93.4": {
+      "n": 7399,
+      "mortalidad_pct": 2.91
+    },
+    "S52.9": {
+      "n": 909,
+      "mortalidad_pct": 3.85
+    },
+    "S61.9": {
+      "n": 2150,
+      "mortalidad_pct": 3.07
+    },
+    "T14.1": {
+      "n": 247,
+      "mortalidad_pct": 4.86
+    },
+    "T30.0": {
+      "n": 80,
+      "mortalidad_pct": 0.0
+    },
+    "T14.2": {
+      "n": 17,
+      "mortalidad_pct": 0.0
+    },
+    "S72.9": {
+      "n": 774,
+      "mortalidad_pct": 2.97
+    },
+    "S82.9": {
+      "n": 227,
+      "mortalidad_pct": 0.88
+    },
+    "S06.9": {
+      "n": 5652,
+      "mortalidad_pct": 1.79
+    },
+    "W34.9": {
+      "n": 9,
+      "mortalidad_pct": 0.0
+    },
+    "T14.3": {
+      "n": 9,
+      "mortalidad_pct": 0.0
+    },
+    "T07": {
+      "n": 2939,
+      "mortalidad_pct": 0.95
+    },
+    "T14.7": {
+      "n": 2,
+      "mortalidad_pct": 0.0
+    },
+    "W19.9": {
+      "n": 3,
+      "mortalidad_pct": 0.0
+    },
+    "T75.4": {
+      "n": 19,
+      "mortalidad_pct": 5.26
+    },
+    "T75.1": {
+      "n": 4,
+      "mortalidad_pct": 0.0
+    },
+    "N39.0": {
+      "n": 48063,
+      "mortalidad_pct": 3.26
+    },
+    "N23": {
+      "n": 25917,
+      "mortalidad_pct": 3.19
+    },
+    "R30.0": {
+      "n": 865,
+      "mortalidad_pct": 5.2
+    },
+    "R31": {
+      "n": 3177,
+      "mortalidad_pct": 2.93
+    },
+    "N94.6": {
+      "n": 888,
+      "mortalidad_pct": 1.8
+    },
+    "O26.9": {
+      "n": 927,
+      "mortalidad_pct": 0.76
+    },
+    "R21": {
+      "n": 39,
+      "mortalidad_pct": 2.56
+    },
+    "L29.9": {
+      "n": 162,
+      "mortalidad_pct": 1.23
+    },
+    "L50.9": {
+      "n": 1942,
+      "mortalidad_pct": 1.7
+    },
+    "J02.9": {
+      "n": 4921,
+      "mortalidad_pct": 1.71
+    },
+    "H10.9": {
+      "n": 620,
+      "mortalidad_pct": 2.1
+    },
+    "F41.9": {
+      "n": 3007,
+      "mortalidad_pct": 1.96
+    },
+    "R45.1": {
+      "n": 434,
+      "mortalidad_pct": 2.3
+    },
+    "E16.2": {
+      "n": 1292,
+      "mortalidad_pct": 2.17
+    },
+    "D50.9": {
+      "n": 446,
+      "mortalidad_pct": 1.79
+    },
+    "R50.9": {
+      "n": 20633,
+      "mortalidad_pct": 4.36
+    },
+    "R53": {
+      "n": 1039,
+      "mortalidad_pct": 2.02
+    },
+    "R63.0": {
+      "n": 15,
+      "mortalidad_pct": 0.0
+    },
+    "R41.0": {
+      "n": 142,
+      "mortalidad_pct": 0.7
+    },
+    "B34.9": {
+      "n": 9438,
+      "mortalidad_pct": 0.66
+    }
+  }
+}

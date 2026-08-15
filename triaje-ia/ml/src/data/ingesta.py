@@ -42,9 +42,14 @@ def ingestar_csv_local(ruta: str | Path, *, fuente: str) -> pd.DataFrame:
 
 
 class AdaptadorPhysioNet:
-    """Adaptador MIMIC-IV-ED — requiere credenciales PhysioNet + CITI (documentado).
+    """Adaptador MIMIC-IV-ED — requiere credenciales PhysioNet + CITI.
 
-    Uso previsto: `AdaptadorPhysioNet(usuario, password).descargar_ed_stays()`.
+    Pasos del usuario (sin vía legítima sin credenciales):
+    1. Registrarse en physionet.org y completar la acreditación.
+    2. Curso CITI «Data or Specimens Only Research» y subir el certificado.
+    3. Firmar el DUA de MIMIC-IV-ED v2.2.
+    4. Descargar los CSV (triage, edstays, diagnosis, vitalsign) a
+       `datasets/mimic-iv-ed/` — después usar `ingestar_mimic_ed`.
     """
 
     def __init__(self, usuario: str, password: str) -> None:
@@ -53,9 +58,71 @@ class AdaptadorPhysioNet:
 
     def descargar_ed_stays(self, destino: Path) -> Path:
         raise NotImplementedError(
-            "Descarga de MIMIC-IV-ED pendiente de credenciales PhysioNet "
-            "(acción del usuario — ver resources/session/estado.json)"
+            "Descarga de MIMIC-IV-ED requiere credenciales PhysioNet (CITI + DUA) — "
+            "descargue los CSV manualmente a datasets/mimic-iv-ed/ y use "
+            "ingestar_mimic_ed()"
         )
+
+
+_MAPEO_ACUITY_MIMIC = {"1": "I", "2": "II", "3": "III", "4": "IV", "5": "V"}
+
+_MAPEO_TRANSPORTE_MIMIC = {
+    "AMBULANCE": "Ambulancia",
+    "HELICOPTER": "Ambulancia",
+    "WALK IN": "Particular",
+    "UNKNOWN": "Particular",
+    "OTHER": "Particular",
+}
+
+
+def ingestar_mimic_ed(ruta_dir: str | Path) -> pd.DataFrame:
+    """Ingesta local de MIMIC-IV-ED v2.2 (CSVs ya descargados por el usuario).
+
+    Mapea triage + edstays + diagnosis a las columnas canónicas del submodelo
+    de texto: motivo_codigo_cie10, motivo_texto (chief complaint), nivel_triaje
+    (acuity 1→I ... 5→V), sexo y vía de llegada. Sin signos de peso/talla
+    (se entrenará solo el lado de texto, igual que la cohorte SJdD).
+    """
+    ruta = Path(ruta_dir)
+    triage = pd.read_csv(ruta / "triage.csv", low_memory=False)
+    edstays = pd.read_csv(ruta / "edstays.csv", low_memory=False)
+    diagnosis = pd.read_csv(ruta / "diagnosis.csv", low_memory=False)
+
+    principal = (
+        diagnosis.sort_values("seq_num")
+        .groupby("stay_id", as_index=False)
+        .agg(codigo_cie10=("icd_code", "first"), titulo_cie10=("icd_title", "first"))
+    )
+    base = triage.merge(
+        edstays[["stay_id", "gender", "arrival_transport"]],
+        on="stay_id", how="left",
+    )
+    base = base.merge(principal, on="stay_id", how="left")
+
+    df = pd.DataFrame(
+        {
+            "sexo": base["gender"].fillna("Femenino"),
+            "via_llegada": (
+                base["arrival_transport"]
+                .fillna("Particular")
+                .map(lambda v: _MAPEO_TRANSPORTE_MIMIC.get(str(v).upper(), "Particular"))
+            ),
+            "temperatura": base["temperature"],
+            "frecuencia_cardiaca": base["heartrate"],
+            "frecuencia_respiratoria": base["resprate"],
+            "saturacion_o2": base["o2sat"],
+            "presion_sistolica": base["sbp"],
+            "presion_diastolica": base["dbp"],
+            "peso": pd.NA,
+            "talla": pd.NA,
+            "motivo_codigo_cie10": base["codigo_cie10"].fillna(""),
+            "motivo_texto": base["chiefcomplaint"].fillna(""),
+            "nivel_triaje": base["acuity"].astype(str).map(_MAPEO_ACUITY_MIMIC),
+            "fuente": "mimic-iv-ed",
+        }
+    )
+    df = df.dropna(subset=["nivel_triaje"]).reset_index(drop=True)
+    return df
 
 
 class AdaptadorSocrata:

@@ -1,0 +1,655 @@
+{
+  "vocab_tamano": 600,
+  "base": {
+    "nivel": "III",
+    "confianza": 0.5186
+  },
+  "total_motivos": 71,
+  "motivos_que_cambian_nivel": 1,
+  "pct_que_cambian": 1.4,
+  "distribucion_niveles": {
+    "III": 70,
+    "I": 1
+  },
+  "detalle": [
+    {
+      "codigo": "R10.4",
+      "descripcion": "Dolor abdominal no especificado",
+      "categoria": "Digestivo",
+      "nivel_sugerido": "III",
+      "confianza": 0.7817,
+      "tiempo_ms": 26.66,
+      "cobertura_tokens_vocab": 0.667
+    },
+    {
+      "codigo": "K59.0",
+      "descripcion": "Estreñimiento",
+      "categoria": "Digestivo",
+      "nivel_sugerido": "III",
+      "confianza": 0.5488,
+      "tiempo_ms": 24.46,
+      "cobertura_tokens_vocab": 0.0
+    },
+    {
+      "codigo": "R11",
+      "descripcion": "Náuseas y vómitos",
+      "categoria": "Digestivo",
+      "nivel_sugerido": "III",
+      "confianza": 0.5488,
+      "tiempo_ms": 27.37,
+      "cobertura_tokens_vocab": 0.0
+    },
+    {
+      "codigo": "K92.2",
+      "descripcion": "Hemorragia gastrointestinal no especificada",
+      "categoria": "Digestivo",
+      "nivel_sugerido": "I",
+      "confianza": 0.4696,
+      "tiempo_ms": 24.88,
+      "cobertura_tokens_vocab": 0.5
+    },
+    {
+      "codigo": "K35.80",
+      "descripcion": "Apendicitis aguda no especificada",
+      "categoria": "Digestivo",
+      "nivel_sugerido": "III",
+      "confianza": 0.5804,
+      "tiempo_ms": 25.17,
+      "cobertura_tokens_vocab": 0.5
+    },
+    {
+      "codigo": "A09",
+      "descripcion": "Gastroenteritis de presunto origen infeccioso",
+      "categoria": "Digestivo",
+      "nivel_sugerido": "III",
+      "confianza": 0.5191,
+      "tiempo_ms": 25.01,
+      "cobertura_tokens_vocab": 0.714
+    },
+    {
+      "codigo": "R10.0",
+      "descripcion": "Abdomen agudo",
+      "categoria": "Digestivo",
+      "nivel_sugerido": "III",
+      "confianza": 0.7019,
+      "tiempo_ms": 24.89,
+      "cobertura_tokens_vocab": 0.5
+    },
+    {
+      "codigo": "K29.7",
+      "descripcion": "Gastritis no especificada",
+      "categoria": "Digestivo",
+      "nivel_sugerido": "III",
+      "confianza": 0.5631,
+      "tiempo_ms": 23.66,
+      "cobertura_tokens_vocab": 0.6
+    },
+    {
+      "codigo": "J00",
+      "descripcion": "Rinofaringitis aguda (resfriado común)",
+      "categoria": "Respiratorio",
+      "nivel_sugerido": "III",
+      "confianza": 0.5212,
+      "tiempo_ms": 23.35,
+      "cobertura_tokens_vocab": 0.333
+    },
+    {
+      "codigo": "J06.9",
+      "descripcion": "Infección aguda de vías respiratorias superiores, no especificada",
+      "categoria": "Respiratorio",
+      "nivel_sugerido": "III",
+      "confianza": 0.4826,
+      "tiempo_ms": 21.93,
+      "cobertura_tokens_vocab": 0.6
+    },
+    {
+      "codigo": "J20.9",
+      "descripcion": "Bronquitis aguda no especificada",
+      "categoria": "Respiratorio",
+      "nivel_sugerido": "III",
+      "confianza": 0.6363,
+      "tiempo_ms": 22.82,
+      "cobertura_tokens_vocab": 0.667
+    },
+    {
+      "codigo": "J45.9",
+      "descripcion": "Asma, no especificada",
+      "categoria": "Respiratorio",
+      "nivel_sugerido": "III",
+      "confianza": 0.5095,
+      "tiempo_ms": 20.69,
+      "cobertura_tokens_vocab": 0.4
+    },
+    {
+      "codigo": "J18.9",
+      "descripcion": "Neumonía no especificada",
+      "categoria": "Respiratorio",
+      "nivel_sugerido": "III",
+      "confianza": 0.5095,
+      "tiempo_ms": 23.06,
+      "cobertura_tokens_vocab": 0.4
+    },
+    {
+      "codigo": "R05",
+      "descripcion": "Tos",
+      "categoria": "Respiratorio",
+      "nivel_sugerido": "III",
+      "confianza": 0.5488,
+      "tiempo_ms": 21.7,
+      "cobertura_tokens_vocab": 0.0
+    },
+    {
+      "codigo": "R06.0",
+      "descripcion": "Disnea",
+      "categoria": "Respiratorio",
+      "nivel_sugerido": "III",
+      "confianza": 0.5488,
+      "tiempo_ms": 22.97,
+      "cobertura_tokens_vocab": 0.0
+    },
+    {
+      "codigo": "J96.0",
+      "descripcion": "Insuficiencia respiratoria aguda",
+      "categoria": "Respiratorio",
+      "nivel_sugerido": "III",
+      "confianza": 0.4715,
+      "tiempo_ms": 22.7,
+      "cobertura_tokens_vocab": 0.4
+    },
+    {
+      "codigo": "R51",
+      "descripcion": "Cefalea",
+      "categoria": "Neurológico",
+      "nivel_sugerido": "III",
+      "confianza": 0.7807,
+      "tiempo_ms": 22.08,
+      "cobertura_tokens_vocab": 0.667
+    },
+    {
+      "codigo": "R42",
+      "descripcion": "Mareo y desvanecimiento",
+      "categoria": "Neurológico",
+      "nivel_sugerido": "III",
+      "confianza": 0.489,
+      "tiempo_ms": 22.23,
+      "cobertura_tokens_vocab": 0.4
+    },
+    {
+      "codigo": "R55",
+      "descripcion": "Síncope y colapso",
+      "categoria": "Neurológico",
+      "nivel_sugerido": "III",
+      "confianza": 0.5677,
+      "tiempo_ms": 22.92,
+      "cobertura_tokens_vocab": 0.2
+    },
+    {
+      "codigo": "R56.9",
+      "descripcion": "Convulsiones, no especificadas",
+      "categoria": "Neurológico",
+      "nivel_sugerido": "III",
+      "confianza": 0.5173,
+      "tiempo_ms": 23.58,
+      "cobertura_tokens_vocab": 0.6
+    },
+    {
+      "codigo": "G43.9",
+      "descripcion": "Migraña, no especificada",
+      "categoria": "Neurológico",
+      "nivel_sugerido": "III",
+      "confianza": 0.4846,
+      "tiempo_ms": 30.64,
+      "cobertura_tokens_vocab": 0.6
+    },
+    {
+      "codigo": "S09.9",
+      "descripcion": "Traumatismo craneal no especificado",
+      "categoria": "Neurológico",
+      "nivel_sugerido": "III",
+      "confianza": 0.5286,
+      "tiempo_ms": 22.86,
+      "cobertura_tokens_vocab": 0.5
+    },
+    {
+      "codigo": "R07.4",
+      "descripcion": "Dolor torácico no especificado",
+      "categoria": "Cardiovascular",
+      "nivel_sugerido": "III",
+      "confianza": 0.5304,
+      "tiempo_ms": 22.85,
+      "cobertura_tokens_vocab": 0.5
+    },
+    {
+      "codigo": "I10",
+      "descripcion": "Hipertensión esencial (primaria)",
+      "categoria": "Cardiovascular",
+      "nivel_sugerido": "III",
+      "confianza": 0.5112,
+      "tiempo_ms": 23.03,
+      "cobertura_tokens_vocab": 0.2
+    },
+    {
+      "codigo": "R00.0",
+      "descripcion": "Taquicardia, no especificada",
+      "categoria": "Cardiovascular",
+      "nivel_sugerido": "III",
+      "confianza": 0.5095,
+      "tiempo_ms": 22.63,
+      "cobertura_tokens_vocab": 0.4
+    },
+    {
+      "codigo": "R00.1",
+      "descripcion": "Bradicardia, no especificada",
+      "categoria": "Cardiovascular",
+      "nivel_sugerido": "III",
+      "confianza": 0.5095,
+      "tiempo_ms": 22.98,
+      "cobertura_tokens_vocab": 0.4
+    },
+    {
+      "codigo": "M54.5",
+      "descripcion": "Lumbago no especificado",
+      "categoria": "Musculoesquelético",
+      "nivel_sugerido": "III",
+      "confianza": 0.5258,
+      "tiempo_ms": 25.14,
+      "cobertura_tokens_vocab": 0.6
+    },
+    {
+      "codigo": "S93.4",
+      "descripcion": "Esguince de tobillo",
+      "categoria": "Musculoesquelético",
+      "nivel_sugerido": "III",
+      "confianza": 0.4275,
+      "tiempo_ms": 22.45,
+      "cobertura_tokens_vocab": 0.4
+    },
+    {
+      "codigo": "S52.9",
+      "descripcion": "Fractura de antebrazo, parte no especificada",
+      "categoria": "Musculoesquelético",
+      "nivel_sugerido": "III",
+      "confianza": 0.5743,
+      "tiempo_ms": 22.64,
+      "cobertura_tokens_vocab": 0.75
+    },
+    {
+      "codigo": "S61.9",
+      "descripcion": "Herida de muñeca y de la mano, no especificada",
+      "categoria": "Musculoesquelético",
+      "nivel_sugerido": "III",
+      "confianza": 0.5064,
+      "tiempo_ms": 23.36,
+      "cobertura_tokens_vocab": 0.7
+    },
+    {
+      "codigo": "T14.1",
+      "descripcion": "Herida abierta, región del cuerpo no especificada",
+      "categoria": "Musculoesquelético",
+      "nivel_sugerido": "III",
+      "confianza": 0.5904,
+      "tiempo_ms": 24.07,
+      "cobertura_tokens_vocab": 0.556
+    },
+    {
+      "codigo": "T30.0",
+      "descripcion": "Quemadura de región del cuerpo no especificada, grado no especificado",
+      "categoria": "Musculoesquelético",
+      "nivel_sugerido": "III",
+      "confianza": 0.6125,
+      "tiempo_ms": 23.81,
+      "cobertura_tokens_vocab": 0.545
+    },
+    {
+      "codigo": "T14.2",
+      "descripcion": "Fractura de región no especificada",
+      "categoria": "Trauma",
+      "nivel_sugerido": "III",
+      "confianza": 0.551,
+      "tiempo_ms": 22.64,
+      "cobertura_tokens_vocab": 0.571
+    },
+    {
+      "codigo": "S62.9",
+      "descripcion": "Fractura de muñeca y mano, no especificada",
+      "categoria": "Trauma",
+      "nivel_sugerido": "III",
+      "confianza": 0.5314,
+      "tiempo_ms": 23.53,
+      "cobertura_tokens_vocab": 0.667
+    },
+    {
+      "codigo": "S72.9",
+      "descripcion": "Fractura de fémur, no especificada",
+      "categoria": "Trauma",
+      "nivel_sugerido": "III",
+      "confianza": 0.551,
+      "tiempo_ms": 23.59,
+      "cobertura_tokens_vocab": 0.571
+    },
+    {
+      "codigo": "S82.9",
+      "descripcion": "Fractura de pierna, no especificada",
+      "categoria": "Trauma",
+      "nivel_sugerido": "III",
+      "confianza": 0.5258,
+      "tiempo_ms": 22.06,
+      "cobertura_tokens_vocab": 0.714
+    },
+    {
+      "codigo": "S06.9",
+      "descripcion": "Traumatismo intracraneal no especificado (TEC)",
+      "categoria": "Trauma",
+      "nivel_sugerido": "III",
+      "confianza": 0.5286,
+      "tiempo_ms": 22.65,
+      "cobertura_tokens_vocab": 0.429
+    },
+    {
+      "codigo": "W34.9",
+      "descripcion": "Herida por arma de fuego, no especificada",
+      "categoria": "Trauma",
+      "nivel_sugerido": "III",
+      "confianza": 0.5864,
+      "tiempo_ms": 23.4,
+      "cobertura_tokens_vocab": 0.556
+    },
+    {
+      "codigo": "W26.0",
+      "descripcion": "Herida por arma cortopunzante (cuchillo/daga)",
+      "categoria": "Trauma",
+      "nivel_sugerido": "III",
+      "confianza": 0.5915,
+      "tiempo_ms": 23.03,
+      "cobertura_tokens_vocab": 0.286
+    },
+    {
+      "codigo": "T14.3",
+      "descripcion": "Luxación, esguince o torcedura de región no especificada",
+      "categoria": "Trauma",
+      "nivel_sugerido": "III",
+      "confianza": 0.523,
+      "tiempo_ms": 22.7,
+      "cobertura_tokens_vocab": 0.3
+    },
+    {
+      "codigo": "T07",
+      "descripcion": "Traumatismos múltiples no especificados (politraumatismo)",
+      "categoria": "Trauma",
+      "nivel_sugerido": "III",
+      "confianza": 0.4656,
+      "tiempo_ms": 23.78,
+      "cobertura_tokens_vocab": 0.429
+    },
+    {
+      "codigo": "T14.7",
+      "descripcion": "Lesión por aplastamiento o amputación traumática",
+      "categoria": "Trauma",
+      "nivel_sugerido": "III",
+      "confianza": 0.6012,
+      "tiempo_ms": 23.68,
+      "cobertura_tokens_vocab": 0.125
+    },
+    {
+      "codigo": "W54",
+      "descripcion": "Mordedura o ataque de perro",
+      "categoria": "Trauma",
+      "nivel_sugerido": "III",
+      "confianza": 0.5507,
+      "tiempo_ms": 26.24,
+      "cobertura_tokens_vocab": 0.571
+    },
+    {
+      "codigo": "W19.9",
+      "descripcion": "Caída no especificada",
+      "categoria": "Trauma",
+      "nivel_sugerido": "III",
+      "confianza": 0.5095,
+      "tiempo_ms": 25.69,
+      "cobertura_tokens_vocab": 0.4
+    },
+    {
+      "codigo": "T75.4",
+      "descripcion": "Electrocución (descarga eléctrica)",
+      "categoria": "Trauma",
+      "nivel_sugerido": "III",
+      "confianza": 0.5488,
+      "tiempo_ms": 24.46,
+      "cobertura_tokens_vocab": 0.0
+    },
+    {
+      "codigo": "T75.1",
+      "descripcion": "Ahogamiento y sumersión no mortal",
+      "categoria": "Trauma",
+      "nivel_sugerido": "III",
+      "confianza": 0.5179,
+      "tiempo_ms": 22.65,
+      "cobertura_tokens_vocab": 0.143
+    },
+    {
+      "codigo": "N39.0",
+      "descripcion": "Infección de vías urinarias",
+      "categoria": "Genitourinario",
+      "nivel_sugerido": "III",
+      "confianza": 0.5541,
+      "tiempo_ms": 22.99,
+      "cobertura_tokens_vocab": 0.333
+    },
+    {
+      "codigo": "N23",
+      "descripcion": "Cólico renal, no especificado",
+      "categoria": "Genitourinario",
+      "nivel_sugerido": "III",
+      "confianza": 0.5361,
+      "tiempo_ms": 23.34,
+      "cobertura_tokens_vocab": 0.333
+    },
+    {
+      "codigo": "R30.0",
+      "descripcion": "Disuria",
+      "categoria": "Genitourinario",
+      "nivel_sugerido": "III",
+      "confianza": 0.535,
+      "tiempo_ms": 24.0,
+      "cobertura_tokens_vocab": 0.333
+    },
+    {
+      "codigo": "R31",
+      "descripcion": "Hematuria no especificada",
+      "categoria": "Genitourinario",
+      "nivel_sugerido": "III",
+      "confianza": 0.5095,
+      "tiempo_ms": 24.04,
+      "cobertura_tokens_vocab": 0.4
+    },
+    {
+      "codigo": "N94.6",
+      "descripcion": "Dismenorrea, no especificada",
+      "categoria": "Ginecológico/Obstétrico",
+      "nivel_sugerido": "III",
+      "confianza": 0.5095,
+      "tiempo_ms": 23.75,
+      "cobertura_tokens_vocab": 0.4
+    },
+    {
+      "codigo": "O26.9",
+      "descripcion": "Complicación relacionada con el embarazo, no especificada",
+      "categoria": "Ginecológico/Obstétrico",
+      "nivel_sugerido": "III",
+      "confianza": 0.6262,
+      "tiempo_ms": 23.14,
+      "cobertura_tokens_vocab": 0.667
+    },
+    {
+      "codigo": "L03.90",
+      "descripcion": "Celulitis, no especificada",
+      "categoria": "Piel/Alergia",
+      "nivel_sugerido": "III",
+      "confianza": 0.5429,
+      "tiempo_ms": 23.69,
+      "cobertura_tokens_vocab": 0.6
+    },
+    {
+      "codigo": "R21",
+      "descripcion": "Erupción y otras erupciones cutáneas no especificadas",
+      "categoria": "Piel/Alergia",
+      "nivel_sugerido": "III",
+      "confianza": 0.606,
+      "tiempo_ms": 24.28,
+      "cobertura_tokens_vocab": 0.333
+    },
+    {
+      "codigo": "L29.9",
+      "descripcion": "Prurito, no especificado",
+      "categoria": "Piel/Alergia",
+      "nivel_sugerido": "III",
+      "confianza": 0.5361,
+      "tiempo_ms": 23.31,
+      "cobertura_tokens_vocab": 0.4
+    },
+    {
+      "codigo": "T78.40",
+      "descripcion": "Alergia, no especificada",
+      "categoria": "Piel/Alergia",
+      "nivel_sugerido": "III",
+      "confianza": 0.5422,
+      "tiempo_ms": 25.96,
+      "cobertura_tokens_vocab": 0.6
+    },
+    {
+      "codigo": "L50.9",
+      "descripcion": "Urticaria no especificada",
+      "categoria": "Piel/Alergia",
+      "nivel_sugerido": "III",
+      "confianza": 0.5095,
+      "tiempo_ms": 26.39,
+      "cobertura_tokens_vocab": 0.4
+    },
+    {
+      "codigo": "J02.9",
+      "descripcion": "Faringitis aguda, no especificada",
+      "categoria": "ORL/Oftalmológico",
+      "nivel_sugerido": "III",
+      "confianza": 0.5405,
+      "tiempo_ms": 27.06,
+      "cobertura_tokens_vocab": 0.667
+    },
+    {
+      "codigo": "J03.90",
+      "descripcion": "Amigdalitis aguda, no especificada",
+      "categoria": "ORL/Oftalmológico",
+      "nivel_sugerido": "III",
+      "confianza": 0.4808,
+      "tiempo_ms": 23.02,
+      "cobertura_tokens_vocab": 0.667
+    },
+    {
+      "codigo": "H66.90",
+      "descripcion": "Otitis media, no especificada",
+      "categoria": "ORL/Oftalmológico",
+      "nivel_sugerido": "III",
+      "confianza": 0.5615,
+      "tiempo_ms": 23.52,
+      "cobertura_tokens_vocab": 0.667
+    },
+    {
+      "codigo": "H10.9",
+      "descripcion": "Conjuntivitis, no especificada",
+      "categoria": "ORL/Oftalmológico",
+      "nivel_sugerido": "III",
+      "confianza": 0.5044,
+      "tiempo_ms": 23.5,
+      "cobertura_tokens_vocab": 0.6
+    },
+    {
+      "codigo": "F41.9",
+      "descripcion": "Trastorno de ansiedad, no especificado",
+      "categoria": "Salud mental",
+      "nivel_sugerido": "III",
+      "confianza": 0.5192,
+      "tiempo_ms": 23.56,
+      "cobertura_tokens_vocab": 0.714
+    },
+    {
+      "codigo": "R45.1",
+      "descripcion": "Inquietud y agitación",
+      "categoria": "Salud mental",
+      "nivel_sugerido": "III",
+      "confianza": 0.5488,
+      "tiempo_ms": 24.98,
+      "cobertura_tokens_vocab": 0.0
+    },
+    {
+      "codigo": "E16.2",
+      "descripcion": "Hipoglicemia no especificada",
+      "categoria": "Endocrino/Metabólico",
+      "nivel_sugerido": "III",
+      "confianza": 0.5095,
+      "tiempo_ms": 22.6,
+      "cobertura_tokens_vocab": 0.4
+    },
+    {
+      "codigo": "D50.9",
+      "descripcion": "Anemia no especificada",
+      "categoria": "Hematológico",
+      "nivel_sugerido": "III",
+      "confianza": 0.5095,
+      "tiempo_ms": 23.32,
+      "cobertura_tokens_vocab": 0.4
+    },
+    {
+      "codigo": "R50.9",
+      "descripcion": "Fiebre no especificada",
+      "categoria": "Signos/Síntomas generales",
+      "nivel_sugerido": "III",
+      "confianza": 0.7077,
+      "tiempo_ms": 23.68,
+      "cobertura_tokens_vocab": 0.6
+    },
+    {
+      "codigo": "E86.0",
+      "descripcion": "Deshidratación",
+      "categoria": "Signos/Síntomas generales",
+      "nivel_sugerido": "III",
+      "confianza": 0.5488,
+      "tiempo_ms": 23.12,
+      "cobertura_tokens_vocab": 0.0
+    },
+    {
+      "codigo": "R53",
+      "descripcion": "Malestar y fatiga",
+      "categoria": "Signos/Síntomas generales",
+      "nivel_sugerido": "III",
+      "confianza": 0.544,
+      "tiempo_ms": 23.99,
+      "cobertura_tokens_vocab": 0.2
+    },
+    {
+      "codigo": "R63.0",
+      "descripcion": "Anorexia",
+      "categoria": "Signos/Síntomas generales",
+      "nivel_sugerido": "III",
+      "confianza": 0.5488,
+      "tiempo_ms": 23.33,
+      "cobertura_tokens_vocab": 0.0
+    },
+    {
+      "codigo": "R41.0",
+      "descripcion": "Desorientación, no especificada",
+      "categoria": "Signos/Síntomas generales",
+      "nivel_sugerido": "III",
+      "confianza": 0.5095,
+      "tiempo_ms": 23.77,
+      "cobertura_tokens_vocab": 0.4
+    },
+    {
+      "codigo": "B34.9",
+      "descripcion": "Infección viral no especificada",
+      "categoria": "Signos/Síntomas generales",
+      "nivel_sugerido": "III",
+      "confianza": 0.5279,
+      "tiempo_ms": 23.36,
+      "cobertura_tokens_vocab": 0.5
+    }
+  ]
+}

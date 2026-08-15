@@ -1,8 +1,8 @@
 # Reporte de Auditoría Científica — TriajeIA
 
-- **Fecha:** 2026-08-14 15:02 UTC
+- **Fecha:** 2026-08-15 00:37 UTC
 - **Modelo:** modelo-latefusion-xgb-text-sjd-v20260814 · **Artefacto:** modelo-latefusion-xgb-text-sjd-v20260814.joblib
-- **Semilla:** 42 · **Git:** 3971149
+- **Semilla:** 42 · **Git:** ab706e9
 
 ## Fase 1 · Prevención de fuga de datos
 | Severidad | Hallazgo |
@@ -40,7 +40,7 @@
 ## Fase 6 · Trazabilidad y reproducibilidad
 | Severidad | Hallazgo |
 |---|---|
-| info | Semilla 42 · artefacto modelo-latefusion-xgb-text-sjd-v20260814 · git 3971149 |
+| info | Semilla 42 · artefacto modelo-latefusion-xgb-text-sjd-v20260814 · git ab706e9 |
 
 ## Veredicto
 - **Leakage:** SIN EVIDENCIA DE FUGA tras corrección (escalador solo en train,

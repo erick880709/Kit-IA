@@ -1,0 +1,29 @@
+{
+  "version": "modelo-latefusion-xgboost-v20260814",
+  "algoritmo": "latefusion-xgboost",
+  "fecha": "2026-08-14",
+  "metricas": {
+    "macro": {
+      "precision": 0.545616331826193,
+      "recall": 0.4800000000000001,
+      "f1": 0.5084503942188952
+    },
+    "por_clase": {
+      "I": {},
+      "II": {},
+      "III": {},
+      "IV": {},
+      "V": {}
+    },
+    "accuracy": 0.965,
+    "auc_roc_ovr": 0.9610232723315347
+  },
+  "umbrales": {
+    "I": 0.01,
+    "II": 0.6427306532859802,
+    "III": 0.5,
+    "IV": 0.5,
+    "V": 0.5
+  },
+  "sha256_16": "599daee0a4277ee1"
+}

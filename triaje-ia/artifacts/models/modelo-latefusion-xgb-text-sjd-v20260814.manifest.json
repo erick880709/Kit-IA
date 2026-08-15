@@ -1,0 +1,54 @@
+{
+  "version": "modelo-latefusion-xgb-text-sjd-v20260814",
+  "algoritmo": "latefusion-xgb-text-sjd",
+  "fecha": "2026-08-14",
+  "metricas": {
+    "macro": {
+      "precision": 0.5598154961872768,
+      "recall": 0.5420918367346939,
+      "f1": 0.5506986209829293
+    },
+    "por_clase": {
+      "I": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 2.0
+      },
+      "II": {
+        "precision": 0.8666666666666667,
+        "recall": 0.8125,
+        "f1-score": 0.8387096774193549,
+        "support": 16.0
+      },
+      "III": {
+        "precision": 0.9962406015037594,
+        "recall": 1.0,
+        "f1-score": 0.9981167608286252,
+        "support": 530.0
+      },
+      "IV": {
+        "precision": 0.9361702127659575,
+        "recall": 0.8979591836734694,
+        "f1-score": 0.9166666666666666,
+        "support": 49.0
+      },
+      "V": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 3.0
+      }
+    },
+    "accuracy": 0.9783333333333334,
+    "auc_roc_ovr": 0.9681556293661597
+  },
+  "umbrales": {
+    "I": 0.2785303381327592,
+    "II": 0.28070430749535624,
+    "III": 0.5,
+    "IV": 0.5,
+    "V": 0.5
+  },
+  "sha256_16": "16ed9f26c4dfa0f6"
+}

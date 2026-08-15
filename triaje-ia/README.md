@@ -34,6 +34,23 @@ triaje-ia/
 - Python 3.12+ (probado con 3.11/3.12)
 - `pip` y `venv`
 
+## Despliegue con Docker (servidor)
+
+```bash
+cd triaje-ia
+docker compose up -d --build        # construye y arranca en http://localhost:8501
+docker compose logs -f triaje-ia    # logs estructurados (JSON)
+docker compose down                 # detener (los datos persisten en el volumen)
+```
+
+- Imagen basada en `python:3.11-slim`, usuario sin privilegios, HEALTHCHECK sobre
+  `/_stcore/health` y seed idempotente de usuarios demo en el arranque.
+- En un servidor real: generar `APP_SECRET_KEY` propia (`.env` o variable de
+  entorno) y exponer tras un reverse proxy con TLS. La BD y los logs viven en
+  volúmenes (`triaje_data`, `triaje_logs`).
+- Los artefactos del modelo van dentro de la imagen (`artifacts/models`); los
+  datasets clínicos NUNCA se incluyen (`.dockerignore`).
+
 ## Puesta en marcha local
 
 ```bash
@@ -44,7 +61,7 @@ pip install -r requirements.txt -r requirements-dev.txt
 copy .env.example .env          # ajustar valores si se desea
 python scripts/healthcheck.py   # debe salir TODO OK
 pytest                          # test de salud
-streamlit run app/main.py
+python -m streamlit run app/main.py   # -m obligatorio: añade la raíz a sys.path (import app)
 ```
 
 ## Variables de entorno

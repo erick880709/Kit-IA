@@ -34,6 +34,7 @@ from ml.src.data.ingesta import (
     _DISTRIBUCION_REAL,
     generar_datos_sinteticos,
     ingestar_csv_local,
+    ingestar_mimic_ed,
     ingestar_san_juan_de_dios,
     ingestar_triage_nacional,
 )
@@ -181,6 +182,13 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
     if NACIONAL_CSV.exists():
         nacional = ingestar_triage_nacional(NACIONAL_CSV)
         print(f"    Nacional MinSalud: {len(nacional)} eventos (calibración)")
+    # MIMIC-IV-ED local (CSVs descargados por el usuario con credenciales
+    # PhysioNet) — refuerza el submodelo de texto con chief complaint + acuity.
+    mimic = None
+    MIMIC_DIR = ML_ROOT.parents[1] / "datasets" / "mimic-iv-ed"
+    if MIMIC_DIR.exists():
+        mimic = _preparar(ingestar_mimic_ed(MIMIC_DIR))
+        print(f"    MIMIC-IV-ED local: {len(mimic)} eventos (chief complaint + acuity)")
     calibracion = _calibrar_distribucion(nacional, demo)
 
     print("2/10 · Split estratificado 70/15/15 del demo (ANTES de tocar features)")
@@ -190,6 +198,10 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
     if sjd is not None:
         sjd["_texto_completo"] = (
             sjd["motivo_codigo_cie10"].fillna("") + " " + sjd["motivo_texto"].fillna("")
+        ).str.strip()
+    if mimic is not None:
+        mimic["_texto_completo"] = (
+            mimic["motivo_codigo_cie10"].fillna("") + " " + mimic["motivo_texto"].fillna("")
         ).str.strip()
     train, val, test = _split_estratificado(demo.assign(_i=np.arange(len(demo))))
     tr_idx = train["_i"].to_numpy()
@@ -207,19 +219,33 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
     X_est = pipeline_est.transform(demo)
     X_est = X_est.toarray() if hasattr(X_est, "toarray") else np.asarray(X_est)
 
-    print("4/10 · Vectorizador TF-IDF ajustado sobre CIE+texto (demo train + SJdD)")
+    print("4/10 · TF-IDF sobre CIE+texto (demo train + SJdD + MIMIC + catálogo)")
     textos_entrenamiento = pd.concat(
-        [train["_texto_completo"], sjd["_texto_completo"]] if sjd is not None
-        else [train["_texto_completo"]]
+        [train["_texto_completo"]]
+        + ([sjd["_texto_completo"]] if sjd is not None else [])
+        + ([mimic["_texto_completo"]] if mimic is not None else [])
+    )
+    # Ajuste 2026-08-14: vocabulario extendido con TODO el catálogo de motivos
+    # (validación: 8/71 motivos tenían cobertura 0; ver validacion-motivos-*.md).
+    from app.domain.catalogos import CATALOGO_MOTIVOS
+
+    textos_catalogo = pd.Series(
+        [f"{codigo} {descripcion}" for codigo, descripcion, _ in CATALOGO_MOTIVOS]
     )
     _, vectorizador = vectorizar_texto(
-        pd.DataFrame({"motivo_texto": textos_entrenamiento}), max_features=600
+        pd.DataFrame({"motivo_texto": textos_entrenamiento}),
+        max_features=600,
+        textos_extra=textos_catalogo,
     )
     assert vectorizador is not None
     X_txt_demo = vectorizador.transformar(demo["_texto_completo"])
     X_txt_sjd = (
         vectorizador.transformar(sjd["_texto_completo"])
         if sjd is not None else None
+    )
+    X_txt_mimic = (
+        vectorizador.transformar(mimic["_texto_completo"])
+        if mimic is not None else None
     )
 
     print("5/10 · Baselines unimodales (LR, RF, XGBoost)")
@@ -244,6 +270,11 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
         X_texto = np.vstack([X_txt_demo[tr_idx], X_txt_sjd])
     else:
         y_texto, X_texto = y_tr_enc, X_txt_demo[tr_idx]
+    if mimic is not None:
+        y_texto = np.concatenate(
+            [y_texto, encoder.transform(mimic["nivel_triaje"].to_numpy())]
+        )
+        X_texto = np.vstack([X_texto, X_txt_mimic])
     sub_b = LogisticRegression(max_iter=2000, class_weight="balanced", random_state=SEMILLA_GLOBAL)
     sub_b.fit(X_texto, y_texto)
 
