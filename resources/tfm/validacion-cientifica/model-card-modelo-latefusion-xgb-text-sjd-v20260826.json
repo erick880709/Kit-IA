@@ -1,0 +1,122 @@
+{
+  "version": "modelo-latefusion-xgb-text-sjd-v20260826",
+  "algoritmo": "latefusion-xgb-text-sjd",
+  "datos": {
+    "fuente_demo": "demo sintético 4000 registros calibrado con distribución nacional real",
+    "fuente_sjd": "cohorte San Juan de Dios (43.594 eventos) — submodelo de texto",
+    "periodo": "sintético; SJdD 2023",
+    "split": "70/15/15 estratificado, escalador solo en train"
+  },
+  "metricas": {
+    "macro": {
+      "precision": 0.5620032223415683,
+      "recall": 0.5627551020408164,
+      "f1": 0.5623784542065413
+    },
+    "por_clase": {
+      "I": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 2.0
+      },
+      "II": {
+        "precision": 0.875,
+        "recall": 0.875,
+        "f1-score": 0.875,
+        "support": 16.0
+      },
+      "III": {
+        "precision": 0.9962406015037594,
+        "recall": 1.0,
+        "f1-score": 0.9981167608286252,
+        "support": 530.0
+      },
+      "IV": {
+        "precision": 0.9387755102040817,
+        "recall": 0.9387755102040817,
+        "f1-score": 0.9387755102040817,
+        "support": 49.0
+      },
+      "V": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 3.0
+      }
+    },
+    "accuracy": 0.9833333333333333,
+    "auc_roc_ovr": 0.8901472923726237
+  },
+  "calibracion": {
+    "brier": 0.03001544019613944,
+    "ece": 0.03528887623058358
+  },
+  "ic_bootstrap": {
+    "f1_macro": {
+      "metrica": "f1_macro",
+      "punto": 0.5608244684694804,
+      "ic95": [
+        0.5297042813110486,
+        0.5838143344969465
+      ],
+      "n_bootstrap": 1000
+    },
+    "accuracy": {
+      "metrica": "accuracy",
+      "punto": 0.9830083333333334,
+      "ic95": [
+        0.9716666666666667,
+        0.9916666666666667
+      ],
+      "n_bootstrap": 1000
+    },
+    "recall_i_ii": {
+      "metrica": "recall_i_ii",
+      "punto": 0.17406462076411647,
+      "ic95": [
+        0.1375,
+        0.2
+      ],
+      "n_bootstrap": 1000
+    }
+  },
+  "equidad": {
+    "sexo": {
+      "Femenino": {
+        "n": 341,
+        "f1_macro": 0.5643427156736377,
+        "recall_i_ii": 0.18181818181818182
+      },
+      "Masculino": {
+        "n": 259,
+        "f1_macro": 0.5591731266149871,
+        "recall_i_ii": 0.16
+      }
+    },
+    "via_llegada": {
+      "Ambulancia": {
+        "n": 166,
+        "f1_macro": 0.6,
+        "recall_i_ii": 0.2
+      },
+      "Particular": {
+        "n": 302,
+        "f1_macro": 0.5570424836601308,
+        "recall_i_ii": 0.16363636363636364
+      },
+      "Remisión": {
+        "n": 132,
+        "f1_macro": 0.5418181818181818,
+        "recall_i_ii": 0.2
+      }
+    }
+  },
+  "limitaciones": [
+    "El demo sintético genera CIE-10 condicionado al nivel: AUC sobre demo-test es optimista.",
+    "Macro-F1 limitado por clases raras (I/V) en un demo de 4000 registros.",
+    "El submodelo de texto puro en SJdD es débil (F1 ≈ 0.10): su valor es complementario.",
+    "MIMIC-IV-ED (signos vitales reales) pendiente de credenciales PhysioNet.",
+    "Sistema de apoyo a la decisión — nunca autónomo (validación profesional obligatoria)."
+  ]
+}

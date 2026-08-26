@@ -1,8 +1,8 @@
 # Reporte de Auditoría Científica — TriajeIA
 
-- **Fecha:** 2026-08-15 00:37 UTC
-- **Modelo:** modelo-latefusion-xgb-text-sjd-v20260814 · **Artefacto:** modelo-latefusion-xgb-text-sjd-v20260814.joblib
-- **Semilla:** 42 · **Git:** ab706e9
+- **Fecha:** 2026-08-26 19:04 UTC
+- **Modelo:** modelo-latefusion-xgb-text-sjd-v20260826 · **Artefacto:** modelo-latefusion-xgb-text-sjd-v20260826.joblib
+- **Semilla:** 42 · **Git:** 515557f
 
 ## Fase 1 · Prevención de fuga de datos
 | Severidad | Hallazgo |
@@ -22,25 +22,25 @@
 ## Fase 3 · Validación estadística de comparaciones
 | Severidad | Hallazgo |
 |---|---|
-| info | McNemar ganador vs regla mayoritaria: b=0 c=57 p=0.0000 (significativo) |
-| info | IC95 macro-F1: [0.5137890038320162, 0.574876108880042] · accuracy: [0.965, 0.9883333333333333] · recall I-II: [0.11995454545454545, 0.2] |
+| info | McNemar ganador vs regla mayoritaria: b=0 c=60 p=0.0000 (significativo) |
+| info | IC95 macro-F1: [0.5297042813110486, 0.5838143344969465] · accuracy: [0.9716666666666667, 0.9916666666666667] · recall I-II: [0.1375, 0.2] |
 
 ## Fase 4 · Calibración de probabilidades
 | Severidad | Hallazgo |
 |---|---|
-| info | Brier multiclase: 0.0363 · ECE: 0.0423 |
+| info | Brier multiclase: 0.0300 · ECE: 0.0353 |
 
 ## Fase 5 · Auditoría de sesgo y equidad
 | Severidad | Hallazgo |
 |---|---|
-| info | Equidad por sexo: {"Femenino": {"n": 341, "f1_macro": 0.5474237891894937, "recall_i_ii": 0.16363636363636364}, "Masculino": {"n": 259, "f1_macro": 0.5591731266149871, "recall_i_ii": 0.16}} |
-| info | Equidad por vía de llegada: {"Ambulancia": {"n": 166, "f1_macro": 0.6, "recall_i_ii": 0.2}, "Particular": {"n": 302, "f1_macro": 0.5391143299425033, "recall_i_ii": 0.14545454545454545}, "Remisión": {"n": 132, "f1_macro": 0.5314285714285714, "recall_i_ii": 0.2}} |
+| info | Equidad por sexo: {"Femenino": {"n": 341, "f1_macro": 0.5643427156736377, "recall_i_ii": 0.18181818181818182}, "Masculino": {"n": 259, "f1_macro": 0.5591731266149871, "recall_i_ii": 0.16}} |
+| info | Equidad por vía de llegada: {"Ambulancia": {"n": 166, "f1_macro": 0.6, "recall_i_ii": 0.2}, "Particular": {"n": 302, "f1_macro": 0.5570424836601308, "recall_i_ii": 0.16363636363636364}, "Remisión": {"n": 132, "f1_macro": 0.5418181818181818, "recall_i_ii": 0.2}} |
 | advertencia | Auditoría de equidad sobre demo SINTÉTICO: los subgrupos son andamiaje metodológico; la auditoría definitiva requiere MIMIC/SJdD con variables demográficas reales (fuente, régimen, sexo, edad). |
 
 ## Fase 6 · Trazabilidad y reproducibilidad
 | Severidad | Hallazgo |
 |---|---|
-| info | Semilla 42 · artefacto modelo-latefusion-xgb-text-sjd-v20260814 · git ab706e9 |
+| info | Semilla 42 · artefacto modelo-latefusion-xgb-text-sjd-v20260826 · git 515557f |
 
 ## Veredicto
 - **Leakage:** SIN EVIDENCIA DE FUGA tras corrección (escalador solo en train,

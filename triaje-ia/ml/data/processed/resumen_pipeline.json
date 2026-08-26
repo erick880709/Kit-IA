@@ -46,15 +46,15 @@
     }
   },
   "early_fusion": {
-    "precision": 0.5696488466354283,
-    "recall": 0.5875942028985508,
-    "f1": 0.5782817537939956
+    "precision": 0.6123133422208966,
+    "recall": 0.6302608695652174,
+    "f1": 0.6209389802506657
   },
   "late_fusion": {
     "promedio_ponderado": {
-      "precision": 0.5615515616842502,
-      "recall": 0.5497672375933245,
-      "f1": 0.5548394705787348
+      "precision": 0.5618605355335917,
+      "recall": 0.5533034694773826,
+      "f1": 0.5567451612724484
     },
     "stacking": {
       "precision": 0.5623801716707549,
@@ -63,11 +63,11 @@
     }
   },
   "ganador_macro": {
-    "precision": 0.5598154961872768,
-    "recall": 0.5420918367346939,
-    "f1": 0.5506986209829293
+    "precision": 0.5557129320847126,
+    "recall": 0.5170918367346939,
+    "f1": 0.5346808234300928
   },
-  "auc_roc_ovr": 0.9681556293661597,
+  "auc_roc_ovr": 0.9619885407655365,
   "metas_cumplidas": {
     "f1": false,
     "precision": false,
@@ -75,8 +75,8 @@
     "auc_roc": true
   },
   "umbrales": {
-    "I": 0.2785303381327592,
-    "II": 0.28070430749535624,
+    "I": 0.26204947790959304,
+    "II": 0.28471159783761546,
     "III": 0.5,
     "IV": 0.5,
     "V": 0.5
@@ -90,11 +90,11 @@
   },
   "peso_estructurado": 0.5,
   "texto_sjd_holdout": {
-    "precision": 0.19967566818178542,
-    "recall": 0.19219601739310863,
-    "f1": 0.08772033181857354
+    "precision": 0.19899368171093024,
+    "recall": 0.18892212750772047,
+    "f1": 0.08284876912590669
   },
-  "ruta_modelo": "C:\\Users\\ELITEBOOK\\OneDrive\\Documentos\\Repositorio\\Trabajo\\kit-ia\\triaje-ia\\artifacts\\models\\modelo-latefusion-xgb-text-sjd-v20260814.joblib",
+  "ruta_modelo": "C:\\Users\\ELITEBOOK\\OneDrive\\Documentos\\Repositorio\\Trabajo\\kit-ia\\triaje-ia\\artifacts\\models\\modelo-latefusion-xgb-text-sjd-v20260826.joblib",
   "comparativa_benchmarks": [
     {
       "referencia": "CTAS (Canadá)",
@@ -130,8 +130,8 @@
     },
     {
       "referencia": "TriajeIA (este proyecto)",
-      "auc": 0.9681556293661597,
-      "f1": 0.5506986209829293,
+      "auc": 0.9619885407655365,
+      "f1": 0.5346808234300928,
       "nota": "Fusión tardía — dataset sintético demo",
       "es_benchmark": false
     }

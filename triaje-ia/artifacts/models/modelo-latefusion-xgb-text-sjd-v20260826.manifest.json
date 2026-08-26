@@ -1,5 +1,7 @@
 {
-  "modelo": "modelo_ganador",
+  "version": "modelo-latefusion-xgb-text-sjd-v20260826",
+  "algoritmo": "latefusion-xgb-text-sjd",
+  "fecha": "2026-08-26",
   "metricas": {
     "macro": {
       "precision": 0.5557129320847126,
@@ -41,27 +43,12 @@
     "accuracy": 0.975,
     "auc_roc_ovr": 0.9619885407655365
   },
-  "extra": {
-    "metas": {
-      "f1": false,
-      "precision": false,
-      "recall": false,
-      "auc_roc": true
-    },
-    "umbrales": {
-      "I": 0.26204947790959304,
-      "II": 0.28471159783761546,
-      "III": 0.5,
-      "IV": 0.5,
-      "V": 0.5
-    },
-    "tuning": {
-      "mejor_config": {
-        "max_depth": 5,
-        "learning_rate": 0.1
-      },
-      "macro_f1_val": 0.5588739902481624
-    },
-    "peso_estructurado": 0.5
-  }
+  "umbrales": {
+    "I": 0.26204947790959304,
+    "II": 0.28471159783761546,
+    "III": 0.5,
+    "IV": 0.5,
+    "V": 0.5
+  },
+  "sha256_16": "01497619873fc0f4"
 }
