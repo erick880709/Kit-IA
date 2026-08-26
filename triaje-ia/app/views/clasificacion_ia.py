@@ -145,10 +145,18 @@ def render() -> None:
             st.rerun()
 
     elif resultado is not None:  # indisponible → fallback manual (RNF-009)
+        motivo = resultado.get("motivo")
+        descripcion_motivo = {
+            "modelo_no_disponible": "sin artefacto o en reintento de carga",
+            "timeout": "la inferencia excedió el presupuesto de 3 s",
+            "error_inferencia": "error interno durante la inferencia",
+        }.get(motivo, str(motivo or "desconocido"))
         st.error(
             "⚠ Modelo no disponible (sin artefacto, error o timeout > 3 s). "
             "El sistema pasa a triaje manual — la indisponibilidad quedó auditada."
         )
+        st.caption(f"Detalle técnico: {descripcion_motivo}. Puede reintentar "
+                   "«Ejecutar inferencia IA» antes de asignar el nivel manual.")
         nivel = st.selectbox(
             "Nivel asignado manualmente por el profesional",
             NIVELES_TRIaje,
