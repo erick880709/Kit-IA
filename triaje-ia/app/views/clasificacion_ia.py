@@ -151,12 +151,17 @@ def render() -> None:
             "timeout": "la inferencia excedió el presupuesto de 3 s",
             "error_inferencia": "error interno durante la inferencia",
         }.get(motivo, str(motivo or "desconocido"))
+        detalle = resultado.get("detalle")
         st.error(
             "⚠ Modelo no disponible (sin artefacto, error o timeout > 3 s). "
             "El sistema pasa a triaje manual — la indisponibilidad quedó auditada."
         )
-        st.caption(f"Detalle técnico: {descripcion_motivo}. Puede reintentar "
-                   "«Ejecutar inferencia IA» antes de asignar el nivel manual.")
+        st.caption(
+            f"Detalle técnico: {descripcion_motivo}"
+            + (f" · {detalle}" if detalle else "")
+            + ". Puede reintentar «Ejecutar inferencia IA» antes de asignar "
+            + "el nivel manual."
+        )
         nivel = st.selectbox(
             "Nivel asignado manualmente por el profesional",
             NIVELES_TRIaje,

@@ -1,14 +1,19 @@
-streamlit>=1.57
-SQLAlchemy>=2.0
-python-dotenv>=1.0
-bcrypt>=4.0
-reportlab>=4.2
+# Versiones FIJADAS (2026-08-26): mismas del entorno que entrenó el artefacto
+# ganador (modelo-latefusion-xgb-text-sjd-v20260826). Evita skew
+# entrenamiento/servicio en Streamlit Cloud (pip resolvía >= a versiones
+# distintas de las del entrenamiento).
+streamlit==1.61.1
+SQLAlchemy==2.0.52
+python-dotenv==1.2.2
+bcrypt==5.0.0
+reportlab==5.0.0
 # Épica E3/E4 — pipeline de entrenamiento e inferencia
-pandas>=2.2
-scikit-learn>=1.5
-xgboost>=2.1
-shap>=0.46
-pyyaml>=6.0
-joblib>=1.4
+pandas==3.0.5
+numpy==2.4.6
+scikit-learn==1.9.0
+xgboost==3.2.0
+shap==0.51.0
+pyyaml==6.0.3
+joblib==1.5.3
 # Épica E5 — exportación de auditoría
-openpyxl>=3.1
+openpyxl==3.1.5

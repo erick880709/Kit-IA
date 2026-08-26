@@ -241,12 +241,17 @@ class InferenceService:
         paquete = self._cargar()
         if paquete is None:
             return {"estado": "indisponible", "motivo": "modelo_no_disponible"}
+        etapa = "carga_modelo"
         try:
+            etapa = "construccion_fila"
             fila = self._construir_fila(datos)
+            etapa = "pipeline_estructurado"
             pipeline = paquete["pipeline_estructurado"]
             X_est = pipeline.transform(fila)
+            etapa = "vectorizacion_texto"
             X_txt = self._vectorizar_texto(paquete, datos)
 
+            etapa = "prediccion"
             inicio = time.perf_counter()
             proba = None
             # Reintento único (Cloud gratuito): un contenedor frío puede
@@ -271,6 +276,7 @@ class InferenceService:
                     f"inferencia excedió {self.timeout_s} s en 2 intentos"
                 )
             explicacion = self.explicar(fila)
+            etapa = "postprocesamiento"
             tiempo_ms = (time.perf_counter() - inicio) * 1000  # incluye SHAP (CA2 HU-E4-01)
 
             from ml.src.evaluation.metrics import CLASES
@@ -310,10 +316,14 @@ class InferenceService:
             logger.error("Inferencia excedió %.1f s — fallback manual", self.timeout_s)
             self._registrar_fallo()
             return {"estado": "indisponible", "motivo": "timeout"}
-        except Exception:  # noqa: BLE001
-            logger.exception("Error en inferencia — fallback manual")
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("Error en inferencia (%s) — fallback manual", etapa)
             self._registrar_fallo()
-            return {"estado": "indisponible", "motivo": "error_inferencia"}
+            return {
+                "estado": "indisponible",
+                "motivo": "error_inferencia",
+                "detalle": f"{etapa} · {type(exc).__name__}: {exc}",
+            }
 
     def explicar(self, fila: pd.DataFrame) -> list[dict]:
         """Top-5 SHAP con mapeo a lenguaje clínico (TT-E3-08, HU-E4-02)."""
