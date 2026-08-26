@@ -2,7 +2,7 @@
   "caso": "test_1",
   "nivel_real": "III",
   "nivel_predicho": "III",
-  "probabilidad_maxima": 0.9838556249421478,
+  "probabilidad_maxima": 0.98940381013918,
   "top_5": [
     {
       "feature": "num__frecuencia_cardiaca",

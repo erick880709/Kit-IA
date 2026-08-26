@@ -46,15 +46,15 @@
     }
   },
   "early_fusion": {
-    "precision": 0.6123133422208966,
-    "recall": 0.6302608695652174,
-    "f1": 0.6209389802506657
+    "precision": 0.6122567026810725,
+    "recall": 0.6284637681159421,
+    "f1": 0.6199564891271085
   },
   "late_fusion": {
     "promedio_ponderado": {
-      "precision": 0.5618605355335917,
-      "recall": 0.5533034694773826,
-      "f1": 0.5567451612724484
+      "precision": 0.5616938688669252,
+      "recall": 0.5506368028107159,
+      "f1": 0.5553688171864268
     },
     "stacking": {
       "precision": 0.5623801716707549,
@@ -63,11 +63,11 @@
     }
   },
   "ganador_macro": {
-    "precision": 0.5557129320847126,
-    "recall": 0.5170918367346939,
-    "f1": 0.5346808234300928
+    "precision": 0.5575800376647834,
+    "recall": 0.5542144782441278,
+    "f1": 0.5558777947277903
   },
-  "auc_roc_ovr": 0.9619885407655365,
+  "auc_roc_ovr": 0.979590813242958,
   "metas_cumplidas": {
     "f1": false,
     "precision": false,
@@ -75,8 +75,8 @@
     "auc_roc": true
   },
   "umbrales": {
-    "I": 0.26204947790959304,
-    "II": 0.28471159783761546,
+    "I": 0.2821686184272387,
+    "II": 0.2293410663507408,
     "III": 0.5,
     "IV": 0.5,
     "V": 0.5
@@ -88,11 +88,11 @@
     },
     "macro_f1_val": 0.5588739902481624
   },
-  "peso_estructurado": 0.5,
+  "peso_estructurado": 0.6,
   "texto_sjd_holdout": {
-    "precision": 0.19899368171093024,
-    "recall": 0.18892212750772047,
-    "f1": 0.08284876912590669
+    "precision": 0.20019754079885327,
+    "recall": 0.21218435710861297,
+    "f1": 0.09989918595812194
   },
   "ruta_modelo": "C:\\Users\\ELITEBOOK\\OneDrive\\Documentos\\Repositorio\\Trabajo\\kit-ia\\triaje-ia\\artifacts\\models\\modelo-latefusion-xgb-text-sjd-v20260826.joblib",
   "comparativa_benchmarks": [
@@ -130,8 +130,8 @@
     },
     {
       "referencia": "TriajeIA (este proyecto)",
-      "auc": 0.9619885407655365,
-      "f1": 0.5346808234300928,
+      "auc": 0.979590813242958,
+      "f1": 0.5558777947277903,
       "nota": "Fusión tardía — dataset sintético demo",
       "es_benchmark": false
     }

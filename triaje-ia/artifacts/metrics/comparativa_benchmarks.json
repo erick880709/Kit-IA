@@ -33,8 +33,8 @@
   },
   {
     "referencia": "TriajeIA (este proyecto)",
-    "auc": 0.9619885407655365,
-    "f1": 0.5346808234300928,
+    "auc": 0.979590813242958,
+    "f1": 0.5558777947277903,
     "nota": "Fusión tardía — dataset sintético demo",
     "es_benchmark": false
   }
