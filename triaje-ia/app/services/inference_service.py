@@ -90,6 +90,24 @@ class InferenceService:
             return []
         return sorted(self.dir_modelos.glob("*.joblib"), key=lambda p: p.stat().st_mtime)
 
+    @staticmethod
+    def _resolver_ruta(
+        almacenada: str, candidatas: list[Path], dir_modelos: Path
+    ) -> Path | None:
+        """Resuelve la ruta persistida del modelo activo (ENT-009).
+
+        La BD puede guardar rutas RELATIVAS (p. ej. `artifacts/models/...`);
+        en entornos como Streamlit Cloud el CWD difiere del repositorio, así
+        que la ruta relativa se resuelve contra el directorio de modelos y
+        nunca se confía en el CWD (bug real 2026-08-26).
+        """
+        ruta = Path(almacenada)
+        if not ruta.is_absolute():
+            ruta = dir_modelos / ruta.name
+        if ruta.exists() and ruta.parent == dir_modelos.resolve():
+            return ruta
+        return None
+
     def _ruta_activa(self, candidatas: list[Path]) -> Path | None:
         """HU-E6-02: la inferencia usa la versión activa en BD (rollback).
 
@@ -108,11 +126,11 @@ class InferenceService:
                     )
                 )
             if activo:
-                ruta = Path(activo.ruta_artefacto)
-                # Solo aplica si el artefacto vive en el directorio de este
-                # servicio (los tests usan directorios temporales).
-                if ruta.exists() and ruta.parent == self.dir_modelos.resolve():
-                    return ruta
+                resuelta = self._resolver_ruta(
+                    activo.ruta_artefacto, candidatas, self.dir_modelos
+                )
+                if resuelta is not None:
+                    return resuelta
         except Exception:  # noqa: BLE001 — sin BD accesible se degrada a mtime
             logger.exception("BD no accesible para resolver modelo activo")
         return candidatas[-1] if candidatas else None
@@ -148,6 +166,27 @@ class InferenceService:
     def _registrar_fallo(self) -> None:
         self._fallos += 1
         self._proximo_reintento = time.monotonic() + _VENTANA_REINTENTO_S
+
+    def precalentar(self) -> bool:
+        """Carga el modelo y el explainer SHAP en el arranque (Cloud).
+
+        El primer uso en frío de un contenedor gratuito paga la carga del
+        joblib + construcción del TreeExplainer; ese costo se mueve al
+        bootstrap para que la PRIMERA inferencia del usuario ya entre dentro
+        del presupuesto RNF-007 (< 3 s). Nunca bloquea el arranque: si falla,
+        la inferencia reintenta por su cuenta (fallback manual RNF-009).
+        """
+        try:
+            paquete = self._cargar()
+            if paquete is None:
+                logger.warning("Precalentamiento omitido: sin artefacto disponible")
+                return False
+            self.explicar(self._construir_fila({}))
+            logger.info("Precalentamiento OK: modelo y SHAP listos para inferir")
+            return True
+        except Exception:  # noqa: BLE001
+            logger.exception("Precalentamiento falló — se reintentará en la primera inferencia")
+            return False
 
     # ---------- inferencia ----------
 
@@ -209,13 +248,28 @@ class InferenceService:
             X_txt = self._vectorizar_texto(paquete, datos)
 
             inicio = time.perf_counter()
-            pool = ThreadPoolExecutor(max_workers=1)
-            try:
-                futuro = pool.submit(self._predecir_proba, paquete, X_est, X_txt)
-                proba = futuro.result(timeout=self.timeout_s)
-            finally:
-                # Sin bloqueo tras timeout (shutdown no-bloqueante).
-                pool.shutdown(wait=False, cancel_futures=True)
+            proba = None
+            # Reintento único (Cloud gratuito): un contenedor frío puede
+            # superar el presupuesto en el primer intento por contención de
+            # CPU; el segundo suele entrar. Presupuesto total ≤ 2× timeout.
+            for intento in (1, 2):
+                pool = ThreadPoolExecutor(max_workers=1)
+                try:
+                    futuro = pool.submit(self._predecir_proba, paquete, X_est, X_txt)
+                    proba = futuro.result(timeout=self.timeout_s)
+                    break
+                except FuturoTimeout:
+                    logger.warning(
+                        "Inferencia excedió %.1f s (intento %d/2)",
+                        self.timeout_s, intento,
+                    )
+                finally:
+                    # Sin bloqueo tras timeout (shutdown no-bloqueante).
+                    pool.shutdown(wait=False, cancel_futures=True)
+            if proba is None:
+                raise FuturoTimeout(
+                    f"inferencia excedió {self.timeout_s} s en 2 intentos"
+                )
             explicacion = self.explicar(fila)
             tiempo_ms = (time.perf_counter() - inicio) * 1000  # incluye SHAP (CA2 HU-E4-01)
 

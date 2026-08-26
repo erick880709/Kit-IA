@@ -197,6 +197,66 @@ def test_normaliza_regimen_y_desconocidos(dir_modelos):
     assert resultado["estado"] == "ok"
 
 
+# ---------- Robustez en Cloud (2026-08-26) ----------
+
+def test_precalentar_carga_modelo_y_explainer(dir_modelos):
+    servicio = InferenceService(dir_modelos=dir_modelos)
+    assert servicio.precalentar() is True
+    # Tras el precalentamiento la primera inferencia usa la caché caliente.
+    resultado = servicio.predecir(_datos_completos())
+    assert resultado["estado"] == "ok"
+    assert servicio._explainer is not None
+
+
+def test_precalentar_sin_artefacto_no_explota(tmp_path):
+    servicio = InferenceService(dir_modelos=tmp_path / "vacio")
+    assert servicio.precalentar() is False
+
+
+def test_resolver_ruta_relativa_y_absoluta(tmp_path):
+    modelo = tmp_path / "modelo-x.joblib"
+    modelo.write_bytes(b"x")
+    candidatas = [modelo]
+    # Ruta relativa persistida (bug Cloud 2026-08-26): se resuelve contra el
+    # directorio de modelos, sin depender del CWD.
+    relativa = InferenceService._resolver_ruta(
+        f"artifacts/models/{modelo.name}", candidatas, tmp_path
+    )
+    assert relativa == modelo
+    # Ruta absoluta válida se usa tal cual.
+    absoluta = InferenceService._resolver_ruta(str(modelo), candidatas, tmp_path)
+    assert absoluta == modelo
+    # Ruta que no existe → None (la inferencia degrada al más reciente).
+    inexistente = InferenceService._resolver_ruta(
+        "artifacts/models/no-existe.joblib", candidatas, tmp_path
+    )
+    assert inexistente is None
+
+
+def test_predecir_reintenta_una_vez_tras_timeout(dir_modelos, monkeypatch):
+    """Cloud gratuito: primer intento en contenedor frío puede exceder el
+    presupuesto; un reintento único debe rescatar la inferencia."""
+    import time
+
+    servicio = InferenceService(dir_modelos=dir_modelos, timeout_s=0.2)
+    llamadas = {"n": 0}
+
+    def fake_proba(paquete, X_est, X_txt):
+        llamadas["n"] += 1
+        if llamadas["n"] == 1:
+            time.sleep(0.6)  # primer intento lento (contenedor frío)
+        proba = np.zeros((1, len(CLASES)))
+        proba[0, 2] = 1.0
+        return proba
+
+    monkeypatch.setattr(servicio, "_predecir_proba", fake_proba)
+    monkeypatch.setattr(servicio, "explicar", lambda fila: [])
+    resultado = servicio.predecir(_datos_completos())
+    assert resultado["estado"] == "ok"
+    assert resultado["nivel_sugerido"] == "III"
+    assert llamadas["n"] == 2
+
+
 @pytest.fixture()
 def session() -> Session:
     engine = create_engine(

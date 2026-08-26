@@ -69,6 +69,17 @@ def bootstrap() -> None:
     # siembra usuarios/roles demo solo cuando la BD está vacía (idempotente).
     with SessionLocal() as session:
         seed_service.seed_demo_si_vacio(session)
+    # Precalentamiento del modelo (2026-08-26): mueve la carga del joblib y la
+    # construcción del explainer SHAP al arranque para que la primera
+    # inferencia en contenedores fríos cumpla el presupuesto < 3 s (RNF-007).
+    try:
+        from app.services.inference_service import inference_service
+
+        inference_service.precalentar()
+    except Exception:  # noqa: BLE001 — nunca debe bloquear el bootstrap
+        logging.getLogger(__name__).exception(
+            "Precalentamiento del modelo falló en bootstrap"
+        )
     if settings.app_secret == "cambiar-en-produccion":
         logging.getLogger(__name__).warning(
             "APP_SECRET_KEY usa el valor por defecto ('cambiar-en-produccion') — "
