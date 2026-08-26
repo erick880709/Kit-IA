@@ -43,6 +43,11 @@ class VectorizadorTexto:
         self._vectorizador.fit(corpus)
         return self
 
+    @property
+    def vocabulario(self) -> set[str]:
+        """Tokens del vocabulario ajustado (auditorías de cobertura del catálogo)."""
+        return set(self._vectorizador.vocabulary_)
+
     def transformar(self, textos: pd.Series) -> np.ndarray:
         salida = []
         for texto in textos.fillna(""):
@@ -51,6 +56,10 @@ class VectorizadorTexto:
                 _CACHE[clave] = self._vectorizador.transform([str(texto)]).toarray()[0]
             salida.append(_CACHE[clave])
         return np.vstack(salida)
+
+    def transformar_disperso(self, textos: pd.Series):
+        """TF-IDF disperso para ENTRENAMIENTO: evita densificar 46k × 11k."""
+        return self._vectorizador.transform(textos.fillna(""))
 
     @staticmethod
     def hay_texto(texto) -> bool:
@@ -62,13 +71,21 @@ def vectorizar_texto(
     df: pd.DataFrame, *, columna: str = "motivo_texto",
     max_features: int = 500, entrenar: bool = True,
     textos_extra: pd.Series | None = None,
+    disperso: bool = False,
 ) -> tuple[np.ndarray, VectorizadorTexto | None]:
-    """Devuelve matriz de embeddings y el vectorizador (None si no hay textos)."""
+    """Devuelve matriz de embeddings y el vectorizador (None si no hay textos).
+
+    `disperso=True` devuelve scipy.sparse (entrenamiento con vocabulario
+    completo sin densificar); la inferencia usa el modo denso de a 1 fila.
+    """
     textos = df[columna].fillna("") if columna in df.columns else pd.Series([""] * len(df))
     if not any(textos.map(VectorizadorTexto.hay_texto)):
         return None, None
     vectorizador = VectorizadorTexto(max_features=max_features)
     if entrenar:
         vectorizador.fit(textos, textos_extra=textos_extra)
-    matriz = vectorizador.transformar(textos)
+    if disperso:
+        matriz = vectorizador.transformar_disperso(textos)
+    else:
+        matriz = vectorizador.transformar(textos)
     return matriz, vectorizador

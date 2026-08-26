@@ -22,6 +22,7 @@ from datetime import date
 
 import numpy as np
 import pandas as pd
+import scipy.sparse as sp
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
@@ -38,7 +39,7 @@ from ml.src.data.ingesta import (
     ingestar_san_juan_de_dios,
     ingestar_triage_nacional,
 )
-from ml.src.data.mapeo_cie11 import remapear_cie11
+from ml.src.data.mapeo_cie11 import normalizar_token_cie, remapear_cie11
 from ml.src.evaluation.benchmarks import tabla_comparativa
 from ml.src.evaluation.metrics import (
     CLASES,
@@ -211,15 +212,18 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
 
     print("2/10 · Split estratificado 70/15/15 del demo (ANTES de tocar features)")
     demo["_texto_completo"] = (
-        demo["motivo_codigo_cie10"].fillna("") + " " + demo["motivo_texto"].fillna("")
+        demo["motivo_codigo_cie10"].fillna("").map(normalizar_token_cie)
+        + " " + demo["motivo_texto"].fillna("")
     ).str.strip()
     if sjd is not None:
         sjd["_texto_completo"] = (
-            sjd["motivo_codigo_cie10"].fillna("") + " " + sjd["motivo_texto"].fillna("")
+            sjd["motivo_codigo_cie10"].fillna("").map(normalizar_token_cie)
+            + " " + sjd["motivo_texto"].fillna("")
         ).str.strip()
     if mimic is not None:
         mimic["_texto_completo"] = (
-            mimic["motivo_codigo_cie10"].fillna("") + " " + mimic["motivo_texto"].fillna("")
+            mimic["motivo_codigo_cie10"].fillna("").map(normalizar_token_cie)
+            + " " + mimic["motivo_texto"].fillna("")
         ).str.strip()
     train, val, test = _split_estratificado(demo.assign(_i=np.arange(len(demo))))
     tr_idx = train["_i"].to_numpy()
@@ -248,21 +252,33 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
     from app.domain.catalogos import CATALOGO_MOTIVOS
 
     textos_catalogo = pd.Series(
-        [f"{codigo} {descripcion}" for codigo, descripcion, _ in CATALOGO_MOTIVOS]
+        [f"{normalizar_token_cie(codigo)} {descripcion}"
+         for codigo, descripcion, _ in CATALOGO_MOTIVOS]
     )
+    # max_features=None: vocabulario completo — garantiza que los 71 códigos
+    # CIE-11 del catálogo queden tokenizados (fail-fast si alguno falta).
     _, vectorizador = vectorizar_texto(
         pd.DataFrame({"motivo_texto": textos_entrenamiento}),
-        max_features=600,
+        max_features=None,
         textos_extra=textos_catalogo,
+        disperso=True,
     )
     assert vectorizador is not None
-    X_txt_demo = vectorizador.transformar(demo["_texto_completo"])
+    faltantes = [
+        c for c, _, _ in CATALOGO_MOTIVOS
+        if normalizar_token_cie(c).casefold() not in vectorizador.vocabulario
+    ]
+    if faltantes:
+        raise SystemExit(f"Vocabulario CIE-11 incompleto: {faltantes}")
+    print(f"    vocabulario TF-IDF: {len(vectorizador.vocabulario)} términos · "
+          f"catálogo CIE-11 71/71 garantizado")
+    X_txt_demo = vectorizador.transformar_disperso(demo["_texto_completo"])
     X_txt_sjd = (
-        vectorizador.transformar(sjd["_texto_completo"])
+        vectorizador.transformar_disperso(sjd["_texto_completo"])
         if sjd is not None else None
     )
     X_txt_mimic = (
-        vectorizador.transformar(mimic["_texto_completo"])
+        vectorizador.transformar_disperso(mimic["_texto_completo"])
         if mimic is not None else None
     )
 
@@ -285,14 +301,14 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
     )
     if sjd is not None:
         y_texto = np.concatenate([y_tr_enc, encoder.transform(sjd["nivel_triaje"].to_numpy())])
-        X_texto = np.vstack([X_txt_demo[tr_idx], X_txt_sjd])
+        X_texto = sp.vstack([X_txt_demo[tr_idx], X_txt_sjd]).tocsr()
     else:
         y_texto, X_texto = y_tr_enc, X_txt_demo[tr_idx]
     if mimic is not None:
         y_texto = np.concatenate(
             [y_texto, encoder.transform(mimic["nivel_triaje"].to_numpy())]
         )
-        X_texto = np.vstack([X_texto, X_txt_mimic])
+        X_texto = sp.vstack([X_texto, X_txt_mimic]).tocsr()
     sub_b = LogisticRegression(max_iter=2000, class_weight="balanced", random_state=SEMILLA_GLOBAL)
     sub_b.fit(X_texto, y_texto)
 

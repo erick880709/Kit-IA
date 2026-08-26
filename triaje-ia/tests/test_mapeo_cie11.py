@@ -1,6 +1,10 @@
 """Pruebas del re-codificado CIE-10 → CIE-11 del vocabulario (2026-08-26)."""
 
-from ml.src.data.mapeo_cie11 import MAPEO_CIE10_A_CIE11, remapear_cie11
+from ml.src.data.mapeo_cie11 import (
+    MAPEO_CIE10_A_CIE11,
+    normalizar_token_cie,
+    remapear_cie11,
+)
 
 
 def test_catalogo_completo_y_unico() -> None:
@@ -35,3 +39,26 @@ def test_codigo_desconocido_pasa_intacto() -> None:
 def test_minusculas_y_espacios() -> None:
     assert remapear_cie11("  r10.4 ") == "DD30"
     assert remapear_cie11("a09") == "1A40"
+
+
+def test_normalizar_token_cie_unico_y_estable() -> None:
+    # Códigos con punto NO colisionan tras normalizar
+    assert normalizar_token_cie("MF50.7") == "MF507"
+    assert normalizar_token_cie("MF50.4") == "MF504"
+    assert normalizar_token_cie("DB24.B") == "DB24B"
+    assert normalizar_token_cie("MD81.3") == "MD813"
+    assert normalizar_token_cie("ME84.2") == "ME842"
+    # Sin punto: estables
+    assert normalizar_token_cie("8A8Z") == "8A8Z"
+    assert normalizar_token_cie("1A40") == "1A40"
+    assert normalizar_token_cie("DD30") == "DD30"
+    assert normalizar_token_cie(None) == ""
+    assert normalizar_token_cie("") == ""
+
+
+def test_todos_los_tokens_normalizados_son_unicos() -> None:
+    from app.domain.catalogos import CATALOGO_MOTIVOS
+
+    tokens = [normalizar_token_cie(c) for c, _, _ in CATALOGO_MOTIVOS]
+    assert len(tokens) == len(set(tokens)), "tokens CIE-11 normalizados duplicados"
+    assert all(t for t in tokens)

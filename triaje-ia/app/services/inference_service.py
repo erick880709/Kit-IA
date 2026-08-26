@@ -173,8 +173,11 @@ class InferenceService:
         vectorizador = paquete.get("vectorizador_texto")
         if vectorizador is None:
             return None
+        from ml.src.data.mapeo_cie11 import normalizar_token_cie
+
         texto = (
-            f"{datos.get('motivo_codigo_cie10', '')} {datos.get('motivo_texto', '')}"
+            f"{normalizar_token_cie(datos.get('motivo_codigo_cie10', ''))} "
+            f"{datos.get('motivo_texto', '')}"
         ).strip()
         if not texto:
             return None

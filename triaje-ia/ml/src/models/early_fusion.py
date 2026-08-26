@@ -7,6 +7,7 @@ Mismo esquema de validación que los baselines (comparabilidad).
 from __future__ import annotations
 
 import numpy as np
+import scipy.sparse as sp
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import LabelEncoder
 from xgboost import XGBClassifier
@@ -22,6 +23,9 @@ from ml.src.models.encoding import (
 def concatenar_features(X_estructurada: np.ndarray, X_texto: np.ndarray | None) -> np.ndarray:
     if X_texto is None:
         return X_estructurada
+    if sp.issparse(X_texto):  # TF-IDF disperso (vocabulario completo CIE-11)
+        est = X_estructurada if sp.issparse(X_estructurada) else sp.csr_matrix(X_estructurada)
+        return sp.hstack([est, X_texto]).tocsr()
     return np.hstack([X_estructurada, X_texto])
 
 

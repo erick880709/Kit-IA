@@ -12,6 +12,8 @@ intactos (p. ej. la mayoría de diagnósticos reales de SJdD).
 
 from __future__ import annotations
 
+import re
+
 MAPEO_CIE10_A_CIE11: dict[str, str] = {
     # Digestivo
     "R10.4": "DD30", "K59.0": "ME05", "R11": "MD90", "K92.2": "DB24.B",
@@ -75,3 +77,14 @@ def remapear_cie11(codigo) -> str:
     if not codigo:
         return ""
     return _INDICE.get(_normalizar(codigo), codigo)
+
+
+def normalizar_token_cie(codigo) -> str:
+    """Token único para TF-IDF: mayúsculas y solo alfanuméricos.
+
+    El tokenizador de sklearn parte los códigos con punto ("MF50.7" → "mf50")
+    y colapsa códigos distintos (MF50.7 vs MF50.4). Esta normalización los
+    conserva únicos y estables entre entrenamiento e inferencia:
+    "MF50.7" → "MF507", "DB24.B" → "DB24B", "8A8Z" → "8A8Z".
+    """
+    return re.sub(r"[^0-9A-Z]", "", str(codigo or "").upper())
