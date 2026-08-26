@@ -64,3 +64,26 @@ def test_cache_aislado_por_vectorizador() -> None:
     m80 = v80.transformar(textos)
     assert m60.shape == (len(textos), 60)
     assert m80.shape == (len(textos), 80)
+
+
+def test_pickle_antiguo_sin_cache_carga_con_setstate(tmp_path) -> None:
+    """Regresión Cloud 2026-08-26: artefactos serializados ANTES del cache
+    por instancia no traen `_cache` en el pickle; `__setstate__` debe
+    re-crearlo para que transformar funcione (AttributeError real en prod)."""
+    import joblib
+
+    textos = pd.Series([
+        "Dificultad respiratoria severa con cianosis central y deterioro rápido",
+        "Dolor torácico opresivo irradiado con sudoración fría y náuseas",
+    ])
+    vectorizador = VectorizadorTexto(max_features=200).fit(textos)
+    # Simula un pickle antiguo: sin `_cache` en el estado serializado.
+    del vectorizador.__dict__["_cache"]
+    ruta = tmp_path / "vectorizador-antiguo.joblib"
+    joblib.dump(vectorizador, ruta)
+
+    cargado = joblib.load(ruta)
+    assert hasattr(cargado, "_cache")  # __setstate__ re-crea el cache
+    matriz = cargado.transformar(textos)
+    assert matriz.shape[0] == len(textos)
+    assert matriz.shape[1] == cargado._vectorizador.transform([textos.iloc[0]]).shape[1]

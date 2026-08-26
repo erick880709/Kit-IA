@@ -167,6 +167,36 @@ class InferenceService:
         self._fallos += 1
         self._proximo_reintento = time.monotonic() + _VENTANA_REINTENTO_S
 
+    def sincronizar_modelo_activo(self, session: Session) -> None:
+        """Garantiza que la fila activa de BD corresponda al artefacto más
+        reciente del disco (bug real 2026-08-26: BD persistida en Cloud
+        mantenía activa una versión vieja serializada antes del cache por
+        instancia → AttributeError `_cache` en inferencia).
+
+        Compara contra el artefacto más reciente del directorio — NO contra
+        lo que devuelve `_ruta_activa`, que consulta la propia BD (circular).
+        """
+        candidatas = self._rutas_candidatas()
+        if not candidatas:
+            return
+        mas_reciente = candidatas[-1]
+        try:
+            from ml.src.registry import cargar_paquete
+
+            self._paquete = cargar_paquete(mas_reciente)
+        except Exception:  # noqa: BLE001 — sin sincronización, BD manda
+            logger.exception("No se pudo cargar el artefacto más reciente para sincronizar")
+            return
+        version_reciente = str(self._paquete.get("version") or mas_reciente.stem)
+        activo = session.scalar(
+            select(Modelo).where(Modelo.activo.is_(True)).order_by(
+                Modelo.creado_en.desc()
+            )
+        )
+        if activo is not None and activo.version == version_reciente:
+            return
+        self.registrar_modelo(session)
+
     def precalentar(self) -> bool:
         """Carga el modelo y el explainer SHAP en el arranque (Cloud).
 
@@ -382,13 +412,24 @@ class InferenceService:
 
     @auditar("REGISTRAR_MODELO", "Modelo")
     def registrar_modelo(self, session: Session) -> str | None:
-        """Registra la versión cargada en BD si aún no existe (idempotente)."""
+        """Registra la versión cargada en BD si aún no existe (idempotente).
+
+        Si la versión ya existe pero quedó INACTIVA (BD persistida de un
+        despliegue anterior), se re-activa y desactiva las demás — el modelo
+        activo siempre debe coincidir con el artefacto más reciente.
+        """
         paquete = self._cargar()
         if paquete is None:
             return None
         version = str(paquete.get("version"))
         existente = session.scalar(select(Modelo).where(Modelo.version == version))
         if existente is not None:
+            if not existente.activo:
+                for anterior in session.scalars(select(Modelo)).all():
+                    anterior.activo = False
+                existente.activo = True
+                session.commit()
+                logger.info("Modelo %s re-activado en BD (ENT-009)", version)
             return version
         manifiesto = None
         candidatos = [p for p in self._rutas_candidatas() if p.stem == version]

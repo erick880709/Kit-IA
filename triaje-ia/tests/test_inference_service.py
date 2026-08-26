@@ -257,6 +257,88 @@ def test_predecir_reintenta_una_vez_tras_timeout(dir_modelos, monkeypatch):
     assert llamadas["n"] == 2
 
 
+def test_artefacto_activo_vectorizador_tiene_cache() -> None:
+    """Regresión Cloud 2026-08-26 (error_inferencia · vectorizacion_texto ·
+    AttributeError '_cache'): el artefacto ganador del repositorio debe
+    cargarse con un vectorizador funcional."""
+    from pathlib import Path
+
+    from ml.src import ARTIFACTS_MODELS
+    from ml.src.registry import cargar_paquete
+
+    candidatas = [
+        p for p in sorted(ARTIFACTS_MODELS.glob("*.joblib"), key=lambda p: p.stat().st_mtime)
+        if Path(str(p).replace(".joblib", ".manifest.json")).is_file()
+    ]
+    assert candidatas, "sin artefacto ganador en el repositorio"
+    paquete = cargar_paquete(candidatas[-1])
+    vectorizador = paquete["vectorizador_texto"]
+    assert hasattr(vectorizador, "_cache")
+    matriz = vectorizador.transformar(pd.Series(["MD30 Dolor torácico opresivo"]))
+    assert matriz.shape[0] == 1 and matriz.shape[1] > 1000
+
+
+def test_registrar_modelo_reactiva_version_inactiva(dir_modelos, session):
+    """BD persistida de un despliegue anterior: si la versión existe pero
+    quedó inactiva, registrar_modelo debe re-activarla."""
+    servicio = InferenceService(dir_modelos=dir_modelos)
+    session.add(Modelo(
+        version="modelo-rf-test-v20260814", algoritmo="rf-test",
+        fecha_entrenamiento=date(2026, 8, 14),
+        ruta_artefacto=str(dir_modelos / "modelo-rf-test-v20260814.joblib"),
+        activo=False,
+    ))
+    session.add(Modelo(
+        version="otra-antigua", algoritmo="rf-test",
+        fecha_entrenamiento=date(2026, 8, 10),
+        ruta_artefacto=str(dir_modelos / "otra.joblib"), activo=True,
+    ))
+    session.commit()
+    version = servicio.registrar_modelo(session)
+    assert version == "modelo-rf-test-v20260814"
+    filas = session.scalars(select(Modelo)).all()
+    activas = [m.version for m in filas if m.activo]
+    assert activas == ["modelo-rf-test-v20260814"]
+
+
+def test_sincronizar_modelo_activo_corrige_activa_desactualizada(
+    tmp_path, monkeypatch
+):
+    """El bootstrap sincroniza la fila activa con el artefacto más reciente
+    (la BD de /tmp puede persistir entre despliegues en Cloud)."""
+    df = FuenteSinteticaDemo(n=200, semilla=5).generar()
+    X_df, pipeline = construir_matriz_estructurada(df)
+    X = X_df.to_numpy()
+    n = len(X)
+    y_enc = np.tile(np.arange(len(CLASES)), n // len(CLASES) + 1)[:n]
+    for version in ("modelo-v1-test", "modelo-v2-test"):
+        sub_a = RandomForestClassifier(n_estimators=10, random_state=0).fit(X, y_enc)
+        serializar_paquete(
+            modelo=sub_a, pipeline_estructurado=pipeline, vectorizador_texto=None,
+            umbrales={c: 0.5 for c in CLASES}, metricas={"macro": {"f1": 0.8}},
+            nombre_algoritmo=version.replace("modelo-", ""),
+            fecha=date(2026, 8, 14),
+            destino=tmp_path / f"{version}.joblib",
+        )
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    Base.metadata.create_all(engine)
+    factory = sessionmaker(bind=engine)
+    with factory() as s:
+        s.add(Modelo(version="modelo-v1-test-v20260814", algoritmo="rf-test",
+                     fecha_entrenamiento=date(2026, 8, 14),
+                     ruta_artefacto=str(tmp_path / "modelo-v1-test.joblib"),
+                     activo=True))
+        s.commit()
+    monkeypatch.setattr("app.infra.db.SessionLocal", factory)
+    servicio = InferenceService(dir_modelos=tmp_path)
+    with factory() as s:
+        servicio.sincronizar_modelo_activo(s)
+        activas = [m.version for m in s.scalars(select(Modelo)).all() if m.activo]
+    assert activas == ["modelo-v2-test-v20260814"]
+
+
 @pytest.fixture()
 def session() -> Session:
     engine = create_engine(

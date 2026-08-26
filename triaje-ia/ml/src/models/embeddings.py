@@ -30,6 +30,15 @@ class VectorizadorTexto:
         # 60 vs 80 features) y producía matrices con filas de dimensiones mixtas.
         self._cache: dict[str, np.ndarray] = {}
 
+    def __setstate__(self, estado: dict) -> None:
+        """Compatibilidad con artefactos serializados ANTES del cache por
+        instancia (bug real 2026-08-26 en Cloud): el diccionario deserializado
+        puede no traer `_cache` — se re-crea vacío para que `transformar`
+        funcione siempre, sin importar con qué versión se serializó el pickle."""
+        self.__dict__.update(estado)
+        if "_cache" not in self.__dict__:
+            self._cache = {}
+
     def fit(self, textos: pd.Series, textos_extra: pd.Series | None = None) -> VectorizadorTexto:
         """Ajusta el vocabulario sobre `textos` (+ `textos_extra` sin etiqueta).
 

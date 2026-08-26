@@ -72,9 +72,13 @@ def bootstrap() -> None:
     # Precalentamiento del modelo (2026-08-26): mueve la carga del joblib y la
     # construcción del explainer SHAP al arranque para que la primera
     # inferencia en contenedores fríos cumpla el presupuesto < 3 s (RNF-007).
+    # Además sincroniza la fila activa de BD con el artefacto más reciente
+    # (la BD de /tmp puede persistir entre despliegues con una versión vieja).
     try:
         from app.services.inference_service import inference_service
 
+        with SessionLocal() as session:
+            inference_service.sincronizar_modelo_activo(session)
         inference_service.precalentar()
     except Exception:  # noqa: BLE001 — nunca debe bloquear el bootstrap
         logging.getLogger(__name__).exception(
