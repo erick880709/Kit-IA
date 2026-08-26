@@ -43,10 +43,17 @@ def render() -> None:
                 f"{evento.nivel_asignado_profesional or '—'} · "
                 f"Concordancia {'Sí' if evento.concordancia else 'No'}"
             )
+            if evento.motivo_cierre:
+                c1.caption(
+                    "🔒 Cierre automático — menor de 16 años (sin recomendación IA; "
+                    "nivel de atención a cargo del profesional)."
+                )
             if evento.motivo_reclasificacion:
                 c1.caption(f"Reclasificación: {evento.motivo_reclasificacion}")
-            if evento.estado == "Cerrado" and c2.button(
-                "Reclasificar", key=f"recl_{evento.id}"
+            if (
+                evento.estado == "Cerrado"
+                and not evento.motivo_cierre
+                and c2.button("Reclasificar", key=f"recl_{evento.id}")
             ):
                 st.session_state["evento_reclasificar"] = evento.id
                 st.rerun()

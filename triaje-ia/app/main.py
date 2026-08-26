@@ -48,6 +48,7 @@ CLAVES_SESION = (
     "usuario_id", "usuario_nombre", "usuario_rol", "ultima_actividad",
     "pantalla", "paciente_id", "evento_id", "evento_reclasificar",
     "precarga_paciente", "duplicados_actuales", "paciente_existente_id",
+    "aviso_cierre_menor", "paciente_nuevo_para_triaje", "registro_ok",
 )
 
 PANTALLA_POR_ESTADO = {
@@ -103,6 +104,12 @@ def render_home() -> None:
     st.title(f"{settings.app_name} · Pantalla inicial")
     st.success(f"Sesión iniciada: {nombre} ({rol})")
 
+    if st.session_state.pop("aviso_cierre_menor", None):
+        st.warning(
+            f"ℹ️ {triaje_service.MOTIVO_CIERRE_MENOR} El triaje quedó registrado, "
+            "cerrado y trazado en auditoría."
+        )
+
     if paciente_id:
         with SessionLocal() as session:
             from sqlalchemy import select
@@ -145,8 +152,13 @@ def render_home() -> None:
                         paciente_id=paciente_id,
                         usuario_id=st.session_state.get("usuario_id"),
                     )
-                st.session_state["evento_id"] = nuevo.id
-                st.session_state["pantalla"] = "signos_vitales"
+                if nuevo.estado == "Cerrado":  # menor de 16: sin recomendación IA
+                    st.session_state["aviso_cierre_menor"] = True
+                    st.session_state.pop("evento_id", None)
+                    st.session_state["pantalla"] = "inicio"
+                else:
+                    st.session_state["evento_id"] = nuevo.id
+                    st.session_state["pantalla"] = "signos_vitales"
                 st.rerun()
         elif evento is not None:
             st.info(f"⏳ Evento de triaje en curso — estado: `{evento.estado}`")

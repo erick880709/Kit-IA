@@ -155,6 +155,10 @@ def render() -> None:
             "verifíquelos y continúe con su nuevo triaje."
         )
 
+    registro_ok = st.session_state.pop("registro_ok", None)
+    if registro_ok:
+        st.success(registro_ok)
+
     datos = _datos_desde_form()
     c1, c2 = st.columns(2)
     verificar = c1.button("Verificar documento", width="stretch")
@@ -188,6 +192,7 @@ def render() -> None:
                 existente
             )
             st.session_state["paciente_existente_id"] = existente.id
+            st.session_state.pop("paciente_nuevo_para_triaje", None)
             st.session_state.pop("duplicados_actuales", None)
             st.rerun()
         if duplicados:
@@ -213,10 +218,18 @@ def render() -> None:
         st.session_state.pop("precarga_paciente", None)
         st.session_state.pop("duplicados_actuales", None)
         st.session_state.pop("paciente_existente_id", None)
-        st.success(
+        st.session_state["registro_ok"] = (
             f"Paciente registrado: {paciente.nombres} {paciente.apellidos} "
             f"({paciente.tipo_documento} {paciente.numero_documento})"
         )
+        st.session_state["paciente_nuevo_para_triaje"] = paciente.id
+        st.rerun()
+
+    # Botones renderizados SIEMPRE (no dentro del bloque del clic de registro):
+    # si se renderizaran dentro de `if registrar_igual`, el clic sobre
+    # «Iniciar triaje» se perdería (en esa corrida el botón no existe).
+    nuevo_id = st.session_state.get("paciente_nuevo_para_triaje")
+    if nuevo_id:
         b1, b2 = st.columns(2)
         if b1.button(
             "➕ Iniciar triaje (signos vitales)",
@@ -225,13 +238,21 @@ def render() -> None:
             with SessionLocal() as session:
                 nuevo = triaje_service.crear_evento(
                     session,
-                    paciente_id=paciente.id,
+                    paciente_id=nuevo_id,
                     usuario_id=usuario_id,
                 )
-            st.session_state["evento_id"] = nuevo.id
-            st.session_state["pantalla"] = "signos_vitales"
+            st.session_state["paciente_id"] = nuevo_id
+            st.session_state.pop("paciente_nuevo_para_triaje", None)
+            if nuevo.estado == "Cerrado":  # menor de 16: sin recomendación IA
+                st.session_state["aviso_cierre_menor"] = True
+                st.session_state.pop("evento_id", None)
+                st.session_state["pantalla"] = "inicio"
+            else:
+                st.session_state["evento_id"] = nuevo.id
+                st.session_state["pantalla"] = "signos_vitales"
             st.rerun()
         if b2.button("Volver al inicio", width="stretch"):
+            st.session_state.pop("paciente_nuevo_para_triaje", None)
             st.session_state["pantalla"] = "inicio"
             st.rerun()
 
@@ -262,11 +283,16 @@ def render() -> None:
                         usuario_id=usuario_id,
                     )
                 st.session_state["paciente_id"] = existente.id
-                st.session_state["evento_id"] = nuevo.id
                 st.session_state.pop("precarga_paciente", None)
                 st.session_state.pop("paciente_existente_id", None)
                 st.session_state.pop("duplicados_actuales", None)
-                st.session_state["pantalla"] = "signos_vitales"
+                if nuevo.estado == "Cerrado":  # menor de 16: sin recomendación IA
+                    st.session_state["aviso_cierre_menor"] = True
+                    st.session_state.pop("evento_id", None)
+                    st.session_state["pantalla"] = "inicio"
+                else:
+                    st.session_state["evento_id"] = nuevo.id
+                    st.session_state["pantalla"] = "signos_vitales"
                 st.rerun()
             if b2.button("Volver al inicio", width="stretch"):
                 st.session_state.pop("precarga_paciente", None)
@@ -292,5 +318,6 @@ def render() -> None:
         st.session_state.pop("precarga_paciente", None)
         st.session_state.pop("duplicados_actuales", None)
         st.session_state.pop("paciente_existente_id", None)
+        st.session_state.pop("paciente_nuevo_para_triaje", None)
         st.session_state["pantalla"] = "inicio"
         st.rerun()

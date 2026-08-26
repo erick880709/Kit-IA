@@ -46,7 +46,7 @@ def render() -> None:
             select(MotivoConsulta).where(MotivoConsulta.evento_id == evento_id)
         )
         pdf_bytes = None
-        if evento and evento.cierre:
+        if evento and evento.cierre and signos and motivo:
             pdf_bytes = registro_pdf.generar_pdf_registro(
                 evento, paciente, signos, motivo
             )
@@ -56,14 +56,22 @@ def render() -> None:
         return
 
     if evento.estado == "Cerrado":
-        st.success("Evento cerrado — ambos niveles persistidos permanentemente.")
-        st.write(
-            f"**IA:** {evento.nivel_sugerido_ia} · **Profesional:** "
-            f"{evento.nivel_asignado_profesional} · **Concordancia:** "
-            f"{'Sí' if evento.concordancia else 'No'}"
-        )
-        if evento.motivo_discrepancia:
-            st.write(f"**Motivo discrepancia:** {evento.motivo_discrepancia}")
+        if evento.motivo_cierre:  # cierre automático: menor de 16 años
+            st.warning(
+                "🔒 Evento cerrado automáticamente — paciente menor de 16 años. "
+                "El sistema de recomendación IA no aplica: el nivel de atención de "
+                "la urgencia recae completamente en el profesional de salud."
+            )
+            st.caption(f"Trazabilidad registrada: {evento.motivo_cierre}")
+        else:
+            st.success("Evento cerrado — ambos niveles persistidos permanentemente.")
+            st.write(
+                f"**IA:** {evento.nivel_sugerido_ia} · **Profesional:** "
+                f"{evento.nivel_asignado_profesional} · **Concordancia:** "
+                f"{'Sí' if evento.concordancia else 'No'}"
+            )
+            if evento.motivo_discrepancia:
+                st.write(f"**Motivo discrepancia:** {evento.motivo_discrepancia}")
         if pdf_bytes:
             st.download_button(
                 "Registro de triaje descargable (PDF)",
