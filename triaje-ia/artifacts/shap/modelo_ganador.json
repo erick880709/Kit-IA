@@ -3,32 +3,32 @@
     {
       "feature": "num__saturacion_o2",
       "clinico": "num__saturacion_o2",
-      "impacto_medio": 1.7281608581542969,
-      "peso_absoluto": 1.7288179397583008
+      "impacto_medio": 0.9875770807266235,
+      "peso_absoluto": 0.9899777770042419
     },
     {
-      "feature": "num__frecuencia_respiratoria",
-      "clinico": "num__frecuencia_respiratoria",
-      "impacto_medio": 0.6030139327049255,
-      "peso_absoluto": 0.6031134128570557
-    },
-    {
-      "feature": "num__presion_sistolica",
-      "clinico": "num__presion_sistolica",
-      "impacto_medio": 0.48798084259033203,
-      "peso_absoluto": 0.5594013333320618
+      "feature": "num__anio_nacimiento",
+      "clinico": "num__anio_nacimiento",
+      "impacto_medio": 0.6956844925880432,
+      "peso_absoluto": 0.7033642530441284
     },
     {
       "feature": "num__frecuencia_cardiaca",
       "clinico": "num__frecuencia_cardiaca",
-      "impacto_medio": 0.501606822013855,
-      "peso_absoluto": 0.512168824672699
+      "impacto_medio": 0.5473747849464417,
+      "peso_absoluto": 0.5502925515174866
     },
     {
       "feature": "num__temperatura",
       "clinico": "num__temperatura",
-      "impacto_medio": 0.31831008195877075,
-      "peso_absoluto": 0.35042867064476013
+      "impacto_medio": 0.2933928966522217,
+      "peso_absoluto": 0.36483269929885864
+    },
+    {
+      "feature": "num__frecuencia_respiratoria",
+      "clinico": "num__frecuencia_respiratoria",
+      "impacto_medio": 0.31044769287109375,
+      "peso_absoluto": 0.35091105103492737
     }
   ]
 }

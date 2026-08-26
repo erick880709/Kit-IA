@@ -9,74 +9,74 @@
   },
   "metricas": {
     "macro": {
-      "precision": 0.6039147869674185,
-      "recall": 0.6293367346938775,
-      "f1": 0.5966651992075721
+      "precision": 0.9333333333333332,
+      "recall": 0.9875,
+      "f1": 0.9535483870967741
     },
     "por_clase": {
       "I": {
-        "precision": 0.16666666666666666,
-        "recall": 0.5,
-        "f1-score": 0.25,
+        "precision": 0.6666666666666666,
+        "recall": 1.0,
+        "f1-score": 0.8,
         "support": 2.0
       },
       "II": {
-        "precision": 0.9166666666666666,
-        "recall": 0.6875,
-        "f1-score": 0.7857142857142857,
+        "precision": 1.0,
+        "recall": 0.9375,
+        "f1-score": 0.967741935483871,
         "support": 16.0
       },
       "III": {
-        "precision": 0.9962406015037594,
+        "precision": 1.0,
         "recall": 1.0,
-        "f1-score": 0.9981167608286252,
+        "f1-score": 1.0,
         "support": 530.0
       },
       "IV": {
-        "precision": 0.94,
-        "recall": 0.9591836734693877,
-        "f1-score": 0.9494949494949495,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
         "support": 49.0
       },
       "V": {
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1-score": 0.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
         "support": 3.0
       }
     },
-    "accuracy": 0.9816666666666667,
-    "auc_roc_ovr": 0.9873722302712544
+    "accuracy": 0.9983333333333333,
+    "auc_roc_ovr": 1.0
   },
   "calibracion": {
-    "brier": 0.026531151859762913,
-    "ece": 0.030610862043095554
+    "brier": 0.025965003925347743,
+    "ece": 0.047219901634080616
   },
   "ic_bootstrap": {
     "f1_macro": {
       "metrica": "f1_macro",
-      "punto": 0.5700882834241897,
+      "punto": 0.9391886514684127,
       "ic95": [
-        0.5427264747402532,
-        0.589353720329188
+        0.7328205039297272,
+        1.0
       ],
       "n_bootstrap": 1000
     },
     "accuracy": {
       "metrica": "accuracy",
-      "punto": 0.9863533333333332,
+      "punto": 0.9983316666666666,
       "ic95": [
-        0.975,
-        0.995
+        0.995,
+        1.0
       ],
       "n_bootstrap": 1000
     },
     "recall_i_ii": {
       "metrica": "recall_i_ii",
-      "punto": 0.18668218399910963,
+      "punto": 0.3766000000000001,
       "ic95": [
-        0.15384615384615385,
-        0.2
+        0.2,
+        0.4
       ],
       "n_bootstrap": 1000
     }
@@ -85,30 +85,30 @@
     "sexo": {
       "Femenino": {
         "n": 341,
-        "f1_macro": 0.6202665020322067,
-        "recall_i_ii": 0.24545454545454545
+        "f1_macro": 0.9504761904761905,
+        "recall_i_ii": 0.38181818181818183
       },
       "Masculino": {
         "n": 259,
-        "f1_macro": 0.5313953488372093,
-        "recall_i_ii": 0.12
+        "f1_macro": 0.8,
+        "recall_i_ii": 0.2
       }
     },
     "via_llegada": {
       "Ambulancia": {
         "n": 166,
-        "f1_macro": 0.4,
-        "recall_i_ii": 0.0
+        "f1_macro": 0.6,
+        "recall_i_ii": 0.2
       },
       "Particular": {
         "n": 302,
-        "f1_macro": 0.5325980392156863,
-        "recall_i_ii": 0.12727272727272726
+        "f1_macro": 0.7904761904761906,
+        "recall_i_ii": 0.18181818181818182
       },
       "Remisión": {
         "n": 132,
-        "f1_macro": 0.702415458937198,
-        "recall_i_ii": 0.3
+        "f1_macro": 1.0,
+        "recall_i_ii": 0.4
       }
     }
   },

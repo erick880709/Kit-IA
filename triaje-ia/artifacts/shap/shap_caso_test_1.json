@@ -2,37 +2,37 @@
   "caso": "test_1",
   "nivel_real": "III",
   "nivel_predicho": "III",
-  "probabilidad_maxima": 0.9842672644572824,
+  "probabilidad_maxima": 0.9903518137259895,
   "top_5": [
-    {
-      "feature": "num__saturacion_o2",
-      "clinico": "num__saturacion_o2",
-      "impacto_medio": 1.2387741804122925,
-      "peso_absoluto": 1.2387741804122925
-    },
     {
       "feature": "num__frecuencia_cardiaca",
       "clinico": "num__frecuencia_cardiaca",
-      "impacto_medio": 1.0058236122131348,
-      "peso_absoluto": 1.0058236122131348
+      "impacto_medio": 1.176051139831543,
+      "peso_absoluto": 1.176051139831543
     },
     {
-      "feature": "cat__regimen_NoAfiliado",
-      "clinico": "cat__regimen_NoAfiliado",
-      "impacto_medio": 0.7676951885223389,
-      "peso_absoluto": 0.7676951885223389
+      "feature": "num__anio_nacimiento",
+      "clinico": "num__anio_nacimiento",
+      "impacto_medio": 1.0218647718429565,
+      "peso_absoluto": 1.0218647718429565
+    },
+    {
+      "feature": "num__saturacion_o2",
+      "clinico": "num__saturacion_o2",
+      "impacto_medio": 0.6740396022796631,
+      "peso_absoluto": 0.6740396022796631
     },
     {
       "feature": "num__peso",
       "clinico": "num__peso",
-      "impacto_medio": 0.47731319069862366,
-      "peso_absoluto": 0.47731319069862366
+      "impacto_medio": 0.2100362777709961,
+      "peso_absoluto": 0.2100362777709961
     },
     {
-      "feature": "num__frecuencia_respiratoria",
-      "clinico": "num__frecuencia_respiratoria",
-      "impacto_medio": 0.3209739327430725,
-      "peso_absoluto": 0.3209739327430725
+      "feature": "num__presion_sistolica",
+      "clinico": "num__presion_sistolica",
+      "impacto_medio": -0.04549919068813324,
+      "peso_absoluto": 0.04549919068813324
     }
   ]
 }

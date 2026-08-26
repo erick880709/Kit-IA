@@ -2,51 +2,51 @@
   "modelo": "baseline_random_forest",
   "metricas": {
     "macro_cv": {
-      "precision": 0.5287187717273162,
-      "recall": 0.5632047850446019,
-      "f1": 0.5444611982077299
+      "precision": 0.7685227416626998,
+      "recall": 0.7623629998275308,
+      "f1": 0.7457749963988316
     },
     "k_folds": 5,
     "mejor_fold": {
       "macro": {
-        "precision": 0.5410646096761411,
-        "recall": 0.5872639437856829,
-        "f1": 0.5619781816511807
+        "precision": 0.9186963979416809,
+        "recall": 0.8308827404479577,
+        "f1": 0.8366843033509699
       },
       "por_clase": {
         "I": {
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1-score": 0.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1-score": 1.0,
           "support": 1.0
         },
         "II": {
-          "precision": 0.9375,
+          "precision": 1.0,
           "recall": 1.0,
-          "f1-score": 0.967741935483871,
+          "f1-score": 1.0,
           "support": 15.0
         },
         "III": {
-          "precision": 0.9958932238193019,
-          "recall": 0.9797979797979798,
-          "f1-score": 0.9877800407331976,
+          "precision": 0.9874213836477987,
+          "recall": 0.9515151515151515,
+          "f1-score": 0.9691358024691358,
           "support": 495.0
         },
         "IV": {
-          "precision": 0.7719298245614035,
-          "recall": 0.9565217391304348,
-          "f1-score": 0.8543689320388349,
+          "precision": 0.6060606060606061,
+          "recall": 0.8695652173913043,
+          "f1-score": 0.7142857142857143,
           "support": 46.0
         },
         "V": {
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1-score": 0.0,
+          "precision": 1.0,
+          "recall": 0.3333333333333333,
+          "f1-score": 0.5,
           "support": 3.0
         }
       },
-      "accuracy": 0.9714285714285714,
-      "auc_roc_ovr": 0.8994100380241383
+      "accuracy": 0.9428571428571428,
+      "auc_roc_ovr": 0.9812247184142151
     }
   }
 }

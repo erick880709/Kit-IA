@@ -30,71 +30,74 @@
   },
   "baselines": {
     "regresion_logistica": {
-      "precision": 0.4778778747645739,
-      "recall": 0.6214305135495067,
-      "f1": 0.48961590822582945
+      "precision": 0.5698052634163784,
+      "recall": 0.7674471168292679,
+      "f1": 0.6204793338513019
     },
     "random_forest": {
-      "precision": 0.5287187717273162,
-      "recall": 0.5632047850446019,
-      "f1": 0.5444611982077299
+      "precision": 0.7685227416626998,
+      "recall": 0.7623629998275308,
+      "f1": 0.7457749963988316
     },
     "xgboost": {
-      "precision": 0.5587004190562875,
-      "recall": 0.5486359244620115,
-      "f1": 0.5530103349664165
+      "precision": 0.7915738469274263,
+      "recall": 0.7778632016343686,
+      "f1": 0.7707926534045191
     }
   },
   "early_fusion": {
-    "precision": 0.6122567026810725,
-    "recall": 0.6284637681159421,
-    "f1": 0.6199564891271085
+    "precision": 0.9991489361702127,
+    "recall": 0.9866666666666667,
+    "f1": 0.9915698924731183
   },
   "late_fusion": {
     "promedio_ponderado": {
-      "precision": 0.5616938688669252,
-      "recall": 0.5506368028107159,
-      "f1": 0.5553688171864268
+      "precision": 0.9074324643170602,
+      "recall": 0.8174241908612618,
+      "f1": 0.8400873212258821
     },
     "stacking": {
-      "precision": 0.5623801716707549,
-      "recall": 0.5586368028107158,
-      "f1": 0.5596371573953969
+      "precision": 0.886068222638395,
+      "recall": 0.7882104765308426,
+      "f1": 0.8188943136810936
     }
   },
   "ganador_macro": {
-    "precision": 0.5562339915723374,
-    "recall": 0.5252551020408164,
-    "f1": 0.5391025921375758
+    "precision": 0.9333333333333332,
+    "recall": 0.9875,
+    "f1": 0.9535483870967741
   },
-  "auc_roc_ovr": 0.9887602062587411,
+  "auc_roc_ovr": 1.0,
   "metas_cumplidas": {
-    "f1": false,
-    "precision": false,
-    "recall": false,
+    "f1": true,
+    "precision": true,
+    "recall": true,
     "auc_roc": true
   },
   "umbrales": {
-    "I": 0.21934820679154587,
-    "II": 0.6895901653229229,
+    "I": 0.6660588827318008,
+    "II": 0.8850677914492527,
     "III": 0.5,
     "IV": 0.5,
-    "V": 0.5
+    "V": 0.682169494028356
   },
   "tuning_sub_a": {
     "mejor_config": {
       "max_depth": 5,
       "learning_rate": 0.1
     },
-    "macro_f1_val": 0.569087980286114
+    "macro_f1_val": 0.6334861302380485
   },
   "peso_estructurado": 0.5,
   "texto_sjd_holdout": {
-    "precision": 0.20019754079885327,
-    "recall": 0.21218435710861297,
-    "f1": 0.09989918595812194
+    "precision": 0.20073912524268517,
+    "recall": 0.20597046391361892,
+    "f1": 0.10413102324417393
   },
   "n_refuerzo_i_v": 800,
+  "n_simulados": 4000,
+  "n_simulados_por_nivel": 800,
+  "desviacion_max_simulacion_sd": 0.92,
   "ruta_modelo": "C:\\Users\\ELITEBOOK\\OneDrive\\Documentos\\Repositorio\\Trabajo\\kit-ia\\triaje-ia\\artifacts\\models\\modelo-latefusion-xgb-text-sjd-v20260826.joblib",
   "comparativa_benchmarks": [
     {
@@ -131,8 +134,8 @@
     },
     {
       "referencia": "TriajeIA (este proyecto)",
-      "auc": 0.9887602062587411,
-      "f1": 0.5391025921375758,
+      "auc": 1.0,
+      "f1": 0.9535483870967741,
       "nota": "Fusión tardía — dataset sintético demo",
       "es_benchmark": false
     }

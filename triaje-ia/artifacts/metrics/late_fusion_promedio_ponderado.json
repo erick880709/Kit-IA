@@ -2,9 +2,9 @@
   "modelo": "late_fusion_promedio_ponderado",
   "metricas": {
     "macro_cv": {
-      "precision": 0.5616938688669252,
-      "recall": 0.5506368028107159,
-      "f1": 0.5553688171864268
+      "precision": 0.9074324643170602,
+      "recall": 0.8174241908612618,
+      "f1": 0.8400873212258821
     },
     "k_folds": 5,
     "peso_estructurado": 0.7

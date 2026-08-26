@@ -1,8 +1,8 @@
 # Reporte de Auditoría Científica — TriajeIA
 
-- **Fecha:** 2026-08-26 19:55 UTC
+- **Fecha:** 2026-08-26 20:25 UTC
 - **Modelo:** modelo-latefusion-xgb-text-sjd-v20260826 · **Artefacto:** modelo-latefusion-xgb-text-sjd-v20260826.joblib
-- **Semilla:** 42 · **Git:** bff250a
+- **Semilla:** 42 · **Git:** 0d8b08b
 
 ## Fase 1 · Prevención de fuga de datos
 | Severidad | Hallazgo |
@@ -22,25 +22,25 @@
 ## Fase 3 · Validación estadística de comparaciones
 | Severidad | Hallazgo |
 |---|---|
-| info | McNemar ganador vs regla mayoritaria: b=0 c=59 p=0.0000 (significativo) |
-| info | IC95 macro-F1: [0.5427264747402532, 0.589353720329188] · accuracy: [0.975, 0.995] · recall I-II: [0.15384615384615385, 0.2] |
+| info | McNemar ganador vs regla mayoritaria: b=0 c=69 p=0.0000 (significativo) |
+| info | IC95 macro-F1: [0.7328205039297272, 1.0] · accuracy: [0.995, 1.0] · recall I-II: [0.2, 0.4] |
 
 ## Fase 4 · Calibración de probabilidades
 | Severidad | Hallazgo |
 |---|---|
-| info | Brier multiclase: 0.0265 · ECE: 0.0306 |
+| info | Brier multiclase: 0.0260 · ECE: 0.0472 |
 
 ## Fase 5 · Auditoría de sesgo y equidad
 | Severidad | Hallazgo |
 |---|---|
-| info | Equidad por sexo: {"Femenino": {"n": 341, "f1_macro": 0.6202665020322067, "recall_i_ii": 0.24545454545454545}, "Masculino": {"n": 259, "f1_macro": 0.5313953488372093, "recall_i_ii": 0.12}} |
-| info | Equidad por vía de llegada: {"Ambulancia": {"n": 166, "f1_macro": 0.4, "recall_i_ii": 0.0}, "Particular": {"n": 302, "f1_macro": 0.5325980392156863, "recall_i_ii": 0.12727272727272726}, "Remisión": {"n": 132, "f1_macro": 0.702415458937198, "recall_i_ii": 0.3}} |
+| info | Equidad por sexo: {"Femenino": {"n": 341, "f1_macro": 0.9504761904761905, "recall_i_ii": 0.38181818181818183}, "Masculino": {"n": 259, "f1_macro": 0.8, "recall_i_ii": 0.2}} |
+| info | Equidad por vía de llegada: {"Ambulancia": {"n": 166, "f1_macro": 0.6, "recall_i_ii": 0.2}, "Particular": {"n": 302, "f1_macro": 0.7904761904761906, "recall_i_ii": 0.18181818181818182}, "Remisión": {"n": 132, "f1_macro": 1.0, "recall_i_ii": 0.4}} |
 | advertencia | Auditoría de equidad sobre demo SINTÉTICO: los subgrupos son andamiaje metodológico; la auditoría definitiva requiere MIMIC/SJdD con variables demográficas reales (fuente, régimen, sexo, edad). |
 
 ## Fase 6 · Trazabilidad y reproducibilidad
 | Severidad | Hallazgo |
 |---|---|
-| info | Semilla 42 · artefacto modelo-latefusion-xgb-text-sjd-v20260826 · git bff250a |
+| info | Semilla 42 · artefacto modelo-latefusion-xgb-text-sjd-v20260826 · git 0d8b08b |
 
 ## Veredicto
 - **Leakage:** SIN EVIDENCIA DE FUGA tras corrección (escalador solo en train,

@@ -2,9 +2,9 @@
   "modelo": "late_fusion_stacking",
   "metricas": {
     "macro_cv": {
-      "precision": 0.5623801716707549,
-      "recall": 0.5586368028107158,
-      "f1": 0.5596371573953969
+      "precision": 0.886068222638395,
+      "recall": 0.7882104765308426,
+      "f1": 0.8188943136810936
     },
     "k_folds": 5,
     "peso_estructurado": 0.7
