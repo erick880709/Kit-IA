@@ -41,6 +41,7 @@ from ml.src.data.ingesta import (
     ingestar_triage_nacional,
 )
 from ml.src.data.mapeo_cie11 import normalizar_token_cie, remapear_cie11
+from ml.src.data.simulacion import generar_simulados_balanceados, resumen_similitud
 from ml.src.evaluation.benchmarks import tabla_comparativa
 from ml.src.evaluation.metrics import (
     CLASES,
@@ -66,6 +67,10 @@ from ml.src.registry import serializar_paquete
 DATASETS_DIR = ML_ROOT.parents[1] / "datasets"
 SJD_CSV = DATASETS_DIR / "dataset_urgencias_san_juan_de_dios_custom.csv"
 NACIONAL_CSV = DATASETS_DIR / "clasificacion_triage_urgencias_20260813.csv"
+
+# Simulación balanceada (2026-08-26): filas sintéticas POR nivel que replican
+# la distribución real del split de entrenamiento (anti-leakage estricto).
+N_SIM_POR_NIVEL = 800
 
 # Búsqueda de hiperparámetros del submodelo estructurado (acotada al demo).
 _GRILLA_XGB = [
@@ -257,6 +262,29 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
     if faltantes:
         raise SystemExit(f"El demo no contiene todas las clases en train: {faltantes} — suba --n")
 
+    # Simulación balanceada (2026-08-26): oversampling tipo SMOTE que replica
+    # la distribución empírica POR NIVEL del split de entrenamiento (nunca
+    # val/test). Como el refuerzo: sin LimpiezaOutliers y sin entrar en la
+    # calibración de umbrales ni en el test honesto.
+    sim_bal = anonimizar(
+        ValidadorCalidad.validar(
+            NormalizadorRegimen.normalizar(
+                generar_simulados_balanceados(train, n_por_nivel=N_SIM_POR_NIVEL)
+            )
+        )
+    )
+    sim_bal["_texto_completo"] = (
+        sim_bal["motivo_codigo_cie10"].fillna("").map(normalizar_token_cie)
+        + " " + sim_bal["motivo_texto"].fillna("")
+    ).str.strip()
+    informe_similitud = resumen_similitud(train, sim_bal)
+    desviacion_max = max(
+        (abs(v) for desvs in informe_similitud.values() for v in desvs.values()),
+        default=0.0,
+    )
+    print(f"    Simulados balanceados: {len(sim_bal)} ejemplos ({N_SIM_POR_NIVEL}/nivel, "
+          f"estadística real de train) · desv. máxima {desviacion_max:.2f}σ")
+
     print("3/10 · Pipeline estructurado ajustado SOLO sobre train (anti-leakage)")
     _, pipeline_est = construir_matriz_estructurada(train)
     X_est = pipeline_est.transform(demo)
@@ -264,6 +292,10 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
     X_est_ref = pipeline_est.transform(ref_iv)
     X_est_ref = (
         X_est_ref.toarray() if hasattr(X_est_ref, "toarray") else np.asarray(X_est_ref)
+    )
+    X_est_sim = pipeline_est.transform(sim_bal)
+    X_est_sim = (
+        X_est_sim.toarray() if hasattr(X_est_sim, "toarray") else np.asarray(X_est_sim)
     )
 
     print("4/10 · TF-IDF sobre CIE+texto (demo train + SJdD + MIMIC + catálogo)")
@@ -307,6 +339,7 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
         if mimic is not None else None
     )
     X_txt_ref = vectorizador.transformar_disperso(ref_iv["_texto_completo"])
+    X_txt_sim = vectorizador.transformar_disperso(sim_bal["_texto_completo"])
 
     print("5/10 · Baselines unimodales (LR, RF, XGBoost)")
     baselines = entrenar_baselines(X_est[tr_idx], y[tr_idx], k_folds=k_folds)
@@ -320,16 +353,20 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
         k_folds=k_folds, combinadores=("promedio_ponderado", "stacking"),
     )
 
-    print("7/10 · Ganador: fusión tardía afinada (XGBoost afinado + LR texto) + refuerzo I/V")
+    print("7/10 · Ganador: fusión tardía afinada (XGBoost + LR texto) "
+          "+ refuerzo I/V + simulación balanceada")
     y_ref_enc = encoder.transform(ref_iv["nivel_triaje"].to_numpy())
-    X_est_ent = np.vstack([X_est[tr_idx], X_est_ref[tr_ref_idx]])
-    y_ent_enc = np.concatenate([y_tr_enc, y_ref_enc[tr_ref_idx]])
+    y_sim_enc = encoder.transform(sim_bal["nivel_triaje"].to_numpy())
+    X_est_ent = np.vstack([X_est[tr_idx], X_est_ref[tr_ref_idx], X_est_sim])
+    y_ent_enc = np.concatenate([y_tr_enc, y_ref_enc[tr_ref_idx], y_sim_enc])
     sub_a, tuning = _sintonizar_submodelo_estructurado(
         X_est_ent, y_ent_enc, X_est[va_idx], encoder.transform(y[va_idx]),
         semilla=SEMILLA_GLOBAL,
     )
-    y_texto = np.concatenate([y_tr_enc, y_ref_enc[tr_ref_idx]])
-    X_texto = sp.vstack([X_txt_demo[tr_idx], X_txt_ref[tr_ref_idx]]).tocsr()
+    y_texto = np.concatenate([y_tr_enc, y_ref_enc[tr_ref_idx], y_sim_enc])
+    X_texto = sp.vstack(
+        [X_txt_demo[tr_idx], X_txt_ref[tr_ref_idx], X_txt_sim]
+    ).tocsr()
     if sjd is not None:
         y_texto = np.concatenate(
             [y_texto, encoder.transform(sjd["nivel_triaje"].to_numpy())]
@@ -363,14 +400,22 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
 
     proba_val = ganador.predict_proba(X_est[va_idx], X_txt_demo[va_idx])
     # Calibración de umbrales reforzada: validación del demo + holdout del
-    # refuerzo I/V (sin refuerzo, Youden se calcula con ~2 ejemplos I).
+    # refuerzo I/V. Ponderación 2026-08-26: la distribución OPERATIVA (real)
+    # domina la decisión (×50); los anclajes sintéticos solo dan soporte.
     proba_ref_cal = ganador.predict_proba(
         X_est_ref[cal_ref_idx], X_txt_ref[cal_ref_idx]
     )
     y_cal = np.concatenate([y[va_idx], ref_iv["nivel_triaje"].to_numpy()[cal_ref_idx]])
     proba_cal = np.vstack([proba_val, proba_ref_cal])
-    umbrales = ajustar_umbrales(y_cal, proba_cal)
-    print(f"    umbrales recalibrados (val + refuerzo): {json.dumps(umbrales, ensure_ascii=False)}")
+    pesos_cal = np.concatenate([
+        np.full(len(va_idx), 50.0),
+        np.ones(len(cal_ref_idx)),
+    ])
+    umbrales = ajustar_umbrales(
+        y_cal, proba_cal, pesos=pesos_cal, priorizar=("I", "II", "V")
+    )
+    print(f"    umbrales recalibrados (val real ×50 + refuerzo): "
+          f"{json.dumps(umbrales, ensure_ascii=False)}")
     proba_test = ganador.predict_proba(X_est[te_idx], X_txt_demo[te_idx])
     pred_test = aplicar_umbrales(proba_test, umbrales)
     metricas = metricas_por_clase(encoder.transform(y[te_idx]), pred_test, proba_test)
@@ -384,6 +429,9 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
             "metas": metas, "umbrales": umbrales, "tuning": tuning,
             "peso_estructurado": mejor_peso,
             "n_refuerzo_i_v": int(len(ref_iv)),
+            "n_simulados": int(len(sim_bal)),
+            "n_simulados_por_nivel": N_SIM_POR_NIVEL,
+            "desviacion_max_simulacion_sd": round(desviacion_max, 3),
         },
     )
 
@@ -436,6 +484,9 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
             evidencia_sjd["macro"] if evidencia_sjd is not None else None
         ),
         "n_refuerzo_i_v": int(len(ref_iv)),
+        "n_simulados": int(len(sim_bal)),
+        "n_simulados_por_nivel": N_SIM_POR_NIVEL,
+        "desviacion_max_simulacion_sd": round(desviacion_max, 3),
         "ruta_modelo": str(ruta_modelo),
         "comparativa_benchmarks": comparativa,
     }

@@ -15,8 +15,6 @@ import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-_CACHE: dict[str, np.ndarray] = {}
-
 
 def _llave(texto: str) -> str:
     return hashlib.sha256(texto.encode("utf-8")).hexdigest()
@@ -27,6 +25,10 @@ class VectorizadorTexto:
 
     def __init__(self, max_features: int = 500, ngram: tuple[int, int] = (1, 2)) -> None:
         self._vectorizador = TfidfVectorizer(max_features=max_features, ngram_range=ngram)
+        # Cache POR INSTANCIA (2026-08-26): la clave por texto a nivel de módulo
+        # colisionaba entre vectorizadores con vocabularios distintos (p. ej.
+        # 60 vs 80 features) y producía matrices con filas de dimensiones mixtas.
+        self._cache: dict[str, np.ndarray] = {}
 
     def fit(self, textos: pd.Series, textos_extra: pd.Series | None = None) -> VectorizadorTexto:
         """Ajusta el vocabulario sobre `textos` (+ `textos_extra` sin etiqueta).
@@ -52,9 +54,9 @@ class VectorizadorTexto:
         salida = []
         for texto in textos.fillna(""):
             clave = _llave(str(texto))
-            if clave not in _CACHE:  # cache por texto (demo < 3 s)
-                _CACHE[clave] = self._vectorizador.transform([str(texto)]).toarray()[0]
-            salida.append(_CACHE[clave])
+            if clave not in self._cache:  # cache por texto (demo < 3 s)
+                self._cache[clave] = self._vectorizador.transform([str(texto)]).toarray()[0]
+            salida.append(self._cache[clave])
         return np.vstack(salida)
 
     def transformar_disperso(self, textos: pd.Series):

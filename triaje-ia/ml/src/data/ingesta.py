@@ -161,72 +161,119 @@ class FuenteSinteticaDemo:
         n = self.n
         nivel = rng.choice(niveles, size=n, p=probs)
 
-        # Inyección de señal clínica: los signos se generan condicionados al nivel
-        # para que el demo sea aprendible (documentado como limitación del
-        # sintético frente a MIMIC real).
-        altos = (nivel == "I") | (nivel == "II")
-        medios = nivel == "III"
-        bajos = ~(altos | medios)
+        # Inyección de señal clínica POR NIVEL (Res. 5596/2015): cada nivel de
+        # urgencia tiene un perfil de signos y motivos distinguible, para que
+        # el demo sea aprendible en las 5 clases (documentado como limitación
+        # del sintético frente a MIMIC real). Mejora 2026-08-26: antes I/II y
+        # IV/V compartían la MISMA distribución (indistinguibles para el modelo).
+        nivel_i = nivel == "I"      # riesgo vital inminente
+        nivel_ii = nivel == "II"    # emergencia
+        nivel_iii = nivel == "III"  # urgencia
+        nivel_iv = nivel == "IV"    # urgencia menor
+        nivel_v = nivel == "V"      # sin urgencia
 
-        def _grupo(mask):
-            return {"spo2": rng.integers(78, 94, mask.sum()),
-                    "fr": rng.integers(24, 40, mask.sum()),
-                    "hr": rng.integers(100, 145, mask.sum()),
-                    "t": np.round(rng.uniform(37.4, 40.6, mask.sum()), 1),
-                    "pas": rng.integers(70, 108, mask.sum())}
+        def _grupo_i(mask):
+            return {"spo2": rng.integers(75, 89, mask.sum()),
+                    "fr": rng.integers(28, 41, mask.sum()),
+                    "hr": rng.integers(120, 161, mask.sum()),
+                    "t": np.round(rng.uniform(38.5, 41.1, mask.sum()), 1),
+                    "pas": rng.integers(60, 96, mask.sum())}
 
-        def _grupo_medio(mask):
+        def _grupo_ii(mask):
+            return {"spo2": rng.integers(88, 94, mask.sum()),
+                    "fr": rng.integers(22, 31, mask.sum()),
+                    "hr": rng.integers(100, 131, mask.sum()),
+                    "t": np.round(rng.uniform(37.8, 39.6, mask.sum()), 1),
+                    "pas": rng.integers(90, 111, mask.sum())}
+
+        def _grupo_iii(mask):
             return {"spo2": rng.integers(92, 98, mask.sum()),
                     "fr": rng.integers(16, 27, mask.sum()),
-                    "hr": rng.integers(70, 112, mask.sum()),
-                    "t": np.round(rng.uniform(36.2, 38.6, mask.sum()), 1),
+                    "hr": rng.integers(75, 111, mask.sum()),
+                    "t": np.round(rng.uniform(36.5, 38.6, mask.sum()), 1),
                     "pas": rng.integers(100, 146, mask.sum())}
 
-        def _grupo_leve(mask):
-            return {"spo2": rng.integers(95, 100, mask.sum()),
-                    "fr": rng.integers(12, 23, mask.sum()),
-                    "hr": rng.integers(55, 96, mask.sum()),
-                    "t": np.round(rng.uniform(35.8, 37.9, mask.sum()), 1),
-                    "pas": rng.integers(105, 168, mask.sum())}
+        def _grupo_iv(mask):
+            return {"spo2": rng.integers(94, 99, mask.sum()),
+                    "fr": rng.integers(14, 23, mask.sum()),
+                    "hr": rng.integers(65, 101, mask.sum()),
+                    "t": np.round(rng.uniform(36.2, 37.9, mask.sum()), 1),
+                    "pas": rng.integers(100, 136, mask.sum())}
+
+        def _grupo_v(mask):
+            return {"spo2": rng.integers(97, 101, mask.sum()),
+                    "fr": rng.integers(12, 19, mask.sum()),
+                    "hr": rng.integers(58, 86, mask.sum()),
+                    "t": np.round(rng.uniform(36.0, 37.4, mask.sum()), 1),
+                    "pas": rng.integers(105, 141, mask.sum())}
 
         spo2, fr, hr, t, pas = (
             np.empty(n, dtype=float), np.empty(n, dtype=float),
             np.empty(n, dtype=float), np.empty(n, dtype=float),
             np.empty(n, dtype=float),
         )
-        for mask, gen in ((altos, _grupo), (medios, _grupo_medio), (bajos, _grupo_leve)):
+        for mask, gen in (
+            (nivel_i, _grupo_i), (nivel_ii, _grupo_ii), (nivel_iii, _grupo_iii),
+            (nivel_iv, _grupo_iv), (nivel_v, _grupo_v),
+        ):
             g = gen(mask)
             spo2[mask], fr[mask], hr[mask], t[mask], pas[mask] = (
                 g["spo2"], g["fr"], g["hr"], g["t"], g["pas"],
             )
 
-        textos_altos = [
-            "Dolor opresivo retroesternal de 2 horas",
-            "Tos con expectoración y disnea marcada",
-            "Caída con golpe en la cabeza y somnolencia",
-            "Dificultad respiratoria severa desde anoche",
-        ]
-        textos_medios = [
-            "Dolor abdominal de 3 días de evolución",
-            "Vómito y diarrea desde hace 24 horas",
-            "Cefalea intensa desde anoche",
-            "Fiebre de 39 grados desde ayer",
-        ]
-        textos_bajos = [
-            "Congestión nasal y malestar general",
-            "Dolor lumbar al esfuerzo",
-            "Ardor al orinar",
-            "Control y dolor leve de tobillo",
-        ]
+        motivos_por_nivel = {
+            "I": (
+                [
+                    "Dificultad respiratoria severa con cianosis central",
+                    "Dolor torácico opresivo irradiado con sudoración fría",
+                    "Sangrado activo por herida profunda",
+                    "Convulsión activa con deterioro de conciencia",
+                ],
+                ["R06.0", "R07.4", "S99.9", "R56.8"],
+            ),
+            "II": (
+                [
+                    "Tos con expectoración y disnea marcada",
+                    "Dolor abdominal intenso de inicio súbito",
+                    "Fiebre alta con deshidratación moderada",
+                    "Cefalea súbita intensa con vómito",
+                ],
+                ["J18.9", "R10.4", "R50.9", "R51"],
+            ),
+            "III": (
+                [
+                    "Dolor abdominal de 3 días de evolución",
+                    "Vómito y diarrea desde hace 24 horas",
+                    "Cefalea intensa desde anoche",
+                    "Fiebre de 39 grados desde ayer",
+                ],
+                ["R10.4", "A09", "R51", "R50.9"],
+            ),
+            "IV": (
+                [
+                    "Dolor lumbar al esfuerzo",
+                    "Ardor al orinar",
+                    "Dolor leve de tobillo tras caída",
+                    "Malestar general sin fiebre",
+                ],
+                ["M54.5", "N39.0", "S93.4", "R53"],
+            ),
+            "V": (
+                [
+                    "Congestión nasal sin otros síntomas",
+                    "Renovación de fórmula médica",
+                    "Control de presión arterial sin síntomas",
+                    "Solicitud de certificado médico",
+                ],
+                ["J00", "Z76.0", "Z71.9", "Z02.9"],
+            ),
+        }
         motivo_texto = np.empty(n, dtype=object)
-        for mask, pool in ((altos, textos_altos), (medios, textos_medios), (bajos, textos_bajos)):
-            motivo_texto[mask] = rng.choice(pool, size=mask.sum())
-        cie_altos = ["R07.4", "J18.9", "S09.9", "R06.0"]
-        cie_medios = ["R10.4", "A09", "R51", "R50.9"]
-        cie_bajos = ["J00", "M54.5", "N39.0", "S93.4"]
         cie = np.empty(n, dtype=object)
-        for mask, pool in ((altos, cie_altos), (medios, cie_medios), (bajos, cie_bajos)):
-            cie[mask] = rng.choice(pool, size=mask.sum())
+        for nivel_clase, (pool_t, pool_c) in motivos_por_nivel.items():
+            mask = nivel == nivel_clase
+            motivo_texto[mask] = rng.choice(pool_t, size=mask.sum())
+            cie[mask] = rng.choice(pool_c, size=mask.sum())
 
         df = pd.DataFrame(
             {

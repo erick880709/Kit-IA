@@ -13,9 +13,18 @@ from ml.src.evaluation.metrics import CLASES
 
 
 def ajustar_umbrales(
-    y_true: np.ndarray, y_proba: np.ndarray, *, priorizar: tuple[str, ...] = ("I", "II")
+    y_true: np.ndarray,
+    y_proba: np.ndarray,
+    *,
+    priorizar: tuple[str, ...] = ("I", "II"),
+    pesos: np.ndarray | None = None,
 ) -> dict[str, float]:
-    """Umbral óptimo por clase maximizando recall en las clases priorizadas."""
+    """Umbral óptimo por clase maximizando recall en las clases priorizadas.
+
+    `pesos` pondera cada fila de calibración (sample_weight de la ROC): sirve
+    para que los datos REALES dominen la decisión frente a anclajes sintéticos
+    (mejora 2026-08-26).
+    """
     umbrales: dict[str, float] = {}
     for i, clase in enumerate(CLASES):
         if clase not in priorizar:
@@ -25,7 +34,9 @@ def ajustar_umbrales(
         if y_bin.sum() == 0:  # clase ausente en validación: conservador 0.5
             umbrales[clase] = 0.5
             continue
-        fpr, tpr, thresholds = roc_curve(y_bin, y_proba[:, i])
+        fpr, tpr, thresholds = roc_curve(
+            y_bin, y_proba[:, i], sample_weight=pesos
+        )
         puntajes = tpr - fpr  # Youden J
         mejor = int(np.argmax(puntajes))
         umbral = float(thresholds[mejor]) if mejor < len(thresholds) else 0.5
