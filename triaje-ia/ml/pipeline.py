@@ -38,6 +38,7 @@ from ml.src.data.ingesta import (
     ingestar_san_juan_de_dios,
     ingestar_triage_nacional,
 )
+from ml.src.data.mapeo_cie11 import remapear_cie11
 from ml.src.evaluation.benchmarks import tabla_comparativa
 from ml.src.evaluation.metrics import (
     CLASES,
@@ -189,6 +190,23 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
     if MIMIC_DIR.exists():
         mimic = _preparar(ingestar_mimic_ed(MIMIC_DIR))
         print(f"    MIMIC-IV-ED local: {len(mimic)} eventos (chief complaint + acuity)")
+
+    # Vocabulario CIE-11 (2026-08-26): re-codifica los motivos etiquetados al
+    # estándar CIE-11 para que el TF-IDF aprenda los MISMOS tokens que produce
+    # la pantalla de evaluación clínica. Códigos fuera del catálogo quedan
+    # intactos (diagnósticos reales de SJdD no catalogados).
+    demo["motivo_codigo_cie10"] = (
+        demo["motivo_codigo_cie10"].fillna("").map(remapear_cie11)
+    )
+    if sjd is not None:
+        sjd["motivo_codigo_cie10"] = (
+            sjd["motivo_codigo_cie10"].fillna("").map(remapear_cie11)
+        )
+    if mimic is not None:
+        mimic["motivo_codigo_cie10"] = (
+            mimic["motivo_codigo_cie10"].fillna("").map(remapear_cie11)
+        )
+
     calibracion = _calibrar_distribucion(nacional, demo)
 
     print("2/10 · Split estratificado 70/15/15 del demo (ANTES de tocar features)")
