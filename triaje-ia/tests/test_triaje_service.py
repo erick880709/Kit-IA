@@ -364,13 +364,16 @@ def _paciente_nacido(session: Session, numero: str, nacimiento: date) -> str:
     return session.query(Paciente).filter_by(numero_documento=numero).one().id
 
 
-def test_edad_en_anios_borde_16() -> None:
+def test_edad_en_anios_borde_16_y_60() -> None:
     hoy = date(2026, 8, 26)
-    assert triaje_service.edad_en_anios(date(2010, 8, 26), hoy) == 16  # cumple hoy
+    assert triaje_service.edad_en_anios(date(2010, 8, 26), hoy) == 16  # cumple 16 hoy
     assert triaje_service.edad_en_anios(date(2010, 8, 27), hoy) == 15
     assert triaje_service.edad_en_anios(date(2010, 8, 25), hoy) == 16
     assert triaje_service.edad_en_anios(date(2012, 1, 1), hoy) == 14
     assert triaje_service.edad_en_anios(date(1986, 2, 12), hoy) == 40
+    assert triaje_service.edad_en_anios(date(1966, 8, 26), hoy) == 60  # cumple 60 hoy
+    assert triaje_service.edad_en_anios(date(1966, 8, 27), hoy) == 59
+    assert triaje_service.edad_en_anios(date(1965, 8, 26), hoy) == 61
 
 
 def test_menor_de_16_cierra_automaticamente_con_trazabilidad(session: Session) -> None:
@@ -401,6 +404,61 @@ def test_16_anios_exactos_si_aplican_recomendacion_ia(session: Session) -> None:
     assert evento.estado == "Registrado"
     assert evento.cierre is None
     assert evento.motivo_cierre is None
+
+
+def test_60_anios_exactos_si_aplican_recomendacion_ia(session: Session) -> None:
+    hoy = date(2026, 8, 26)
+    adulto_id = _paciente_nacido(session, "9901010005", date(1966, 8, 26))  # 60 exactos
+    evento = triaje_service.crear_evento(
+        session, paciente_id=adulto_id, usuario_id=USUARIO, hoy=hoy
+    )
+    assert evento.estado == "Registrado"
+    assert evento.cierre is None
+    assert evento.motivo_cierre is None
+
+
+def test_mayor_de_60_cierra_automaticamente_con_trazabilidad(session: Session) -> None:
+    hoy = date(2026, 8, 26)
+    mayor_id = _paciente_nacido(session, "9901010004", date(1950, 1, 1))  # 76 años
+    evento = triaje_service.crear_evento(
+        session, paciente_id=mayor_id, usuario_id=USUARIO, hoy=hoy
+    )
+    assert evento.estado == "Cerrado"
+    assert evento.cierre is not None
+    assert evento.nivel_sugerido_ia is None
+    assert evento.nivel_asignado_profesional is None
+    assert "mayor de 60 años" in (evento.motivo_cierre or "")
+    assert "100%" in (evento.motivo_cierre or "")
+    auditorias = session.query(Auditoria).all()
+    assert any(r.accion == "CIERRE_AUTOMATICO_MAYOR" for r in auditorias)
+    assert any(
+        r.accion == "CAMBIO_ESTADO" and (r.detalle or "").endswith("Cerrado")
+        for r in auditorias
+    )
+
+
+def test_61_anios_cierra_automaticamente(session: Session) -> None:
+    hoy = date(2026, 8, 26)
+    mayor_id = _paciente_nacido(session, "9901010006", date(1965, 8, 26))  # 61 años
+    evento = triaje_service.crear_evento(
+        session, paciente_id=mayor_id, usuario_id=USUARIO, hoy=hoy
+    )
+    assert evento.estado == "Cerrado"
+    assert "mayor de 60 años" in (evento.motivo_cierre or "")
+
+
+def test_mayor_cerrado_no_admite_ia_ni_reclasificacion(session: Session) -> None:
+    hoy = date(2026, 8, 26)
+    mayor_id = _paciente_nacido(session, "9901010007", date(1948, 3, 3))  # 78 años
+    evento = triaje_service.crear_evento(
+        session, paciente_id=mayor_id, usuario_id=USUARIO, hoy=hoy
+    )
+    assert evento.estado == "Cerrado"
+    with pytest.raises(ValidationError):
+        triaje_service.reclasificar(
+            session, evento_original_id=evento.id, nuevo_nivel="II",
+            motivo="x", usuario_id=USUARIO,
+        )
 
 
 def test_menor_cerrado_no_admite_ia_ni_reclasificacion(session: Session) -> None:

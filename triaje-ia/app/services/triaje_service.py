@@ -38,12 +38,24 @@ from app.services import audit_service
 logger = logging.getLogger(__name__)
 
 # Regla de aplicabilidad del sistema de recomendación IA (ámbito adulto,
-# Res. 5596/2015): aplica SOLO a personas de 16 años en adelante.
+# Res. 5596/2015): aplica SOLO a personas entre 16 y 60 años (inclusive).
 EDAD_MINIMA_TRIaje_IA = 16
+EDAD_MAXIMA_TRIaje_IA = 60
+
+_MOTIVO_SUFIJO_FUERA_RANGO = (
+    "el sistema de recomendación IA no aplica; el diagnóstico del nivel de urgencia "
+    "recae 100% en el profesional y el triaje de la herramienta no puede usarse "
+    "como apoyo."
+)
 
 MOTIVO_CIERRE_MENOR = (
-    "Paciente menor de 16 años — el sistema de recomendación IA no aplica; "
-    "el nivel de atención de la urgencia recae completamente en el profesional."
+    f"Paciente menor de 16 años (fuera del rango {EDAD_MINIMA_TRIaje_IA}-"
+    f"{EDAD_MAXIMA_TRIaje_IA} años) — {_MOTIVO_SUFIJO_FUERA_RANGO}"
+)
+
+MOTIVO_CIERRE_MAYOR = (
+    f"Paciente mayor de 60 años (fuera del rango {EDAD_MINIMA_TRIaje_IA}-"
+    f"{EDAD_MAXIMA_TRIaje_IA} años) — {_MOTIVO_SUFIJO_FUERA_RANGO}"
 )
 
 # ---------- Búsqueda e historial (HU-E2-02 / HU-E2-03) ----------
@@ -104,10 +116,11 @@ def crear_evento(
 ) -> EventoTriaje:
     """Crea el evento y aplica la regla de aplicabilidad por edad:
 
-    - 16 años en adelante: flujo normal con recomendación IA.
-    - Menor de 16: NO se aplica la recomendación IA; el evento queda cerrado
-      automáticamente y el nivel de urgencia recae en el profesional, dejando
-      trazabilidad completa en auditoría.
+    - Entre 16 y 60 años (inclusive): flujo normal con recomendación IA.
+    - Fuera de ese rango (menor de 16 o mayor de 60): NO se aplica la
+      recomendación IA; el evento queda cerrado automáticamente y el
+      diagnóstico del nivel de urgencia recae 100% en el profesional,
+      dejando trazabilidad completa en auditoría.
     """
     paciente = session.get(Paciente, paciente_id)
     if paciente is None:
@@ -119,21 +132,26 @@ def crear_evento(
         session, usuario_id=usuario_id, accion="CREAR_EVENTO",
         entidad="EventoTriaje", detalle=evento.id, commit=False,
     )
-    if edad_en_anios(paciente.fecha_nacimiento, hoy) < EDAD_MINIMA_TRIaje_IA:
+    edad = edad_en_anios(paciente.fecha_nacimiento, hoy)
+    if not (EDAD_MINIMA_TRIaje_IA <= edad <= EDAD_MAXIMA_TRIaje_IA):
+        es_menor = edad < EDAD_MINIMA_TRIaje_IA
+        motivo = MOTIVO_CIERRE_MENOR if es_menor else MOTIVO_CIERRE_MAYOR
+        accion = "CIERRE_AUTOMATICO_MENOR" if es_menor else "CIERRE_AUTOMATICO_MAYOR"
         transicionar_estado(
             session, evento_id=evento.id, nuevo_estado="Cerrado", usuario_id=usuario_id
         )
         evento.cierre = datetime.now(UTC)
-        evento.motivo_cierre = MOTIVO_CIERRE_MENOR
+        evento.motivo_cierre = motivo
         audit_service.registrar(
-            session, usuario_id=usuario_id, accion="CIERRE_AUTOMATICO_MENOR",
+            session, usuario_id=usuario_id, accion=accion,
             entidad="EventoTriaje", evento_id=evento.id,
-            detalle=f"{evento.id} · {MOTIVO_CIERRE_MENOR}", commit=False,
+            detalle=f"{evento.id} · {motivo}", commit=False,
         )
         logger.info(
-            "Evento %s creado y cerrado automáticamente: paciente %s menor de %s años "
-            "— sin recomendación IA, nivel a cargo del profesional",
-            evento.id, paciente_id, EDAD_MINIMA_TRIaje_IA,
+            "Evento %s creado y cerrado automáticamente: paciente %s (%s años, "
+            "fuera del rango %s-%s) — sin recomendación IA, diagnóstico 100%% "
+            "a cargo del profesional",
+            evento.id, paciente_id, edad, EDAD_MINIMA_TRIaje_IA, EDAD_MAXIMA_TRIaje_IA,
         )
     session.commit()  # cambio + auditoría en una sola transacción
     logger.info(
@@ -505,8 +523,8 @@ def reclasificar(
         )
     if original.motivo_cierre:
         raise ValidationError(
-            "Evento cerrado automáticamente (menor de 16 años) — sin recomendación "
-            "IA, la reclasificación asistida no aplica",
+            "Evento cerrado automáticamente (fuera del rango 16-60 años) — sin "
+            "recomendación IA, la reclasificación asistida no aplica",
             detalle=evento_original_id,
         )
     anterior = original.nivel_asignado_profesional

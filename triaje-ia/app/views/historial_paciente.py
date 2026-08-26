@@ -45,8 +45,9 @@ def render() -> None:
             )
             if evento.motivo_cierre:
                 c1.caption(
-                    "🔒 Cierre automático — menor de 16 años (sin recomendación IA; "
-                    "nivel de atención a cargo del profesional)."
+                    "🔒 Cierre automático — paciente fuera del rango de aplicabilidad "
+                    "(16-60 años); el diagnóstico del nivel de urgencia recae 100% en "
+                    "el profesional (sin recomendación IA)."
                 )
             if evento.motivo_reclasificacion:
                 c1.caption(f"Reclasificación: {evento.motivo_reclasificacion}")

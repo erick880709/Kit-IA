@@ -243,8 +243,8 @@ def render() -> None:
                 )
             st.session_state["paciente_id"] = nuevo_id
             st.session_state.pop("paciente_nuevo_para_triaje", None)
-            if nuevo.estado == "Cerrado":  # menor de 16: sin recomendación IA
-                st.session_state["aviso_cierre_menor"] = True
+            if nuevo.estado == "Cerrado":  # fuera del rango 16-60: sin IA
+                st.session_state["aviso_cierre_motivo"] = nuevo.motivo_cierre
                 st.session_state.pop("evento_id", None)
                 st.session_state["pantalla"] = "inicio"
             else:
@@ -286,8 +286,8 @@ def render() -> None:
                 st.session_state.pop("precarga_paciente", None)
                 st.session_state.pop("paciente_existente_id", None)
                 st.session_state.pop("duplicados_actuales", None)
-                if nuevo.estado == "Cerrado":  # menor de 16: sin recomendación IA
-                    st.session_state["aviso_cierre_menor"] = True
+                if nuevo.estado == "Cerrado":  # fuera del rango 16-60: sin IA
+                    st.session_state["aviso_cierre_motivo"] = nuevo.motivo_cierre
                     st.session_state.pop("evento_id", None)
                     st.session_state["pantalla"] = "inicio"
                 else:

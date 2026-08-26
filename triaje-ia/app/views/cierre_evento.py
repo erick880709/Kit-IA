@@ -56,11 +56,12 @@ def render() -> None:
         return
 
     if evento.estado == "Cerrado":
-        if evento.motivo_cierre:  # cierre automático: menor de 16 años
+        if evento.motivo_cierre:  # cierre automático: fuera del rango 16-60 años
             st.warning(
-                "🔒 Evento cerrado automáticamente — paciente menor de 16 años. "
-                "El sistema de recomendación IA no aplica: el nivel de atención de "
-                "la urgencia recae completamente en el profesional de salud."
+                "🔒 Evento cerrado automáticamente — paciente fuera del rango de "
+                "aplicabilidad (16-60 años). El sistema de recomendación IA no aplica: "
+                "el diagnóstico del nivel de urgencia recae 100% en el profesional de "
+                "salud y el triaje de la herramienta no puede usarse como apoyo."
             )
             st.caption(f"Trazabilidad registrada: {evento.motivo_cierre}")
         else:
