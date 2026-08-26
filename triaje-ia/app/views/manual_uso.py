@@ -71,9 +71,9 @@ MANUAL_POR_ROL: dict[str, dict] = {
             },
             {
                 "nombre": "Evaluación clínica",
-                "objetivo": "Capturar el motivo de consulta CIE-10 y el estado clínico.",
+                "objetivo": "Capturar el motivo de consulta CIE-11 y el estado clínico.",
                 "pasos": [
-                    "Seleccione el motivo estructurado (código CIE-10 + categoría).",
+                    "Seleccione el motivo estructurado (código CIE-11 + categoría).",
                     "Registre escala de dolor (0-10), Glasgow (3-15) y nivel de conciencia.",
                     "Complete antecedentes por autorreporte, alergias y observaciones si aplica.",
                     "Pulse «Continuar → Clasificación IA».",
@@ -190,7 +190,7 @@ MANUAL_POR_ROL: dict[str, dict] = {
             },
             {
                 "nombre": "Evaluación clínica",
-                "objetivo": "Capturar motivo CIE-10 y evaluación de enfermería.",
+                "objetivo": "Capturar motivo CIE-11 y evaluación de enfermería.",
                 "pasos": [
                     "Seleccione el motivo estructurado por categoría.",
                     "Registre dolor, Glasgow y nivel de conciencia.",

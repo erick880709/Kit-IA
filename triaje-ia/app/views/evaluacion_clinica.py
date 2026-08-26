@@ -1,6 +1,6 @@
 """Pantalla de evaluación clínica (HU-E2-05, mockup s-evaluacion).
 
-CA1: motivo en doble captura (catálogo CIE-10 + texto libre).
+CA1: motivo en doble captura (catálogo CIE-11 + texto libre).
 CA2: dolor 0-10, Glasgow, conciencia con catálogos.
 CA3: antecedentes por autorreporte (MockHCE) precargados si existen.
 CA4: texto libre vacío no bloquea.
@@ -36,7 +36,7 @@ def render() -> None:
         f"{codigo} — {desc} · {categoria}"
         for codigo, desc, categoria in CATALOGO_MOTIVOS
     ]
-    seleccion = st.selectbox("Motivo estructurado (CIE-10)", opciones)
+    seleccion = st.selectbox("Motivo estructurado (CIE-11)", opciones)
     codigo = seleccion.split(" — ")[0]
     descripcion = seleccion.split(" — ", 1)[1].rsplit(" · ", 1)[0]
     texto_libre = st.text_area(

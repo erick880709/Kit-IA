@@ -333,7 +333,7 @@ def registrar_evaluacion(
     )
     session.commit()
     logger.info(
-        "Evaluación clínica registrada: evento %s (CIE-10 %s, usuario %s)",
+        "Evaluación clínica registrada: evento %s (CIE-11 %s, usuario %s)",
         evento_id, codigo, usuario_id,
     )
     return motivo, evaluacion
