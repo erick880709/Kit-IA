@@ -63,11 +63,11 @@
     }
   },
   "ganador_macro": {
-    "precision": 0.5575800376647834,
-    "recall": 0.5542144782441278,
-    "f1": 0.5558777947277903
+    "precision": 0.5562339915723374,
+    "recall": 0.5252551020408164,
+    "f1": 0.5391025921375758
   },
-  "auc_roc_ovr": 0.979590813242958,
+  "auc_roc_ovr": 0.9887602062587411,
   "metas_cumplidas": {
     "f1": false,
     "precision": false,
@@ -75,8 +75,8 @@
     "auc_roc": true
   },
   "umbrales": {
-    "I": 0.2821686184272387,
-    "II": 0.2293410663507408,
+    "I": 0.21934820679154587,
+    "II": 0.6895901653229229,
     "III": 0.5,
     "IV": 0.5,
     "V": 0.5
@@ -86,14 +86,15 @@
       "max_depth": 5,
       "learning_rate": 0.1
     },
-    "macro_f1_val": 0.5588739902481624
+    "macro_f1_val": 0.569087980286114
   },
-  "peso_estructurado": 0.6,
+  "peso_estructurado": 0.5,
   "texto_sjd_holdout": {
     "precision": 0.20019754079885327,
     "recall": 0.21218435710861297,
     "f1": 0.09989918595812194
   },
+  "n_refuerzo_i_v": 800,
   "ruta_modelo": "C:\\Users\\ELITEBOOK\\OneDrive\\Documentos\\Repositorio\\Trabajo\\kit-ia\\triaje-ia\\artifacts\\models\\modelo-latefusion-xgb-text-sjd-v20260826.joblib",
   "comparativa_benchmarks": [
     {
@@ -130,8 +131,8 @@
     },
     {
       "referencia": "TriajeIA (este proyecto)",
-      "auc": 0.979590813242958,
-      "f1": 0.5558777947277903,
+      "auc": 0.9887602062587411,
+      "f1": 0.5391025921375758,
       "nota": "Fusión tardía — dataset sintético demo",
       "es_benchmark": false
     }
