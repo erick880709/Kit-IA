@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -36,6 +36,15 @@ from app.domain.exceptions import ValidationError
 from app.services import audit_service
 
 logger = logging.getLogger(__name__)
+
+# Regla de aplicabilidad del sistema de recomendación IA (ámbito adulto,
+# Res. 5596/2015): aplica SOLO a personas de 16 años en adelante.
+EDAD_MINIMA_TRIaje_IA = 16
+
+MOTIVO_CIERRE_MENOR = (
+    "Paciente menor de 16 años — el sistema de recomendación IA no aplica; "
+    "el nivel de atención de la urgencia recae completamente en el profesional."
+)
 
 # ---------- Búsqueda e historial (HU-E2-02 / HU-E2-03) ----------
 
@@ -77,19 +86,59 @@ def historial_eventos(session: Session, *, paciente_id: str) -> list[EventoTriaj
 
 # ---------- Máquina de estados (HU-E2-06) ----------
 
-def crear_evento(session: Session, *, paciente_id: str, usuario_id: str | None) -> EventoTriaje:
-    if session.get(Paciente, paciente_id) is None:
+def edad_en_anios(fecha_nacimiento: date, hoy: date | None = None) -> int:
+    """Edad exacta en años cumplidos. `hoy` inyectable para tests deterministas."""
+    hoy = hoy or date.today()
+    anios = hoy.year - fecha_nacimiento.year
+    if (hoy.month, hoy.day) < (fecha_nacimiento.month, fecha_nacimiento.day):
+        anios -= 1
+    return anios
+
+
+def crear_evento(
+    session: Session,
+    *,
+    paciente_id: str,
+    usuario_id: str | None,
+    hoy: date | None = None,
+) -> EventoTriaje:
+    """Crea el evento y aplica la regla de aplicabilidad por edad:
+
+    - 16 años en adelante: flujo normal con recomendación IA.
+    - Menor de 16: NO se aplica la recomendación IA; el evento queda cerrado
+      automáticamente y el nivel de urgencia recae en el profesional, dejando
+      trazabilidad completa en auditoría.
+    """
+    paciente = session.get(Paciente, paciente_id)
+    if paciente is None:
         raise ValidationError("Paciente inexistente", detalle=paciente_id)
     evento = EventoTriaje(paciente_id=paciente_id, usuario_id=usuario_id, estado="Registrado")
     session.add(evento)
+    session.flush()  # genera evento.id (default en INSERT) antes de usarlo
     audit_service.registrar(
         session, usuario_id=usuario_id, accion="CREAR_EVENTO",
         entidad="EventoTriaje", detalle=evento.id, commit=False,
     )
+    if edad_en_anios(paciente.fecha_nacimiento, hoy) < EDAD_MINIMA_TRIaje_IA:
+        transicionar_estado(
+            session, evento_id=evento.id, nuevo_estado="Cerrado", usuario_id=usuario_id
+        )
+        evento.cierre = datetime.now(UTC)
+        evento.motivo_cierre = MOTIVO_CIERRE_MENOR
+        audit_service.registrar(
+            session, usuario_id=usuario_id, accion="CIERRE_AUTOMATICO_MENOR",
+            entidad="EventoTriaje", evento_id=evento.id,
+            detalle=f"{evento.id} · {MOTIVO_CIERRE_MENOR}", commit=False,
+        )
+        logger.info(
+            "Evento %s creado y cerrado automáticamente: paciente %s menor de %s años "
+            "— sin recomendación IA, nivel a cargo del profesional",
+            evento.id, paciente_id, EDAD_MINIMA_TRIaje_IA,
+        )
     session.commit()  # cambio + auditoría en una sola transacción
     logger.info(
-        "Evento de triaje creado: %s (paciente %s, usuario %s)",
-        evento.id, paciente_id, usuario_id,
+        "Evento de triaje creado: %s (paciente %s, usuario %s, estado %s)",
+        evento.id, paciente_id, usuario_id, evento.estado,
     )
     return evento
 
@@ -453,6 +502,12 @@ def reclasificar(
         raise ValidationError(
             "La reclasificación solo está disponible tras el cierre del evento",
             detalle=original.estado,
+        )
+    if original.motivo_cierre:
+        raise ValidationError(
+            "Evento cerrado automáticamente (menor de 16 años) — sin recomendación "
+            "IA, la reclasificación asistida no aplica",
+            detalle=evento_original_id,
         )
     anterior = original.nivel_asignado_profesional
     nuevo = EventoTriaje(

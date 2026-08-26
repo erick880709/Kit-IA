@@ -433,7 +433,9 @@ ESTADOS_TRIaje: list[str] = [
 ]
 
 TRANSICIONES_VALIDAS: dict[str, set[str]] = {
-    "Registrado": {"SignosVitales"},
+    # "Cerrado" directo desde "Registrado" solo lo produce el cierre automático
+    # por menor de 16 años (sin recomendación IA, nivel a cargo del profesional).
+    "Registrado": {"SignosVitales", "Cerrado"},
     "SignosVitales": {"EvaluacionClinica"},
     "EvaluacionClinica": {"ClasificacionIA"},
     "ClasificacionIA": {"ValidacionProfesional"},

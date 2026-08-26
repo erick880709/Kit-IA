@@ -141,6 +141,7 @@ class EventoTriaje(Base):
     concordancia: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     motivo_discrepancia: Mapped[str | None] = mapped_column(Text, nullable=True)
     motivo_reclasificacion: Mapped[str | None] = mapped_column(Text, nullable=True)
+    motivo_cierre: Mapped[str | None] = mapped_column(Text, nullable=True)
     version_modelo: Mapped[str | None] = mapped_column(String(40), nullable=True)
     # Épica E4 · inferencia real (HU-E4-01)
     algoritmo_modelo: Mapped[str | None] = mapped_column(String(60), nullable=True)
