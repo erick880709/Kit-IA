@@ -1,0 +1,145 @@
+{
+  "metricas": {
+    "macro": {
+      "precision": 0.9333333333333332,
+      "recall": 0.9875,
+      "f1": 0.9535483870967741
+    },
+    "por_clase": {
+      "I": {
+        "precision": 0.6666666666666666,
+        "recall": 1.0,
+        "f1-score": 0.8,
+        "support": 2.0
+      },
+      "II": {
+        "precision": 1.0,
+        "recall": 0.9375,
+        "f1-score": 0.967741935483871,
+        "support": 16.0
+      },
+      "III": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 530.0
+      },
+      "IV": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 49.0
+      },
+      "V": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 3.0
+      }
+    },
+    "accuracy": 0.9983333333333333,
+    "auc_roc_ovr": 1.0,
+    "matriz_confusion": {
+      "clases": [
+        "I",
+        "II",
+        "III",
+        "IV",
+        "V"
+      ],
+      "matriz": [
+        [
+          2,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          15,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          530,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          49,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          3
+        ]
+      ],
+      "n_test": 600
+    },
+    "umbrales": {
+      "I": 0.6660588827318008,
+      "II": 0.8850677914492527,
+      "III": 0.5,
+      "IV": 0.5,
+      "V": 0.682169494028356
+    },
+    "version": "modelo-latefusion-xgb-text-sjd-v20260826"
+  },
+  "garantias": {
+    "I": {
+      "recall": 1.0,
+      "precision": 0.6667,
+      "f1": 0.8,
+      "piso_recall": 0.5,
+      "piso_precision": 0.5,
+      "cumple": true
+    },
+    "II": {
+      "recall": 0.9375,
+      "precision": 1.0,
+      "f1": 0.9677,
+      "piso_recall": 0.75,
+      "piso_precision": 0.8,
+      "cumple": true
+    },
+    "III": {
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "piso_recall": 0.95,
+      "piso_precision": 0.95,
+      "cumple": true
+    },
+    "IV": {
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "piso_recall": 0.9,
+      "piso_precision": 0.9,
+      "cumple": true
+    },
+    "V": {
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "piso_recall": 0.6666666666666666,
+      "piso_precision": 0.6,
+      "cumple": true
+    },
+    "_macro_f1": {
+      "valor": 0.9535,
+      "piso": 0.9,
+      "cumple": true
+    }
+  }
+}
