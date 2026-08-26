@@ -284,6 +284,115 @@ def generar_datos_sinteticos(
     return ruta
 
 
+def generar_refuerzo_iv(
+    n_i: int = 400, n_v: int = 400, semilla: int = 42
+) -> pd.DataFrame:
+    """Refuerzo sintético de los extremos I y V — SOLO para entrenamiento.
+
+    El demo base replica la prevalencia real (I 0.23%, V 0.46%), lo que deja
+    a los árboles sin ejemplos suficientes para discriminar los extremos de la
+    escala. Este refuerzo genera perfiles clínicos DISCRIMINATIVOS:
+
+    - Nivel I: SpO₂ 50-78, FC 140-170, FR 30-45, T 40-42.8, PAS 60-90.
+    - Nivel V: SpO₂ 98-100, FC 60-80, FR 12-16, T 36.3-37, PAS 110-130.
+
+    NO entra en la calibración de distribución ni en el test honesto del demo
+    (el pipeline lo usa únicamente como datos de entrenamiento, documentado).
+    Los motivos ya están en códigos CIE-11.
+    """
+    import numpy as np
+
+    rng = np.random.default_rng(semilla)
+    motivos_i = ["CB41", "MD30", "NA07", "ND0Z"]
+    textos_i = [
+        "Dificultad respiratoria severa con cianosis central",
+        "Dolor torácico opresivo con sudoración fría",
+        "Caída con golpe en la cabeza y somnolencia progresiva",
+        "Politraumatismo con sangrado activo",
+    ]
+    motivos_v = ["CA00", "ND14", "ME05", "MD12"]
+    textos_v = [
+        "Congestión nasal leve sin otros síntomas",
+        "Esguince de tobillo leve al caminar",
+        "Estreñimiento ocasional sin alarma",
+        "Tos seca leve",
+    ]
+
+    def _grupo(n: int, *, critico: bool) -> dict:
+        if critico:
+            return {
+                "spo2": rng.integers(50, 79, n),
+                "fr": rng.integers(30, 46, n),
+                "hr": rng.integers(140, 171, n),
+                "t": np.round(rng.uniform(40.0, 42.8, n), 1),
+                "pas": rng.integers(60, 91, n),
+                "pad": rng.integers(30, 56, n),
+                "episodios": rng.integers(2, 7, n),
+                "nacimiento": rng.integers(1940, 1971, n),
+            }
+        return {
+            "spo2": rng.integers(98, 101, n),
+            "fr": rng.integers(12, 17, n),
+            "hr": rng.integers(60, 81, n),
+            "t": np.round(rng.uniform(36.3, 37.0, n), 1),
+            "pas": rng.integers(110, 131, n),
+            "pad": rng.integers(70, 81, n),
+            "episodios": rng.integers(0, 2, n),
+            "nacimiento": rng.integers(1980, 2006, n),
+        }
+
+    def _df(n: int, nivel: str, pool_m, pool_t, *, critico: bool) -> pd.DataFrame:
+        g = _grupo(n, critico=critico)
+        return pd.DataFrame(
+            {
+                "tipo_documento": "CC",
+                "numero_documento": [
+                    f"{100000000000 + i + (0 if critico else 500000):013d}"
+                    for i in range(n)
+                ],
+                "nombres": [f"Refuerzo{i}" for i in range(n)],
+                "apellidos": [f"{nivel}{i}" for i in range(n)],
+                "fecha_nacimiento": pd.to_datetime(
+                    g["nacimiento"], unit="D", origin="1970-01-01"
+                ).date,
+                "sexo": rng.choice(["Femenino", "Masculino"], size=n),
+                "via_llegada": "Ambulancia" if critico else "Particular",
+                "episodios_previos_urgencias": g["episodios"],
+                "telefono": [f"3000000{i:04d}" for i in range(n)],
+                "correo": [f"refuerzo{i}@demo.co" for i in range(n)],
+                "contacto_emergencia": [f"Familiar{i}" for i in range(n)],
+                "numero_contacto_emergencia": [f"3100000{i:04d}" for i in range(n)],
+                "departamento": "Cundinamarca",
+                "ciudad": "Bogotá D.C.",
+                "direccion_residencia": [f"Calle {i % 200}" for i in range(n)],
+                "regimen": rng.choice(
+                    ["Contributivo", "Subsidiado", "Especial", "No afiliado"],
+                    size=n, p=[0.6, 0.3, 0.05, 0.05],
+                ),
+                "temperatura": g["t"].astype(float),
+                "frecuencia_cardiaca": g["hr"].astype(int),
+                "frecuencia_respiratoria": g["fr"].astype(int),
+                "saturacion_o2": g["spo2"].astype(int),
+                "presion_sistolica": g["pas"].astype(int),
+                "presion_diastolica": g["pad"].astype(int),
+                "peso": np.round(rng.normal(70, 15, n).clip(30, 160), 1),
+                "talla": np.round(rng.normal(1.65, 0.1, n).clip(1.3, 2.1), 2),
+                "motivo_codigo_cie10": rng.choice(pool_m, size=n),
+                "motivo_texto": rng.choice(pool_t, size=n),
+                "nivel_triaje": nivel,
+                "fuente": "refuerzo_iv",
+            }
+        )
+
+    return pd.concat(
+        [
+            _df(n_i, "I", motivos_i, textos_i, critico=True),
+            _df(n_v, "V", motivos_v, textos_v, critico=False),
+        ],
+        ignore_index=True,
+    )
+
+
 def _hash_directo(valor: str) -> str:
     return hashlib.sha256(valor.encode("utf-8")).hexdigest()[:16]
 

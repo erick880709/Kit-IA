@@ -13,7 +13,13 @@ import streamlit as st
 from sqlalchemy import select
 
 from app.domain.catalogos import NIVELES_TRIaje
-from app.domain.entities import EventoTriaje, MotivoConsulta, Paciente, SignosVitales
+from app.domain.entities import (
+    EvaluacionClinica,
+    EventoTriaje,
+    MotivoConsulta,
+    Paciente,
+    SignosVitales,
+)
 from app.domain.exceptions import ValidationError
 from app.infra.db import SessionLocal
 from app.services import audit_service, triaje_service
@@ -37,6 +43,9 @@ def _datos_para_inferencia(session, evento_id: str) -> dict:
     motivo = session.scalar(
         select(MotivoConsulta).where(MotivoConsulta.evento_id == evento_id)
     )
+    evaluacion = session.scalar(
+        select(EvaluacionClinica).where(EvaluacionClinica.evento_id == evento_id)
+    )
     anio = paciente.fecha_nacimiento.year if paciente.fecha_nacimiento else 1990
     return {
         "temperatura": signos.temperatura,
@@ -53,6 +62,8 @@ def _datos_para_inferencia(session, evento_id: str) -> dict:
         "via_llegada": paciente.via_llegada,
         "regimen": paciente.regimen,
         "departamento": paciente.departamento,
+        "glasgow": evaluacion.glasgow if evaluacion else 15,
+        "escala_dolor": evaluacion.escala_dolor if evaluacion else 0,
         "motivo_codigo_cie10": motivo.codigo_cie10 if motivo else "",
         "motivo_texto": (motivo.texto_libre or motivo.descripcion_estructurada) if motivo else "",
     }
@@ -98,6 +109,11 @@ def render() -> None:
             f"**Nivel sugerido por la IA: {nivel}** — {_DESCRIPCION_NIVELES[nivel]} "
             f"(confianza {resultado['confianza']:.0%})"
         )
+        if resultado.get("regla_seguridad"):
+            st.caption(
+                "🛡️ Nivel ajustado por la red de contención clínica "
+                "(Res. 5596/2015) — criterio de riesgo vital o de no urgencia."
+            )
         filas = [
             {"Nivel": n, "Descripción": _DESCRIPCION_NIVELES[n],
              "Probabilidad": f"{p:.2%}"}

@@ -220,11 +220,19 @@ class InferenceService:
             tiempo_ms = (time.perf_counter() - inicio) * 1000  # incluye SHAP (CA2 HU-E4-01)
 
             from ml.src.evaluation.metrics import CLASES
+            from ml.src.models.seguridad_clinica import regla_seguridad_clinica
             from ml.src.models.thresholds import sugerir_nivel
 
             probabilidades = {CLASES[i]: float(proba[0, i]) for i in range(len(CLASES))}
             umbrales = paquete.get("umbrales", {c: 0.5 for c in CLASES})
             nivel = sugerir_nivel(probabilidades, umbrales)
+            regla = regla_seguridad_clinica(datos, probabilidades)
+            if regla:
+                logger.info(
+                    "Red de contención clínica aplicada: modelo %s → %s (Res. 5596/2015)",
+                    nivel, regla,
+                )
+                nivel = regla
             confianza = max(probabilidades.values())
             self._fallos = 0
             logger.info(
@@ -242,6 +250,7 @@ class InferenceService:
                 "fecha_entrenamiento": paquete.get("fecha"),
                 "umbrales": umbrales,
                 "explicacion": explicacion,
+                "regla_seguridad": regla,
             }
         except (FuturoTimeout, TimeoutError):
             logger.error("Inferencia excedió %.1f s — fallback manual", self.timeout_s)

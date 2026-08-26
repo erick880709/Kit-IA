@@ -14,6 +14,7 @@ from ml.src.data.anonimizacion import anonimizar
 from ml.src.data.ingesta import (
     FuenteSinteticaDemo,
     generar_datos_sinteticos,
+    generar_refuerzo_iv,
     ingestar_san_juan_de_dios,
 )
 from ml.src.evaluation.metrics import (
@@ -75,6 +76,27 @@ def test_generar_datos_sinteticos_persiste():
     assert ruta.exists()
     df = pd.read_csv(ruta)
     assert len(df) >= 50  # idempotente: no sobreescribe el demo de 4000
+
+
+def test_refuerzo_iv_perfiles_discriminativos() -> None:
+    ref = generar_refuerzo_iv(n_i=40, n_v=40, semilla=7)
+    assert len(ref) == 80
+    assert set(ref["nivel_triaje"]) == {"I", "V"}
+    i_rows = ref[ref["nivel_triaje"] == "I"]
+    v_rows = ref[ref["nivel_triaje"] == "V"]
+    assert i_rows["saturacion_o2"].max() < 85
+    assert i_rows["frecuencia_cardiaca"].min() >= 140
+    assert v_rows["saturacion_o2"].min() >= 98
+    assert v_rows["frecuencia_cardiaca"].max() <= 80
+    # códigos CIE-11 del catálogo
+    from app.domain.catalogos import CATALOGO_MOTIVOS
+
+    codigos = {c for c, _, _ in CATALOGO_MOTIVOS}
+    assert set(ref["motivo_codigo_cie10"]) <= codigos
+    # columnas mínimas para el pipeline
+    for col in ("temperatura", "frecuencia_respiratoria", "presion_sistolica",
+                "motivo_texto", "sexo", "via_llegada", "regimen"):
+        assert col in ref.columns
 
 
 def test_ingesta_san_juan_de_dios_mapea_columnas(tmp_path):

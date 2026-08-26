@@ -34,6 +34,7 @@ from ml.src.data.anonimizacion import anonimizar
 from ml.src.data.ingesta import (
     _DISTRIBUCION_REAL,
     generar_datos_sinteticos,
+    generar_refuerzo_iv,
     ingestar_csv_local,
     ingestar_mimic_ed,
     ingestar_san_juan_de_dios,
@@ -208,6 +209,22 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
             mimic["motivo_codigo_cie10"].fillna("").map(remapear_cie11)
         )
 
+    # Refuerzo I/V (2026-08-26): perfiles discriminativos SOLO para entrenar
+    # los extremos de la escala. Sin LimpiezaOutliers (recortaría los valores
+    # extremos al percentil 1-99); NO entra en la calibración de distribución
+    # ni en el test honesto del demo.
+    ref_iv = anonimizar(
+        ValidadorCalidad.validar(
+            NormalizadorRegimen.normalizar(generar_refuerzo_iv())
+        )
+    )
+    print(f"    Refuerzo I/V: {len(ref_iv)} ejemplos sintéticos (solo entrenamiento)")
+    idx_ref = np.arange(len(ref_iv))
+    tr_ref_idx, cal_ref_idx = train_test_split(
+        idx_ref, test_size=0.5, stratify=ref_iv["nivel_triaje"],
+        random_state=SEMILLA_GLOBAL,
+    )
+
     calibracion = _calibrar_distribucion(nacional, demo)
 
     print("2/10 · Split estratificado 70/15/15 del demo (ANTES de tocar features)")
@@ -225,6 +242,10 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
             mimic["motivo_codigo_cie10"].fillna("").map(normalizar_token_cie)
             + " " + mimic["motivo_texto"].fillna("")
         ).str.strip()
+    ref_iv["_texto_completo"] = (
+        ref_iv["motivo_codigo_cie10"].fillna("").map(normalizar_token_cie)
+        + " " + ref_iv["motivo_texto"].fillna("")
+    ).str.strip()
     train, val, test = _split_estratificado(demo.assign(_i=np.arange(len(demo))))
     tr_idx = train["_i"].to_numpy()
     va_idx = val["_i"].to_numpy()
@@ -240,6 +261,10 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
     _, pipeline_est = construir_matriz_estructurada(train)
     X_est = pipeline_est.transform(demo)
     X_est = X_est.toarray() if hasattr(X_est, "toarray") else np.asarray(X_est)
+    X_est_ref = pipeline_est.transform(ref_iv)
+    X_est_ref = (
+        X_est_ref.toarray() if hasattr(X_est_ref, "toarray") else np.asarray(X_est_ref)
+    )
 
     print("4/10 · TF-IDF sobre CIE+texto (demo train + SJdD + MIMIC + catálogo)")
     textos_entrenamiento = pd.concat(
@@ -281,6 +306,7 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
         vectorizador.transformar_disperso(mimic["_texto_completo"])
         if mimic is not None else None
     )
+    X_txt_ref = vectorizador.transformar_disperso(ref_iv["_texto_completo"])
 
     print("5/10 · Baselines unimodales (LR, RF, XGBoost)")
     baselines = entrenar_baselines(X_est[tr_idx], y[tr_idx], k_folds=k_folds)
@@ -294,16 +320,21 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
         k_folds=k_folds, combinadores=("promedio_ponderado", "stacking"),
     )
 
-    print("7/10 · Ganador: fusión tardía afinada (XGBoost afinado + LR texto)")
+    print("7/10 · Ganador: fusión tardía afinada (XGBoost afinado + LR texto) + refuerzo I/V")
+    y_ref_enc = encoder.transform(ref_iv["nivel_triaje"].to_numpy())
+    X_est_ent = np.vstack([X_est[tr_idx], X_est_ref[tr_ref_idx]])
+    y_ent_enc = np.concatenate([y_tr_enc, y_ref_enc[tr_ref_idx]])
     sub_a, tuning = _sintonizar_submodelo_estructurado(
-        X_est[tr_idx], y_tr_enc, X_est[va_idx], encoder.transform(y[va_idx]),
+        X_est_ent, y_ent_enc, X_est[va_idx], encoder.transform(y[va_idx]),
         semilla=SEMILLA_GLOBAL,
     )
+    y_texto = np.concatenate([y_tr_enc, y_ref_enc[tr_ref_idx]])
+    X_texto = sp.vstack([X_txt_demo[tr_idx], X_txt_ref[tr_ref_idx]]).tocsr()
     if sjd is not None:
-        y_texto = np.concatenate([y_tr_enc, encoder.transform(sjd["nivel_triaje"].to_numpy())])
-        X_texto = sp.vstack([X_txt_demo[tr_idx], X_txt_sjd]).tocsr()
-    else:
-        y_texto, X_texto = y_tr_enc, X_txt_demo[tr_idx]
+        y_texto = np.concatenate(
+            [y_texto, encoder.transform(sjd["nivel_triaje"].to_numpy())]
+        )
+        X_texto = sp.vstack([X_texto, X_txt_sjd]).tocsr()
     if mimic is not None:
         y_texto = np.concatenate(
             [y_texto, encoder.transform(mimic["nivel_triaje"].to_numpy())]
@@ -331,7 +362,15 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
     )
 
     proba_val = ganador.predict_proba(X_est[va_idx], X_txt_demo[va_idx])
-    umbrales = ajustar_umbrales(y[va_idx], proba_val)
+    # Calibración de umbrales reforzada: validación del demo + holdout del
+    # refuerzo I/V (sin refuerzo, Youden se calcula con ~2 ejemplos I).
+    proba_ref_cal = ganador.predict_proba(
+        X_est_ref[cal_ref_idx], X_txt_ref[cal_ref_idx]
+    )
+    y_cal = np.concatenate([y[va_idx], ref_iv["nivel_triaje"].to_numpy()[cal_ref_idx]])
+    proba_cal = np.vstack([proba_val, proba_ref_cal])
+    umbrales = ajustar_umbrales(y_cal, proba_cal)
+    print(f"    umbrales recalibrados (val + refuerzo): {json.dumps(umbrales, ensure_ascii=False)}")
     proba_test = ganador.predict_proba(X_est[te_idx], X_txt_demo[te_idx])
     pred_test = aplicar_umbrales(proba_test, umbrales)
     metricas = metricas_por_clase(encoder.transform(y[te_idx]), pred_test, proba_test)
@@ -344,6 +383,7 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
         extra={
             "metas": metas, "umbrales": umbrales, "tuning": tuning,
             "peso_estructurado": mejor_peso,
+            "n_refuerzo_i_v": int(len(ref_iv)),
         },
     )
 
@@ -395,6 +435,7 @@ def ejecutar(n: int = 4000, *, k_folds: int = 5) -> dict:
         "texto_sjd_holdout": (
             evidencia_sjd["macro"] if evidencia_sjd is not None else None
         ),
+        "n_refuerzo_i_v": int(len(ref_iv)),
         "ruta_modelo": str(ruta_modelo),
         "comparativa_benchmarks": comparativa,
     }
