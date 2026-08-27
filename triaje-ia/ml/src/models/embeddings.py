@@ -61,11 +61,15 @@ class VectorizadorTexto:
 
     def transformar(self, textos: pd.Series) -> np.ndarray:
         salida = []
+        cache = getattr(self, "_cache", None)
+        if cache is None:  # pickle antiguo sin _cache (regresión Cloud 2026-08-26)
+            self._cache = {}
+            cache = self._cache
         for texto in textos.fillna(""):
             clave = _llave(str(texto))
-            if clave not in self._cache:  # cache por texto (demo < 3 s)
-                self._cache[clave] = self._vectorizador.transform([str(texto)]).toarray()[0]
-            salida.append(self._cache[clave])
+            if clave not in cache:  # cache por texto (demo < 3 s)
+                cache[clave] = self._vectorizador.transform([str(texto)]).toarray()[0]
+            salida.append(cache[clave])
         return np.vstack(salida)
 
     def transformar_disperso(self, textos: pd.Series):

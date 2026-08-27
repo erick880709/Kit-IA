@@ -250,7 +250,13 @@ class InferenceService:
         ).strip()
         if not texto:
             return None
-        return vectorizador.transformar(pd.Series([str(texto)]))
+        try:
+            return vectorizador.transformar(pd.Series([str(texto)]))
+        except AttributeError as exc:  # pickle antiguo sin _cache (Cloud 2026-08-26)
+            if "_cache" in str(exc):
+                vectorizador._cache = {}
+                return vectorizador.transformar(pd.Series([str(texto)]))
+            raise
 
     def _construir_fila(self, datos: dict) -> pd.DataFrame:
         fila = {

@@ -278,6 +278,25 @@ def test_artefacto_activo_vectorizador_tiene_cache() -> None:
     assert matriz.shape[0] == 1 and matriz.shape[1] > 1000
 
 
+def test_vectorizar_texto_autorrepara_pickle_sin_cache():
+    """Inmunidad total (Cloud 2026-08-26): aunque un pickle antiguo llegue sin
+    `_cache` y sin __setstate__, `_vectorizar_texto` repara el vectorizador en
+    el primer uso en vez de fallar la inferencia."""
+    from ml.src.models.embeddings import VectorizadorTexto
+
+    vectorizador = VectorizadorTexto(max_features=200).fit(
+        pd.Series(["MD30 Dolor torácico opresivo", "CB41 Dificultad respiratoria"])
+    )
+    del vectorizador.__dict__["_cache"]  # simula pickle serializado antes del fix
+    resultado = InferenceService._vectorizar_texto(
+        {"vectorizador_texto": vectorizador},
+        {"motivo_codigo_cie10": "MD30", "motivo_texto": "Dolor torácico opresivo"},
+    )
+    assert resultado is not None
+    assert resultado.shape[0] == 1
+    assert hasattr(vectorizador, "_cache")  # quedó reparado
+
+
 def test_registrar_modelo_reactiva_version_inactiva(dir_modelos, session):
     """BD persistida de un despliegue anterior: si la versión existe pero
     quedó inactiva, registrar_modelo debe re-activarla."""
