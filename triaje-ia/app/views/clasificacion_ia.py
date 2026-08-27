@@ -33,6 +33,29 @@ _DESCRIPCION_NIVELES = {
     "V": "No urgente — 12-24 h",
 }
 
+_AVISO_VISITA_ANTERIOR = (
+    "ℹ️ El resultado que ves corresponde a la ÚLTIMA VISITA a urgencias del "
+    "paciente — no al triaje en curso. Para obtener la sugerencia de ESTA "
+    "visita, ejecuta «⚡ Ejecutar inferencia IA»."
+)
+
+
+def _resultado_de_otro_evento(
+    resultado: dict | None,
+    evento_id_resultado: str | None,
+    evento_id_actual: str | None,
+) -> bool:
+    """True si el resultado almacenado en sesión pertenece a OTRO evento
+    (visita anterior del paciente) y no al triaje en curso (2026-08-26).
+
+    El resultado de un triaje previo permanece en `st.session_state` al
+    iniciar un nuevo evento del mismo paciente; sin esta distinción la
+    pantalla muestra la recomendación vieja como si fuera la nueva.
+    """
+    if resultado is None:
+        return False
+    return evento_id_resultado != evento_id_actual
+
 
 def _datos_para_inferencia(session, evento_id: str) -> dict:
     evento = session.get(EventoTriaje, evento_id)
@@ -97,11 +120,19 @@ def render() -> None:
         with st.spinner("Ejecutando inferencia del modelo (presupuesto < 3 s)…"):
             resultado = inference_service.predecir(datos)
         st.session_state["resultado_ia"] = resultado
+        st.session_state["resultado_ia_evento_id"] = evento_id
         if resultado["estado"] != "ok":
             _auditar_indisponibilidad(str(resultado.get("motivo")))
         st.rerun()
 
     resultado = st.session_state["resultado_ia"]
+    es_visita_anterior = _resultado_de_otro_evento(
+        resultado,
+        st.session_state.get("resultado_ia_evento_id"),
+        evento_id,
+    )
+    if es_visita_anterior:
+        st.info(_AVISO_VISITA_ANTERIOR)
 
     if resultado is not None and resultado["estado"] == "ok":
         nivel = resultado["nivel_sugerido"]

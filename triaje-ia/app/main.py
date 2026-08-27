@@ -49,6 +49,7 @@ CLAVES_SESION = (
     "pantalla", "paciente_id", "evento_id", "evento_reclasificar",
     "precarga_paciente", "duplicados_actuales", "paciente_existente_id",
     "aviso_cierre_motivo", "paciente_nuevo_para_triaje", "registro_ok",
+    "resultado_ia", "resultado_ia_evento_id",
 )
 
 PANTALLA_POR_ESTADO = {
