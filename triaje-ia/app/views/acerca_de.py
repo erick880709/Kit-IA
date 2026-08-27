@@ -8,6 +8,7 @@ import streamlit as st
 
 from app.domain.exceptions import ProhibidoError
 from app.services import authorization_service
+from app.version import version_app
 
 ASSETS_DIR = Path(__file__).resolve().parents[2] / "assets" / "manual"
 
@@ -29,6 +30,7 @@ def render() -> None:
         "Es el **Trabajo de Fin de Máster (TFM)** del equipo, desarrollado como "
         "proyecto final de maestría."
     )
+    st.caption(f"Versión desplegada: `{version_app()}`")
 
     st.subheader("Autores")
     st.markdown(

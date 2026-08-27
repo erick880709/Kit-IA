@@ -19,6 +19,7 @@ from app.domain.exceptions import (
 from app.infra.config import settings
 from app.infra.db import SessionLocal
 from app.services import auth_service
+from app.version import version_app
 
 
 def render() -> None:
@@ -54,6 +55,8 @@ def render() -> None:
         f"Tras {settings.max_intentos_login} intentos fallidos la cuenta se bloquea "
         f"{settings.bloqueo_login_min} minutos."
     )
+
+    st.caption(f"Versión desplegada: `{version_app()}`")
 
     _render_recuperacion()
 
