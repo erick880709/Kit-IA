@@ -57,6 +57,24 @@ def _resultado_de_otro_evento(
     return evento_id_resultado != evento_id_actual
 
 
+def _mismo_paciente(
+    session,
+    evento_id_a: str | None,
+    evento_id_b: str | None,
+) -> bool:
+    """True si ambos eventos existen y pertenecen al mismo paciente.
+
+    Necesario para no atribuir a un paciente el resultado de otro
+    (2026-08-27): la sesión del navegador conserva el último resultado
+    calculado, que puede ser de un paciente distinto al triaje en curso.
+    """
+    if not evento_id_a or not evento_id_b:
+        return False
+    evento_a = session.get(EventoTriaje, evento_id_a)
+    evento_b = session.get(EventoTriaje, evento_id_b)
+    return bool(evento_a and evento_b and evento_a.paciente_id == evento_b.paciente_id)
+
+
 def _datos_para_inferencia(session, evento_id: str) -> dict:
     evento = session.get(EventoTriaje, evento_id)
     paciente = session.get(Paciente, evento.paciente_id)
@@ -126,13 +144,22 @@ def render() -> None:
         st.rerun()
 
     resultado = st.session_state["resultado_ia"]
+    resultado_evento_id = st.session_state.get("resultado_ia_evento_id")
     es_visita_anterior = _resultado_de_otro_evento(
         resultado,
-        st.session_state.get("resultado_ia_evento_id"),
+        resultado_evento_id,
         evento_id,
     )
     if es_visita_anterior:
-        st.info(_AVISO_VISITA_ANTERIOR)
+        # El resultado de un paciente distinto no debe mostrarse como
+        # "visita anterior" del paciente en curso: se descarta (2026-08-27).
+        with SessionLocal() as session:
+            if _mismo_paciente(session, resultado_evento_id, evento_id):
+                st.info(_AVISO_VISITA_ANTERIOR)
+            else:
+                st.session_state["resultado_ia"] = None
+                st.session_state["resultado_ia_evento_id"] = None
+                resultado = None
 
     if resultado is not None and resultado["estado"] == "ok":
         nivel = resultado["nivel_sugerido"]
